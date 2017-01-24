@@ -212,7 +212,7 @@ if __name__ == '__main__':
     read_count = file_len("{0}_nc_ABC_R1.fastq".format(lib["prefix"])) / 4
     print "{0} read count after trimming: {1}".format(lib["prefix"], read_count)
  
-  # get rid of the temporary flash dir and teh symlinked flashed files
+  # get rid of the temporary flash dir
   shutil.rmtree(os.path.join(cwd, "flash"))
 
 print "DONE."
