@@ -2,19 +2,19 @@
 WGS (Wheat) Robust Assembly Pipeline
 
 ## Software required
-To run the pipline you will need to install the following;  
+To run the pipeline you will need to install the following;  
 
-* KAT  
-* BWA (or other short-read aligner)  
-* FLASH  
-* FASTX toolkit  
-* Nextclip  
-* Something to calculate assembly stats (eg. abyss-fac)
+* [KAT] (https://github.com/TGAC/KAT)  
+* [BWA] (https://sourceforge.net/projects/bio-bwa/files/) (or other short-read aligner)  
+* [FLASh] (https://ccb.jhu.edu/software/FLASH/)  
+* [FASTX toolkit] (http://hannonlab.cshl.edu/fastx_toolkit/)  
+* [Nextclip] (https://github.com/richardmleggett/nextclip/)  
+* Something to calculate assembly stats (eg. [abyss-fac] (http://www.bcgsc.ca/platform/bioinfo/software/abyss))
 
-Other tools are optional depending on how much validation you want to perform on your assembly.  We recommend;  
+Other tools are optional depending on how much QC and validation you want to perform on your reads and assembly.  We recommend;  
 
-* FASTQC  
-* BUSCO
+* [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  
+* [BUSCO] (http://busco.ezlab.org/)
 
 ## w2rap steps
 ### QC PE read files
@@ -25,7 +25,6 @@ Other tools are optional depending on how much validation you want to perform on
 * Map the reads to a reference and generate an insert size histogram to check the insert size and shape of the distribution
 
 ### Contigging
-How to run using multiple libraries?
 
 ### Contig assessment
 * Check N50, total content, gaps etc.
@@ -33,7 +32,7 @@ How to run using multiple libraries?
 * Align genes, BUSCO etc.
 
 ### LMP processing
-Python script to remove the Nextera adapter from LMP reads and remove any PE contamination.  
+Python script to remove Nextera adapters from LMP reads and remove any PE contamination.  
   
 Run as: lmp_processing \<read\_file\_list\> \<ncpus\>  
 
