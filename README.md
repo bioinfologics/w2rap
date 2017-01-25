@@ -16,13 +16,46 @@ Other tools are optional depending on how much QC and validation you want to per
 * [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  
 * [BUSCO] (http://busco.ezlab.org/)
 
-## w2rap steps
+## w2rap steps using Saccharomyces cerevisiae dataset
 ### QC PE read files
-* Run FASTQC to check read qualities etc.
-* Calculate read count and coverage
-* Use KAT hist to generate a kmer histogram to estimate kmer coverage
-* Use KAT comp to compare read 1 and read 2
-* Map the reads to a reference and generate an insert size histogram to check the insert size and shape of the distribution
+1) Run FASTQC to check read qualities etc.
+
+```
+fastqc scer_R1.fastq scer_R2.fastq
+```
+
+2) Calculate read count and coverage  
+3,648,316 100bp PE reads  
+12.1 Mb genome  
+PE coverage = ~60x
+ 
+3) Use KAT hist to generate a kmer histogram to estimate kmer coverage
+
+```
+kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_R?.fastq
+```
+
+4) Use KAT comp to create a density plot comparing read 1 and read 2
+
+```
+kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_R1.fastq scer_R2.fastq
+```
+
+5)  Map reads to the [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/) and generate a SAM file. 
+
+```
+bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+bwa mem -SP -t 8 scer_ref scer_R?.fastq > pe2ref.sam
+
+```
+
+6) Generate an insert size histogram to check the insert size and shape of the distribution.
+
+```
+grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
+
+```
+Insert size is 270bp
 
 ### Contigging
 
@@ -32,9 +65,13 @@ Other tools are optional depending on how much QC and validation you want to per
 * Align genes, BUSCO etc.
 
 ### LMP processing
-Python script to remove Nextera adapters from LMP reads and remove any PE contamination.  
-  
-Run as: lmp_processing \<read\_file\_list\> \<ncpus\>  
+Run FastQC to check read qualities etc.
+
+Run Python script to remove Nextera adapters from LMP reads and any PE contamination.  
+
+```  
+lmp_processing <read_file_list> <ncpus>  
+```
 
 read\_file\_list: a text file containing a list of LMP FASTQ files to process.  Files must be uncompressed and end in \_R1.fastq or \_R2.fastq.  
 eg.  
