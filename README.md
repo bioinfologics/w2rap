@@ -28,10 +28,8 @@ fastqc -o fastqc scer_R1.fastq scer_R2.fastq
 You can view the HTML reports generated in the fastqc directory.
 
 b) Calculate read count and coverage;  
-We have 3,648,316 PE reads (read length 100bp)  
-So we have 3,648,316 * 100 * 2 = 729,663,200 bp coverage   
-The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb  
-This equates to 729,663,200 / 12,495,682 = 58.4x genome coverage
+FastQC tells us we have 3,648,316 PE reads (read length 100bp) so we have 3,648,316 * 100 * 2 = 729,663,200 bp coverage   
+The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 729,663,200 / 12,495,682 = 58.4x genome coverage
  
 c) Use KAT hist to generate a kmer histogram to estimate kmer coverage
 
@@ -60,7 +58,6 @@ f) Generate an insert size histogram to check the insert size and shape of the d
 grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
 ![](images/scer_pe_isize.png)
-Insert size is 270bp
 
 ### 2) Contigging
 Use the w2rap-contigger to generate contigs from the PE reads.
@@ -117,9 +114,13 @@ b) Use KAT comp to check for LMP representation issues by comparing LMP reads to
 c) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
 
 ### 6) Scaffolding
-a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using the PE and LMP reads to scaffold.  
+a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using both the PE and LMP reads to scaffold.  
 b) Run "prepare->map->scaff" pipeline  
-c) Run N-remapping script
+c) SOAPdenovo converst gaps in contigs to Cs and Gs so we need to convert these back to Ns
+
+```
+N-remapping script
+```
 
 ### 7) Scaffold validation
 a) Check N50, total content, gaps etc.  
