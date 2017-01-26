@@ -115,11 +115,11 @@ c) Map the reads to a reference and generate an insert size histogram to check t
 
 ### 6) Scaffolding
 a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using both the PE and LMP reads to scaffold.  
-b) Run "prepare->map->scaff" pipeline  
-c) SOAPdenovo converst gaps in contigs to Cs and Gs so we need to convert these back to Ns
+b) Run "prepare->map->scaff" pipeline.  
+c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns.
 
 ```
-N-remapping script
+python SOAP_n_remapper.py <contigPosInscaff_file> <scafSeq_file> <contig_file> <output_file>
 ```
 
 ### 7) Scaffold validation
