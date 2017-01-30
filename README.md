@@ -42,7 +42,7 @@ c) Use KAT comp to create a density plot comparing read 1 and read 2
 ```
 kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_R1.fastq scer_R2.fastq
 ```
-![] (images/scer_pe_R1vsR2-main.mx.density.png)
+![] (images/scer_pe_R1vsR2-main.mx.density.png =200x200)
 
 d)  Download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map reads and generate a SAM file. 
 
