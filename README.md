@@ -58,7 +58,7 @@ e) Generate an insert size histogram to check the insert size and shape of the d
 ```
 grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
-![](images/scer_pe_isize.png)
+<img src="images/yeast_pe.png"  width="450" height="400">
 
 ### 2) Contigging
 Use the w2rap-contigger to generate contigs from the PE reads.
@@ -87,7 +87,7 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_R?.fastq' contigs/a.lines.fasta
 ```
 
-<img src="images/reads_vs_assembly_k27-main.png"  width="450" height="400">
+<img src="images/insert.png"  width="450" height="400">
 
 c) Align genes, QUAST, BUSCO etc.
 
@@ -114,6 +114,14 @@ ncpus: the number of CPUs to use.
 
 Processed LMP files will be written to the 'nextclip' directory. Read counts before and after trimming are written to the log file.
 
+```
+yeast_lmp_LIB3796 read count before trimming: 4094921
+yeast_lmp_LIB3797 read count before trimming: 2686352
+
+yeast_lmp_LIB3796 read count after trimming: 2628914
+yeast_lmp_LIB3797 read count after trimming: 1673233
+```
+
 ### 5) QC processed LMPs
 a) Calculate fragment coverage from trimmed read count  
 b) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
@@ -123,10 +131,10 @@ kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/tr
 ```
 
 <img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
-
+                 lmp_vs_pe_k27-main.mx.density.png
 c) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
 
-<img src="images/yeast_lmp.pdf"  width="450" height="400">
+<img src="images/yeast_lmp.png"  width="450" height="400">
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
@@ -202,7 +210,7 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 
 mkdir quast
 python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
-``
+```
 
 -------------|----------------
         418  |   Complete BUSCOs
