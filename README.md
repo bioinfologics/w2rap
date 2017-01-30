@@ -35,15 +35,16 @@ b) Use KAT hist to generate a kmer histogram to estimate kmer coverage
 ```
 kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_R?.fastq
 ```
-![] (images/scer_pe_hist.png)
+<img src="images/scer_pe_hist.png"  width="450" height="400">
+
 
 c) Use KAT comp to create a density plot comparing read 1 and read 2
 
 ```
 kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_R1.fastq scer_R2.fastq
 ```
-![] (images/scer_pe_R1vsR2-main.mx.density.png =200x200)
-<img src="images/"  width="200" height="200">
+<img src="images/scer_pe_R1vsR2-main.mx.density.png"  width="450" height="400">
+
 
 d)  Download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map reads and generate a SAM file. 
 
@@ -86,7 +87,7 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_R?.fastq' contigs/a.lines.fasta
 ```
 
-<img src="images/reads_vs_assembly_k31-main.png"  width="450" height="400">
+<img src="images/reads_vs_assembly_k27-main.png"  width="450" height="400">
 
 c) Align genes, QUAST, BUSCO etc.
 
@@ -118,10 +119,14 @@ a) Calculate fragment coverage from trimmed read count
 b) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
 
 ```
-kat comp -t 16 -m 37 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
+kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
 ```
 
+<img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
+
 c) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
+
+<img src="images/yeast_lmp.pdf"  width="450" height="400">
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
@@ -185,6 +190,10 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds
 kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to/pe_R1.fastq /path/to/pe_R2.fastq' /path/to/scaffolds/yeast.scafSeq
 ```
 
+
+<img src="images/reads_vs_scaffolds_k27-main.png"  width="450" height="400">
+
+
 c) Align genes, QUAST, BUSCO etc.
 
 ```
@@ -193,8 +202,15 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 
 mkdir quast
 python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
-```
+``
 
+-------------|----------------
+        418  |   Complete BUSCOs
+        400  |   Complete and single-copy BUSCOs
+        18   |   Complete and duplicated BUSCOs
+        6    |   Fragmented BUSCOs
+        5    |   Missing BUSCOs
+        429  |   Total BUSCO groups searched
 
 ### 8) Generate release
 a) Check for contamination  
