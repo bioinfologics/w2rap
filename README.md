@@ -76,14 +76,17 @@ abyss-fac contigs/a.lines.fasta
 ```
 ![](images/contigs_fac.png)
 
+* Total content: 172982bp
+* N50: 11.78e6bp
+
+
 b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 
 ```
 kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_R?.fastq' contigs/a.lines.fasta
 ```
-![](images/reads_vs_assembly_k31-main.png)
 
-<img src="images/reads_vs_assembly_k31-main.png"  width="200" height="200">
+<img src="images/reads_vs_assembly_k31-main.png"  width="450" height="400">
 
 c) Align genes, QUAST, BUSCO etc.
 
@@ -146,7 +149,11 @@ q2=/path/totrimmed_lmp__R2.fastq
  
 b) Run "prepare->map->scaff" pipeline.  
 
+[//]: # not sure exactly when to  create lins.lst so just do it first
+
 ```
+ls /path/to/trimmed_lmps*fastq | awk -F'_R' '{print $1}' | awk -F '/' '{print $NF}' | sort | uniq > libs.lst
+
 ./finalFusion -t 8 -g yeast -D -K 71 -c ./contigs/a.lines.fasta
 
 FLAGS=""
@@ -167,19 +174,21 @@ python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <
 ```
 
 ### 7) Scaffold validation
-a) Check N50, total content, gaps etc.  
+a) Check N50 and total content.  
 
-```
-```
+* Total content: 11.78e6bp
+* N50: 531425bp
 
 b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds  
 
 ```
+kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to/pe_R1.fastq /path/to/pe_R2.fastq' /path/to/scaffolds/yeast.scafSeq
 ```
 
 c) Align genes, QUAST, BUSCO etc.
 
 ```
+PYTHONPATH=""
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
 
 mkdir quast
