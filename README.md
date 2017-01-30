@@ -114,23 +114,24 @@ Processed LMP files will be written to the 'nextclip' directory. Read counts bef
 a) Calculate fragment coverage from trimmed read count  
 b) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
 
----
+```
 kat comp -t 16 -m 37 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
----
+```
 
 c) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
----
+
+```
 bwa index -p yeast ./contigs/a.lines.fasta
 bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq > lmp2ref.sam
 
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
----
+```
 
 ### 6) Scaffolding
 a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using both the PE and LMP reads to scaffold. 
 
----
+```
 [LIB]
 avg_ins=320
 q1=/path/to/pe_R1.fastq
@@ -141,10 +142,11 @@ avg_ins=12300
 reverse_seq=1
 q1=/path/to/trimmed_lmp__R1.fastq
 q2=/path/totrimmed_lmp__R2.fastq
----
+```
  
 b) Run "prepare->map->scaff" pipeline.  
----
+
+```
 ./finalFusion -t 8 -g yeast -D -K 71 -c ./contigs/a.lines.fasta
 
 FLAGS=""
@@ -155,13 +157,13 @@ NCPUS="32"
 /path/to/SOAPdenovo-127mer map $FLAGS 71 -s $CONFIG_FILE -p $NCPUS -g $PREFIX >>$PREFIX.map.log 2>&1
 
 
-/tgac/workarea/Research-Groups/RG-Bernardo-Clavijo/soap_scripts/SOAPdenovo-127mer scaff -p $NCPUS -g $PREFIX >>$PREFIX.scaff.log 2>&1
----
+/path/to/SOAPdenovo-127mer scaff -p $NCPUS -g $PREFIX >>$PREFIX.scaff.log 2>&1
+```
 
 c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns.
 
 ```
-python SOAP_n_remapper.py <contigPosInscaff_file> <scafSeq_file> <contig_file> <output_file>
+python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <output_file>
 ```
 
 ### 7) Scaffold validation
@@ -177,12 +179,12 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds
 
 c) Align genes, QUAST, BUSCO etc.
 
----
+```
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
 
 mkdir quast
-python/path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
----
+python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+```
 
 
 ### 8) Generate release
