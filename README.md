@@ -91,6 +91,15 @@ kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_R?.fastq'
 
 c) Align genes, QUAST, BUSCO etc.
 
+	Count		|       Type    
+------------ | -----------------------------------
+        419  |   Complete BUSCOs
+        403  |   Complete and single-copy BUSCOs
+        16   |   Complete and duplicated BUSCOs
+        5    |   Fragmented BUSCOs
+        5    |   Missing BUSCOs
+        429  |   Total BUSCO groups searched
+
 ### 4) LMP processing
 Run FastQC to check read qualities etc.
 
@@ -211,14 +220,14 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 mkdir quast
 python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
 ```
-
--------------|----------------
-        418  |   Complete BUSCOs
-        400  |   Complete and single-copy BUSCOs
-        18   |   Complete and duplicated BUSCOs
-        6    |   Fragmented BUSCOs
-        5    |   Missing BUSCOs
-        429  |   Total BUSCO groups searched
+   Count      |       Type
+------------- | ------------------------------------
+        418   |   Complete BUSCOs
+        400   |   Complete and single-copy BUSCOs
+        18    |   Complete and duplicated BUSCOs
+        6     |   Fragmented BUSCOs
+        5     |   Missing BUSCOs
+        429   |   Total BUSCO groups searched
 
 ### 8) Generate release
 a) Check for contamination  
