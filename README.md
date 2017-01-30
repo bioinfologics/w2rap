@@ -43,6 +43,7 @@ c) Use KAT comp to create a density plot comparing read 1 and read 2
 kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_R1.fastq scer_R2.fastq
 ```
 ![] (images/scer_pe_R1vsR2-main.mx.density.png =200x200)
+<img src="images/"  width="200" height="200">
 
 d)  Download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map reads and generate a SAM file. 
 
@@ -81,6 +82,8 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_R?.fastq' contigs/a.lines.fasta
 ```
 ![](images/reads_vs_assembly_k31-main.png)
+
+<img src="images/reads_vs_assembly_k31-main.png"  width="200" height="200">
 
 c) Align genes, QUAST, BUSCO etc.
 
