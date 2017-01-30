@@ -58,7 +58,7 @@ e) Generate an insert size histogram to check the insert size and shape of the d
 ```
 grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
-<img src="images/yeast_pe.png"  width="450" height="400">
+<img src="images/yeast_pe.png"  width="550" height="400">
 
 ### 2) Contigging
 Use the w2rap-contigger to generate contigs from the PE reads.
@@ -131,10 +131,10 @@ kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/tr
 ```
 
 <img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
-                 lmp_vs_pe_k27-main.mx.density.png
+
 c) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
 
-<img src="images/yeast_lmp.png"  width="450" height="400">
+<img src="images/yeast_lmp.png"  width="500" height="400">
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
