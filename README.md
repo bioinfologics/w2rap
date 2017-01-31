@@ -10,6 +10,8 @@ To run the pipeline you will need to install the following;
 * [FASTX toolkit] (http://hannonlab.cshl.edu/fastx_toolkit/)  
 * [Nextclip] (https://github.com/richardmleggett/nextclip/)  
 * Something to calculate assembly stats (eg. [abyss-fac] (http://www.bcgsc.ca/platform/bioinfo/software/abyss))
+* [bioawk](https://github.com/lh3/bioawk)
+* Python with Biopython and Matplotlib installed [python2] (https://www.python.org/downloads/release/python-2711/)
 
 Other tools are optional depending on how much QC and validation you want to perform on your reads and assembly.  We recommend;  
 
@@ -62,13 +64,45 @@ grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if 
 <img src="images/yeast_pe.png" width="550" height="400">
 
 ### 2) Contigging
-Use the w2rap-contigger to generate contigs from the PE reads.  Here we use a kmer length of 200 but you may want to generate assemblies using different kmer lengths and assess each one.
+Use the w2rap-contigger to generate contigs from the PE reads. You need to create a new directory for the intermediate and output files.
+
+The current version of the w2rap contigger runs in 7 steps. By default the contigger will run each of these steps in order, not dumping unnecessary intermediate files. You can use the `--from_step` and `--to_step` options to start from and finish after particular steps. When run this way, the contigger will read the output files from the previous step and dump the necessary files for the next step to run. If you want to dump the output of every step you can use the `--dump_all 1` option.
+
+
+Step # | Description | Outputs
+:---|---|---
+1 | Read loading | binary-formatted reads
+2 | Build small k (k=60) graph from reads | small k graph, read paths
+3 | Build large K graph from small k graph and reads | large K graph, read paths
+4 | Clean large K graph | large K cleaned graph, read paths
+5 | Local assemblies on the large K graph "gaps" | large K completed graph, read paths
+6 | Graph simplification and PathFinder | large K simplified graph, read paths, raw/contig-lines GFA and fasta
+7 | PE-scale scaffolding across gaps in the large K graph | large K simplified graph with jumps, read paths, raw/lines GFA and fasta
+
+Each step can be run individually, by specifying the `--from_step ` and `--to_step`,  or the entire contigger can be run from start to finish. To be able to run from an intermediate step, the preceeding steps must have been run with the `--dump_all` flag set. To run from start to finish with default assembly parameters, run: 
 
 ```
 mkdir contigs
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 -K 200
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 
 ```
 The contigs FASTA is generated in contigs/a.lines.fasta 
+
+
+The number of times a kmer must appear in the reads to be included in the small k graph can be controlled with the `--min_freq` parameter:
+
+```
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 --min_freq 20
+```
+
+Ideally, `--min_freq` should be selected to remove most error kmers, and retain most kmers which are genuinely present in the genome of interest. 
+
+In the above examples we use the default kmer length of 200 but you may want to generate assemblies using different kmer lengths and assess each one. We can vary the value of k used to build the large k graph with the `-K` option, like so:
+
+```
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
+```
+
+More detail about these options, and descriptions of the other options, can be found in the full w2rap paper. 
 
 ### 3) Contig assessment
 a) Check contiguity stats.
@@ -98,7 +132,31 @@ python /path/to/quast.py -o ./quast -R ref/S288C_reference_sequence_R64-2-1_2015
 ```
 When a reference is provided, QUAST generates a report containing useful statistics including an estimation of missassemblies.
 
-![](images/quast_ctg.png)
+
+Genome statistics	 | a.lines
+-------------------- |---------------
+Genome fraction (%)			  |	96.159
+Duplication ratio			  |	1.006
+Largest alignment			  |	466909
+Total aligned length		  |	11728906
+NGA50							  |	160207
+LGA50							  |	25
+Misassemblies					  |
+misassemblies					  |19
+Misassembled contigs length  |	1260681
+Mismatches					  |
+mismatches per 100 kbp		  |84.02
+indels per 100 kbp			  |9.61
+N's per 100 kbp				  |	14.42
+Statistics without reference |	
+contigs						  | 	286
+Largest contig				  |	467657
+Total length					  |	11785235
+Total length (>= 1000 bp)	  | 11696184
+Total length (>= 10000 bp)	  | 11544270
+Total length (>= 50000 bp)	  | 10792181
+Predicted genes	            |
+predicted genes (unique)    |	7313
 
 ```
 python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_data/eukaryota -m genome -f
@@ -153,9 +211,7 @@ kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/tr
 
 <img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
 
-b) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
-
-<img src="images/yeast_lmp.png"  width="500" height="400">
+b) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution. 
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
@@ -164,6 +220,14 @@ bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fas
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
 ```
+
+This is the expected distribution of the insert sizes of library 1: 
+
+<img src="images/yeast_lmp.png"  width="500" height="400">
+
+The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 5000.   
+
+
 
 c) Calculate the fragment coverage from trimmed read count and insert size
 
@@ -179,10 +243,17 @@ q1=/path/to/pe_R1.fastq
 q2=/path/to/pe_R2.fastq
 
 [LIB]
-avg_ins=12300
+avg_ins=5000
 reverse_seq=1
-q1=/path/to/trimmed_lmp__R1.fastq
-q2=/path/totrimmed_lmp__R2.fastq
+q1=/path/to/trimmed_lmp_R1_lib1.fastq
+q2=/path/totrimmed_lmp_R2_lib1.fastq
+
+[LIB]
+avg_ins=9000
+reverse_seq=1
+q1=/path/to/trimmed_lmp_R1_lib2.fastq
+q2=/path/totrimmed_lmp_R2_lib2.fastq
+
 ```
  
 b) Run "prepare->map->scaff" pipeline.  
@@ -229,11 +300,7 @@ kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to
 c) Align genes, QUAST, BUSCO etc.
 
 ```
-PYTHONPATH=""
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
-
-mkdir quast
-python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
 ```
    Count      |       Type
 ------------- | ------------------------------------
@@ -243,6 +310,38 @@ python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_r
         6     |   Fragmented BUSCOs
         5     |   Missing BUSCOs
         429   |   Total BUSCO groups searched
+
+```
+mkdir quast
+python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+```
+
+
+Genome statistics	 | yeast.scafSeq
+-------------------- |---------------
+Genome fraction (%)			  |	96.159
+Duplication ratio			  |	1.051
+Largest alignment			  |	487548
+Total aligned length		  |	11726512
+NGA50							  |	164971
+LGA50							  |	23
+Misassemblies					  |
+misassemblies					  |95
+Misassembled contigs length  |	11382276
+Mismatches					  |
+mismatches per 100 kbp		  |83.22
+indels per 100 kbp			  |9.27
+N's per 100 kbp				  |	4258.81
+Statistics without reference |	
+contigs						  | 	210
+Largest contig				  |	1090329
+Total length					  |	12303836
+Total length (>= 1000 bp)	  | 12216807
+Total length (>= 10000 bp)	  | 12128016
+Total length (>= 50000 bp)	  | 11941412
+Predicted genes	            |
+predicted genes (unique)    |	7333
+
 
 ### 8) Generate release
 a) Check for contamination  
