@@ -90,16 +90,18 @@ kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_pe_R?.fas
 
 This spectra shows we are assembling almost all the content from the reads correctly with no evidence of missassembly.  There is some evidence of reads from the error distribution appearing in the assembly (see the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots).
 
-c) Assess assembly completeness by aligning with QUAST and aligning BUSCO genes.
+c) Assess assembly accuracy and completeness using QUAST and aligning BUSCO genes.
 
 ```
 mkdir quast
 python /path/to/quast.py -o ./quast -R ref/S288C_reference_sequence_R64-2-1_20150113.fsa -t 8 -f ../tutorial_runthrough/contigs/a.lines.fasta
 ```
-TODO: QUAST results
+When a reference is provided, QUAST generates a report containing useful statistics including an estimation of missassemblies.
+
+![](images/quast_ctg.png)
 
 ```
-BUSCO command
+python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_data/eukaryota -m genome -f
 ```
 
 	Count		|       Type    
@@ -112,9 +114,9 @@ BUSCO command
         429  |   Total BUSCO groups searched
 
 ### 4) LMP processing
-Run FastQC to check read metrics for LMP.
+a) Run FastQC to check read metrics for LMP as shown above.
 
-Run Python script to remove Nextera adapters from LMP reads and any PE contamination.  
+b) Run Python script to remove Nextera adapters from LMP reads and any PE contamination.  
 
 ```  
 lmp_processing <read_file_list> <ncpus>  
@@ -142,9 +144,8 @@ yeast_lmp_LIB3796 read count after trimming: 2628914
 yeast_lmp_LIB3797 read count after trimming: 1673233
 ```
 
-### 5) QC processed LMPs
-a) Calculate fragment coverage from trimmed read count  
-b) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
+### 5) QC processed LMPs 
+a) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
 
 ```
 kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
@@ -152,7 +153,7 @@ kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/tr
 
 <img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
 
-c) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
+b) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution
 
 <img src="images/yeast_lmp.png"  width="500" height="400">
 
@@ -163,6 +164,10 @@ bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fas
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
 ```
+
+c) Calculate the fragment coverage from trimmed read count and insert size
+
+TODO
 
 ### 6) Scaffolding
 a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using both the PE and LMP reads to scaffold. 
@@ -217,7 +222,6 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds
 ```
 kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to/pe_R1.fastq /path/to/pe_R2.fastq' /path/to/scaffolds/yeast.scafSeq
 ```
-
 
 <img src="images/reads_vs_scaffolds_k27-main.png"  width="450" height="400">
 
