@@ -19,38 +19,39 @@ Other tools are optional depending on how much QC and validation you want to per
 
 ## w2rap steps using Saccharomyces cerevisiae dataset
 ### 1) QC PE read files
-a) Run FASTQC to check read qualities etc.
+a) Run FASTQC to check read metrics.
 
 ```
 mkdir fastqc
-fastqc -o fastqc scer_R1.fastq scer_R2.fastq
+fastqc -o fastqc scer_pe_R1.fastq scer_pe_R2.fastq
 ```
-FastQC generates an HTML report in the fastqc directory showing various read quality metrics.  You should calculate the read coverage using the read count; 
+FastQC generates an HTML report in the fastqc directory.  You should calculate the read coverage using the read count. 
 
-FastQC shows we have 3,648,316 PE reads (read length 300bp) so we have 3,648,316 * 100 * 2 = 729,663,200 bp coverage   
-The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 729,663,200 / 12,495,682 = 58.4x genome coverage
+![] (images/fastqc.png)
+
+FastQC shows we have 2,519,142 PE reads of length 300bp providing 2,519,142 * 300 * 2 = 1,511,485,200 bp coverage   
+The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 1,511,485,200 / 12,495,682 = 121x genome coverage
  
 b) Use KAT hist to generate a kmer histogram to estimate kmer coverage
 
 ```
-kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_R?.fastq
+kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_pe_R?.fastq
 ```
-<img src="images/scer_pe_hist.png"  width="450" height="400">
+<img src="images/scer_pe_hist.png"  width="500" height="400">
 
 
 c) Use KAT comp to create a density plot comparing read 1 and read 2
 
 ```
-kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_R1.fastq scer_R2.fastq
+kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_pe_R1.fastq scer_pe_R2.fastq
 ```
-<img src="images/scer_pe_R1vsR2-main.mx.density.png"  width="450" height="400">
-
+<img src="images/scer_pe_R1vsR2-main.mx.density.png"  width="500" height="400">
 
 d)  Download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map reads and generate a SAM file. 
 
 ```
 bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
-bwa mem -SP -t 8 scer_ref scer_R?.fastq > pe2ref.sam
+bwa mem -SP -t 8 scer_ref scer_pe_R?.fastq > pe2ref.sam
 ```
 
 e) Generate an insert size histogram to check the insert size and shape of the distribution.
@@ -58,38 +59,48 @@ e) Generate an insert size histogram to check the insert size and shape of the d
 ```
 grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
-<img src="images/yeast_pe.png"  width="550" height="400">
+<img src="images/yeast_pe.png" width="550" height="400">
 
 ### 2) Contigging
-Use the w2rap-contigger to generate contigs from the PE reads.
+Use the w2rap-contigger to generate contigs from the PE reads.  Here we use a kmer length of 200 but you may want to generate assemblies using different kmer lengths and assess each one.
 
 ```
 mkdir contigs
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_R1_san.fastq,scer_R2_san.fastq -o contigs -p scer_k200 -K 200
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 -K 200
 ```
 The contigs FASTA is generated in contigs/a.lines.fasta 
 
 ### 3) Contig assessment
-a) Check N50, total content etc.
+a) Check contiguity stats.
 
 ```
 abyss-fac contigs/a.lines.fasta
 ```
 ![](images/contigs_fac.png)
 
-* Total content: 172982bp
-* N50: 11.78e6bp
-
+We are assembling ~95% of the genome in contigs longer than 500bp.  The contig-N50 is 173 Kb. 
 
 b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 
 ```
-kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_R?.fastq' contigs/a.lines.fasta
+kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_pe_R?.fastq' contigs/a.lines.fasta
 ```
 
-<img src="images/insert.png"  width="450" height="400">
+<img src="images/reads_vs_assembly_k27-main.png"  width="500" height="400">
 
-c) Align genes, QUAST, BUSCO etc.
+This spectra shows we are assembling almost all the content from the reads correctly with no evidence of missassembly.  There is some evidence of reads from the error distribution appearing in the assembly (see the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots).
+
+c) Assess assembly completeness by aligning with QUAST and aligning BUSCO genes.
+
+```
+mkdir quast
+python /path/to/quast.py -o ./quast -R ref/S288C_reference_sequence_R64-2-1_20150113.fsa -t 8 -f ../tutorial_runthrough/contigs/a.lines.fasta
+```
+TODO: QUAST results
+
+```
+BUSCO command
+```
 
 	Count		|       Type    
 ------------ | -----------------------------------
@@ -101,7 +112,7 @@ c) Align genes, QUAST, BUSCO etc.
         429  |   Total BUSCO groups searched
 
 ### 4) LMP processing
-Run FastQC to check read qualities etc.
+Run FastQC to check read metrics for LMP.
 
 Run Python script to remove Nextera adapters from LMP reads and any PE contamination.  
 
