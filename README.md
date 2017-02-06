@@ -34,39 +34,44 @@ FastQC generates an HTML report in the fastqc directory.  You should calculate t
 FastQC shows we have 2,519,142 PE reads of length 300bp providing 2,519,142 * 300 * 2 = 1,511,485,200 bp coverage   
 The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 1,511,485,200 / 12,495,682 = 121x genome coverage
  
-b) Use KAT hist to generate a kmer histogram to estimate kmer coverage
+b) Use KAT hist to generate a kmer histogram to estimate kmer coverage. The histogram shows us how often kmers appear in reads 1 and 2, 
 
 ```
 kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_pe_R?.fastq
 ```
 <img src="images/scer_pe_hist.png"  width="500" height="400">
 
+We can see that as the frequency approaches zero, the number of distinct kmers increases significantly, these kmers are from erroneous reads. There is a relatively symmetrical distribution, centered at approximately 80, with a reasonably small variance. Hence, the estimated kmer coverage is equal to 80.  
 
-c) Use KAT comp to create a density plot comparing read 1 and read 2
+c) Use KAT comp to create a density plot comparing read 1 and read 2. 
 
 ```
 kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_pe_R1.fastq scer_pe_R2.fastq
 ```
 <img src="images/scer_pe_R1vsR2-main.mx.density.png"  width="500" height="400">
 
-d)  Download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map reads and generate a SAM file. 
+This allows us to compare kmer representations from each read set. These should be roughly equal, and in this case they are, as indicated by the yellow peak towards the center.
+
+d)  To enable a more detailed assessment of the quality of the reads, download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map the reads to it, and generate a SAM file. 
 
 ```
 bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
 bwa mem -SP -t 8 scer_ref scer_pe_R?.fastq > pe2ref.sam
 ```
 
-e) Generate an insert size histogram to check the insert size and shape of the distribution.
+e) From the SAM file generated above, we can obtain an insert size histogram to check the insert size and the shape of the distribution.
 
 ```
 grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
 <img src="images/yeast_pe.png" width="550" height="400">
 
-### 2) Contigging
-Use the w2rap-contigger to generate contigs from the PE reads. You need to create a new directory for the intermediate and output files.
+We can se that the insert sizes are roughly symmetrically distributed around 500. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
 
-The current version of the w2rap contigger runs in 7 steps. By default the contigger will run each of these steps in order, not dumping unnecessary intermediate files. You can use the `--from_step` and `--to_step` options to start from and finish after particular steps. When run this way, the contigger will read the output files from the previous step and dump the necessary files for the next step to run. If you want to dump the output of every step you can use the `--dump_all 1` option.
+
+### 2) Contigging
+
+Use the w2rap-contigger to generate contigs from the PE reads. The current version of the w2rap contigger runs in 7 steps: 
 
 
 Step # | Description | Outputs
@@ -79,7 +84,9 @@ Step # | Description | Outputs
 6 | Graph simplification and PathFinder | large K simplified graph, read paths, raw/contig-lines GFA and fasta
 7 | PE-scale scaffolding across gaps in the large K graph | large K simplified graph with jumps, read paths, raw/lines GFA and fasta
 
-Each step can be run individually, by specifying the `--from_step ` and `--to_step`,  or the entire contigger can be run from start to finish. To be able to run from an intermediate step, the preceeding steps must have been run with the `--dump_all` flag set. To run from start to finish with default assembly parameters, run: 
+By default the contigger will run each of these steps in order, not dumping unnecessary intermediate files. Each step can be run individually, by specifying the `--from_step ` and `--to_step`. If you specify the `--to_step`, the contigger will automatically dump the output files from the specified step. To be able to run from any intermediate step, the preceeding steps must have been run with the `--dump_all` flag set. 
+
+You need to create a new directory for the intermediate and output files. To run from start to finish with default assembly parameters, run: 
 
 ```
 mkdir contigs
@@ -94,7 +101,7 @@ The number of times a kmer must appear in the reads to be included in the small 
 w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 --min_freq 20
 ```
 
-Ideally, `--min_freq` should be selected to remove most error kmers, and retain most kmers which are genuinely present in the genome of interest. 
+Ideally, `--min_freq` should be selected to remove most error kmers, and retain most kmers which are genuinely present in the genome of interest. This value can be determined with the help of the kmer histogram from step b) of the QC. 
 
 In the above examples we use the default kmer length of 200 but you may want to generate assemblies using different kmer lengths and assess each one. We can vary the value of k used to build the large k graph with the `-K` option, like so:
 
@@ -130,7 +137,7 @@ c) Assess assembly accuracy and completeness using QUAST and aligning BUSCO gene
 mkdir quast
 python /path/to/quast.py -o ./quast -R ref/S288C_reference_sequence_R64-2-1_20150113.fsa -t 8 -f ../tutorial_runthrough/contigs/a.lines.fasta
 ```
-When a reference is provided, QUAST generates a report containing useful statistics including an estimation of missassemblies.
+When a reference is provided, QUAST generates a report containing useful statistics including an estimation of missassemblies:
 
 
 Genome statistics	 | a.lines
@@ -158,9 +165,13 @@ Total length (>= 50000 bp)	  | 10792181
 Predicted genes	            |
 predicted genes (unique)    |	7313
 
+Run BUSCO like so:
+
 ```
 python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_data/eukaryota -m genome -f
 ```
+
+The proportion of BUSCOs present is assumed to be similar to the proportion of all genes present, so the summary table enables us to estimate how well the assembly captures the genetic content of the genome:
 
 	Count		|       Type    
 ------------ | -----------------------------------
@@ -171,10 +182,11 @@ python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_
         5    |   Missing BUSCOs
         429  |   Total BUSCO groups searched
 
+
 ### 4) LMP processing
 a) Run FastQC to check read metrics for LMP as shown above.
 
-b) Run Python script to remove Nextera adapters from LMP reads and any PE contamination.  
+b) Run the Python script to remove Nextera adapters from LMP reads and any PE contamination.  
 
 ```  
 lmp_processing <read_file_list> <ncpus>  
@@ -192,7 +204,7 @@ eg.
 
 ncpus: the number of CPUs to use.
 
-Processed LMP files will be written to the 'nextclip' directory. Read counts before and after trimming are written to the log file.
+The processed LMP files will be written to the 'nextclip' directory. These should be used in the subsequent scaffolding. The read counts before and after trimming are written to the log file, for the test dataset we get the following before and after values:
 
 ```
 yeast_lmp_LIB3796 read count before trimming: 4094921
@@ -206,7 +218,7 @@ yeast_lmp_LIB3797 read count after trimming: 1673233
 a) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
 
 ```
-kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
+kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
 ```
 
 <img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
@@ -215,7 +227,7 @@ b) Map the reads to a reference and generate an insert size histogram to check t
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
-bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1.fastq /path/to/trimmed_lmp_R2.fastq > lmp2ref.sam
+bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq > lmp2ref.sam
 
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
@@ -225,7 +237,7 @@ This is the expected distribution of the insert sizes of library 1:
 
 <img src="images/yeast_lmp.png"  width="500" height="400">
 
-The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 5000.   
+The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 5000. There is no paired end contamination present, as this would cause another peak closer to the origin.  
 
 
 
@@ -258,7 +270,6 @@ q2=/path/totrimmed_lmp_R2_lib2.fastq
  
 b) Run "prepare->map->scaff" pipeline.  
 
-[//]: # not sure exactly when to  create lins.lst so just do it first
 
 ```
 ls /path/to/trimmed_lmps*fastq | awk -F'_R' '{print $1}' | awk -F '/' '{print $NF}' | sort | uniq > libs.lst
@@ -276,7 +287,10 @@ NCPUS="32"
 /path/to/SOAPdenovo-127mer scaff -p $NCPUS -g $PREFIX >>$PREFIX.scaff.log 2>&1
 ```
 
-c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns.
+If this pipeline runs successfully, the output files with the following extensions should be present, and contain data: .Arc, .bubbleInScaff, .ContigIndex, .contigPosInscaff, .gapSeq, .newContigIndex, .peGrads, .preGraphBasic, .scafSeq, .scafStatistics.
+
+
+c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns using the script included. The three input files are output by SOAP.
 
 ```
 python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <output_file>
@@ -288,6 +302,8 @@ a) Check N50 and total content.
 * Total content: 11.78e6bp
 * N50: 531425bp
 
+The total content is similar to the expected genome size, so the assembly contains roughly the right amount of information. The N50 is reasonable for a genome of this size and complexity.
+
 b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds  
 
 ```
@@ -296,8 +312,9 @@ kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to
 
 <img src="images/reads_vs_scaffolds_k27-main.png"  width="450" height="400">
 
+Again, there is no content from the reads missing in the assembly and no duplication of content, but there are a few erroneos kmers present.
 
-c) Align genes, QUAST, BUSCO etc.
+c) Run QUAST and align sequences to BUSCOs. 
 
 ```
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
@@ -315,7 +332,7 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 mkdir quast
 python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
 ```
-
+As the N50 of the contigs was greater than the average size of a gene, scaffolding did not increase the number of BUSCOs present. 
 
 Genome statistics	 | yeast.scafSeq
 -------------------- |---------------
@@ -342,7 +359,4 @@ Total length (>= 50000 bp)	  | 11941412
 Predicted genes	            |
 predicted genes (unique)    |	7333
 
-
-### 8) Generate release
-a) Check for contamination  
-b) Remove phiX and Illumina adapters
+We can see that the genome statistics have not changed significantly between the contigging and the scaffolding stage. 
