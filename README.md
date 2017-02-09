@@ -19,6 +19,8 @@ Other tools are optional depending on how much QC and validation you want to per
 * [BUSCO] (http://busco.ezlab.org/)
 * [QUAST] (http://quast.sourceforge.net/quast)
 
+This tutorial assumes that you are using a Linux machine. If you do not have access to a Linux machine, you will need to find equivalent tools which run on your operating system to complete some of the steps.
+
 ## w2rap steps using Saccharomyces cerevisiae dataset
 ### 1) QC PE read files
 a) Run FASTQC to check read metrics.
@@ -27,7 +29,7 @@ a) Run FASTQC to check read metrics.
 mkdir fastqc
 fastqc -o fastqc scer_pe_R1.fastq scer_pe_R2.fastq
 ```
-FastQC generates an HTML report in the fastqc directory.  You should calculate the read coverage using the read count. 
+ [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
 
 ![] (images/fastqc.png)
 
@@ -43,46 +45,47 @@ kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_pe_R?.fastq
 
 We can see that as the frequency approaches zero, the number of distinct kmers increases significantly, these kmers are from erroneous reads. There is a relatively symmetrical distribution, centered at approximately 80, with a reasonably small variance. Hence, the estimated kmer coverage is equal to 80.  
 
-c) Use KAT comp to create a density plot comparing read 1 and read 2. 
-
-```
-kat comp -o scer_pe_R1vsR2 -n -t 8 -m 27 -H 100000000 -I 100000000 scer_pe_R1.fastq scer_pe_R2.fastq
-```
-<img src="images/scer_pe_R1vsR2-main.mx.density.png"  width="500" height="400">
-
-This allows us to compare kmer representations from each read set. These should be roughly equal, and in this case they are, as indicated by the yellow peak towards the center.
-
-d)  To enable a more detailed assessment of the quality of the reads, download the S. cerevisiae [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map the reads to it, and generate a SAM file. 
+c)  To enable a more detailed assessment of the quality of the reads, download the S. cerevisiae S288C [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map the reads to it, and generate a SAM file. 
 
 ```
 bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
 bwa mem -SP -t 8 scer_ref scer_pe_R?.fastq > pe2ref.sam
 ```
 
-e) From the SAM file generated above, we can obtain an insert size histogram to check the insert size and the shape of the distribution.
+By checking that a reasonable percentage of your reads map to the reference, you can be conifdent that your sequencing data is of a reasonable quality. You can do this by entering the following command:
+
+```
+samtools view -F 4  pe2ref.sam | cut -f 1 | sort | uniq | wc -l
+```
+
+d) From the SAM file generated above, we can obtain the raw data needed to draw an insert size histogram: 
 
 ```
 grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
+
+Then, simply use your favourite plotting tool to check the insert size and the shape of the distribution.
+
 <img src="images/yeast_pe.png" width="550" height="400">
 
-We can se that the insert sizes are roughly symmetrically distributed around 500. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
+We can see that the insert sizes are roughly symmetrically distributed around 500. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
 
 
 ### 2) Contigging
 
-Use the w2rap-contigger to generate contigs from the PE reads. The current version of the w2rap contigger runs in 7 steps: 
+Use the w2rap-contigger to generate contigs from the PE reads. The current version of the w2rap contigger runs in 8 steps: 
 
 
 Step # | Description | Outputs
 :---|---|---
 1 | Read loading | binary-formatted reads
-2 | Build small k (k=60) graph from reads | small k graph, read paths
-3 | Build large K graph from small k graph and reads | large K graph, read paths
-4 | Clean large K graph | large K cleaned graph, read paths
-5 | Local assemblies on the large K graph "gaps" | large K completed graph, read paths
-6 | Graph simplification and PathFinder | large K simplified graph, read paths, raw/contig-lines GFA and fasta
-7 | PE-scale scaffolding across gaps in the large K graph | large K simplified graph with jumps, read paths, raw/lines GFA and fasta
+2 | Kmer counting | raw kmer data
+3 | Build small k (k=60) graph from reads | small k graph, read paths
+4 | Build large K graph from small k graph and reads | large K graph, read paths
+5 | Clean large K graph | large K cleaned graph, read paths
+6 | Local assemblies on the large K graph "gaps" | large K completed graph, read paths
+7 | Graph simplification and PathFinder | large K simplified graph, read paths, raw/contig-lines GFA and fasta
+8 | PE-scale scaffolding across gaps in the large K graph | large K simplified graph with jumps, read paths, raw/lines GFA and fasta
 
 By default the contigger will run each of these steps in order, not dumping unnecessary intermediate files. Each step can be run individually, by specifying the `--from_step ` and `--to_step`. If you specify the `--to_step`, the contigger will automatically dump the output files from the specified step. To be able to run from any intermediate step, the preceeding steps must have been run with the `--dump_all` flag set. 
 
@@ -109,7 +112,11 @@ In the above examples we use the default kmer length of 200 but you may want to 
 w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
 ```
 
-More detail about these options, and descriptions of the other options, can be found in the full w2rap paper. 
+More detail about these options, and descriptions of the other options, can be found in the full w2rap paper, or by running:
+
+```
+w2rap-contigger/bin/w2rap-contigger --help
+``` 
 
 ### 3) Contig assessment
 a) Check contiguity stats.
@@ -119,7 +126,7 @@ abyss-fac contigs/a.lines.fasta
 ```
 ![](images/contigs_fac.png)
 
-We are assembling ~95% of the genome in contigs longer than 500bp.  The contig-N50 is 173 Kb. 
+We are assembling 11.78e6 bps of our 12Mb genome in contigs longer than 500bp.  The contig-N50 is 173 Kb. The expected number of contigs and N50 will vary significantly between genomes, in particular more complex and repetitive genomes may be more fragmented and hence have a lower N50. 
 
 b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 
@@ -184,6 +191,8 @@ The proportion of BUSCOs present is assumed to be similar to the proportion of a
 
 
 ### 4) LMP processing
+There are two LMP libraries. To avoid repetition, we have taken some of these steps for one library only, but they should be performed with both.
+ 
 a) Run FastQC to check read metrics for LMP as shown above.
 
 b) Run the Python script to remove Nextera adapters from LMP reads and any PE contamination.  
@@ -219,9 +228,13 @@ a) Use KAT comp to check for LMP representation issues by comparing LMP reads to
 
 ```
 kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
+
+kat plot spectra-mx -o lmp_vs_pe_spectra_mx.png -x 200 --intersection lmp_vs_pe-main.mx
 ```
 
 <img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
+
+As they come from the same sample, there should be no content in the LMP data which is not present in the PE data, and vice versa. Hence, there should be no exclusive content.
 
 b) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution. 
 
@@ -246,6 +259,9 @@ c) Calculate the fragment coverage from trimmed read count and insert size
 TODO
 
 ### 6) Scaffolding
+
+s_scaff is an edited version of SOAPdenovo which is better suited to complex genomes, and more configurable.
+
 a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using both the PE and LMP reads to scaffold. 
 
 ```
@@ -272,22 +288,21 @@ b) Run "prepare->map->scaff" pipeline.
 
 
 ```
-ls /path/to/trimmed_lmps*fastq | awk -F'_R' '{print $1}' | awk -F '/' '{print $NF}' | sort | uniq > libs.lst
+/path/to/s_prepare -t 8 -g yeast -K 71 -c ./contigs/a.lines.fasta 2>&1
 
-./finalFusion -t 8 -g yeast -D -K 71 -c ./contigs/a.lines.fasta
-
-FLAGS=""
 PREFIX="yeast"
 CONFIG_FILE="./soap.config"
 NCPUS="32"
 
-/path/to/SOAPdenovo-127mer map $FLAGS 71 -s $CONFIG_FILE -p $NCPUS -g $PREFIX >>$PREFIX.map.log 2>&1
+s_map -k 31 -s $CONFIG_FILE -p $NCPUS -g $PREFIX > $PREFIX.map.log 2>&1
 
 
-/path/to/SOAPdenovo-127mer scaff -p $NCPUS -g $PREFIX >>$PREFIX.scaff.log 2>&1
+s_scaff -p $NCPUS -g $PREFIX > $PREFIX.scaff.log 2>&1
 ```
 
-If this pipeline runs successfully, the output files with the following extensions should be present, and contain data: .Arc, .bubbleInScaff, .ContigIndex, .contigPosInscaff, .gapSeq, .newContigIndex, .peGrads, .preGraphBasic, .scafSeq, .scafStatistics.
+The prepare script converts the fasta file to the format needed for SOAP mapping. For the majority of use cases, it is suitable to use K = 71. In s_map, K must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs. 
+
+If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension 'scafSeq.'
 
 
 c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns using the script included. The three input files are output by SOAP.
