@@ -66,7 +66,7 @@ grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if 
 
 Then, simply use your favourite plotting tool to check the insert size and the shape of the distribution.
 
-<img src="images/yeast_pe.png" width="550" height="400">
+<img src="images/yeast_pe_insert_size.png" width="550" height="400">
 
 We can see that the insert sizes are roughly symmetrically distributed around 500. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
 
@@ -134,7 +134,7 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
 kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_pe_R?.fastq' contigs/a.lines.fasta
 ```
 
-<img src="images/reads_vs_assembly_k27-main.png"  width="500" height="400">
+<img src="images/pe_vs_contigs_k27-main.mx.spectra-cn.png"  width="500" height="400">
 
 This spectra shows we are assembling almost all the content from the reads correctly with no evidence of missassembly.  There is some evidence of reads from the error distribution appearing in the assembly (see the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots).
 
@@ -149,28 +149,27 @@ When a reference is provided, QUAST generates a report containing useful statist
 
 Genome statistics	 | a.lines
 -------------------- |---------------
-Genome fraction (%)			  |	96.159
-Duplication ratio			  |	1.006
-Largest alignment			  |	466909
-Total aligned length		  |	11728906
-NGA50							  |	160207
-LGA50							  |	25
+Genome fraction (%)			  |	91.919
+Duplication ratio			  |	1.033
+Largest alignment			  |	47316
+Total aligned length		  |	11535940
+NGA50							  |	9669
+LGA50							  |	381
 Misassemblies					  |
-misassemblies					  |19
-Misassembled contigs length  |	1260681
+misassemblies					  |28
+Misassembled contigs length  |	826088
 Mismatches					  |
-mismatches per 100 kbp		  |84.02
-indels per 100 kbp			  |9.61
-N's per 100 kbp				  |	14.42
+mismatches per 100 kbp		  |3.19
+indels per 100 kbp			  |1.56
+N's per 100 kbp				  |	55.41
 Statistics without reference |	
-contigs						  | 	286
-Largest contig				  |	467657
+contigs						  | 	1723
+Largest contig				  |	76827
 Total length					  |	11785235
-Total length (>= 1000 bp)	  | 11696184
-Total length (>= 10000 bp)	  | 11544270
-Total length (>= 50000 bp)	  | 10792181
-Predicted genes	            |
-predicted genes (unique)    |	7313
+Total length (>= 1000 bp)	  | 11480625
+Total length (>= 10000 bp)	  | 5930056
+Total length (>= 50000 bp)	  | 282022
+
 
 Run BUSCO like so:
 
@@ -182,11 +181,11 @@ The proportion of BUSCOs present is assumed to be similar to the proportion of a
 
 	Count		|       Type    
 ------------ | -----------------------------------
-        419  |   Complete BUSCOs
-        403  |   Complete and single-copy BUSCOs
-        16   |   Complete and duplicated BUSCOs
-        5    |   Fragmented BUSCOs
-        5    |   Missing BUSCOs
+        416  |   Complete BUSCOs
+        300  |   Complete and single-copy BUSCOs
+        116  |   Complete and duplicated BUSCOs
+        7    |   Fragmented BUSCOs
+        6    |   Missing BUSCOs
         429  |   Total BUSCO groups searched
 
 
@@ -216,23 +215,23 @@ ncpus: the number of CPUs to use.
 The processed LMP files will be written to the 'nextclip' directory. These should be used in the subsequent scaffolding. The read counts before and after trimming are written to the log file, for the test dataset we get the following before and after values:
 
 ```
-yeast_lmp_LIB3796 read count before trimming: 4094921
-yeast_lmp_LIB3797 read count before trimming: 2686352
+LIB6470 read count before trimming: 576252
+LIB6471 read count before trimming: 576252
 
-yeast_lmp_LIB3796 read count after trimming: 2628914
-yeast_lmp_LIB3797 read count after trimming: 1673233
+LIB6470 read count after trimming: 435974
+LIB6471 read count after trimming: 443411
 ```
 
 ### 5) QC processed LMPs 
 a) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
 
 ```
-kat comp -n -t 16 -m 27 -n -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
+kat comp -n -t 16 -m 27 -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
 
-kat plot spectra-mx -o lmp_vs_pe_spectra_mx.png -x 200 --intersection lmp_vs_pe-main.mx
+kat plot spectra-mx -o lmp_vs_pe_spectra_mx.png -x 100 --intersection lmp_vs_pe-main.mx
 ```
 
-<img src="images/lmp_vs_pe_k27-main.mx.density.png"  width="450" height="400">
+<img src="images/lmp_vs_pe_spectra_mx.png"  width="450" height="400">
 
 As they come from the same sample, there should be no content in the LMP data which is not present in the PE data, and vice versa. Hence, there should be no exclusive content.
 
@@ -240,7 +239,7 @@ b) Map the reads to a reference and generate an insert size histogram to check t
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
-bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq > lmp2ref.sam
+bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq > lmp2contig.sam
 
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
@@ -280,7 +279,7 @@ q2=/path/totrimmed_lmp_R2_lib1.fastq
 avg_ins=9000
 reverse_seq=1
 q1=/path/to/trimmed_lmp_R1_lib2.fastq
-q2=/path/totrimmed_lmp_R2_lib2.fastq
+q2=/path/to/trimmed_lmp_R2_lib2.fastq
 
 ```
  
@@ -336,11 +335,11 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 ```
    Count      |       Type
 ------------- | ------------------------------------
-        418   |   Complete BUSCOs
-        400   |   Complete and single-copy BUSCOs
-        18    |   Complete and duplicated BUSCOs
+        417   |   Complete BUSCOs
+        301   |   Complete and single-copy BUSCOs
+        116   |   Complete and duplicated BUSCOs
         6     |   Fragmented BUSCOs
-        5     |   Missing BUSCOs
+        6     |   Missing BUSCOs
         429   |   Total BUSCO groups searched
 
 ```
