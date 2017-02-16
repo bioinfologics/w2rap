@@ -1,8 +1,9 @@
 # W2rap: the WGS (Wheat) Robust Assembly Pipeline 
-This is a short tutorial on how to use w2rap to get from raw data to scaffolds. We have provided a test *Saccharomyces cerevisiae* dataset consisting of a paired-end library and a long mate-pair library.
+This is a short tutorial on how to use w2rap to get from raw data to scaffolds. We have provided a test *Saccharomyces cerevisiae* dataset consisting of one paired-end library and two long mate-pair libraries.
 
  * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
- * LIBXXXX\_R1.fastq, LIBXXXX\_R2.fastq - LMP read files
+ * LIB6470\_R1.fastq, LIB6470\_R2.fastq - LMP read files from library 1
+ * LIB6471\_R1.fastq, LIB6471\_R2.fastq - LMP read files from library 2
 
 We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes which can also be downloaded from the [Saccharomyces Genome Database] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
@@ -15,7 +16,6 @@ To run the pipeline you will need to install the following;
 * [FASTX toolkit] (http://hannonlab.cshl.edu/fastx_toolkit/)  
 * [Nextclip] (https://github.com/richardmleggett/nextclip/)  
 * Something to calculate assembly stats (eg. [abyss-fac] (http://www.bcgsc.ca/platform/bioinfo/software/abyss))
-* [bioawk](https://github.com/lh3/bioawk)
 * [Python] (https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
 
 Other tools are optional depending on how much QC and validation you want to perform on your reads and assembly.  We recommend;  
@@ -248,6 +248,9 @@ Map the reads to the reference (or the contigs generated in step 2) and generate
 bwa index -p yeast ./contigs/a.lines.fasta
 bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq > lmp2contig.sam
 
+grep -v '@SQ' lmp1ref.sam | grep -v '@PG' | awk -v binsize=100 '{if ($5==60) {if ($9<0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=100 '{print $2*binsize","$1}' > lmp1ref.is
+
+# old bit
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
 ```
