@@ -53,8 +53,8 @@ The histogram shows us how often kmers appear in the PE reads. We can see that a
 To enable a more detailed assessment of the quality of the reads, map them to the S288C reference seqeunce, and generate a SAM file. 
 
 ```
-bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
-bwa mem -SP -t 8 scer_ref LIB4432_R?.fastq > pe2ref.sam
+bwa index -p S288C_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+bwa mem -SP -t 8 S288C_ref LIB4432_R?.fastq > pe2ref.sam
 ```
 
 By checking that a reasonable percentage of your reads map to the reference, you can be confident that your sequencing data is of a reasonable quality. The following command gives a count of reads mapping to the reference:
@@ -66,7 +66,7 @@ samtools view -F 4  pe2ref.sam | cut -f 1 | sort | uniq | wc -l
 From the SAM file generated above, we can obtain the raw data needed to draw an insert size histogram (using read pairs mapping with quality 60 only) as follows: 
 
 ```
-grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5==60) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
+grep -v '@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5==60) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
 
 Then use your favourite plotting tool to check the insert size and the shape of the distribution.
@@ -242,7 +242,7 @@ kat plot spectra-mx -o lmp_vs_pe_spectra_mx.png -x 100 --intersection lmp_vs_pe-
 This shows that the majority of content is shared between PE and LMP reads.
 
 ### b) Check the LMP insert size distribution
-Map the reads to a reference (or teh contigs generated in step 2) and generate an insert size histogram to check the insert size and the shape of the distribution. 
+Map the reads to the reference (or the contigs generated in step 2) and generate an insert size histogram to check the insert size and the shape of the distribution. 
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
