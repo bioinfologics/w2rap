@@ -1,10 +1,10 @@
 # W2rap: the WGS (Wheat) Robust Assembly Pipeline 
 This is a short tutorial on how to use w2rap to get from raw data to scaffolds. We have provided a test *Saccharomyces cerevisiae* dataset consisting of a paired-end library and a long mate-pair library.
 
- * LIBXXXX\_R1.fastq, LIBXXXX\_R2.fastq - PE read files
+ * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
  * LIBXXXX\_R1.fastq, LIBXXXX\_R2.fastq - LMP read files
 
-We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes which can be downloaded from [here] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
+We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes which can also be downloaded from the [Saccharomyces Genome Database] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
 ## Software required
 To run the pipeline you will need to install the following;  
@@ -31,7 +31,7 @@ This tutorial assumes that you are using a Linux machine. If you do not have acc
 
 ```
 mkdir fastqc
-fastqc -o fastqc scer_pe_R1.fastq scer_pe_R2.fastq
+fastqc -o fastqc LIB4432_R1.fastq LIB4432_R2.fastq
 ```
 [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
 
@@ -43,7 +43,7 @@ The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is
 ### b) Use KAT hist to estimate kmer coverage. 
 
 ```
-kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_pe_R?.fastq
+kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 LIB4432_R?.fastq
 ```
 <img src="images/scer_pe_hist.png"  width="500" height="400">
 
@@ -54,7 +54,7 @@ To enable a more detailed assessment of the quality of the reads, map them to th
 
 ```
 bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
-bwa mem -SP -t 8 scer_ref scer_pe_R?.fastq > pe2ref.sam
+bwa mem -SP -t 8 scer_ref LIB4432_R?.fastq > pe2ref.sam
 ```
 
 By checking that a reasonable percentage of your reads map to the reference, you can be confident that your sequencing data is of a reasonable quality. The following command gives a count of reads mapping to the reference:
