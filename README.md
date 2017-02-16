@@ -97,15 +97,14 @@ You need to create a new directory for the intermediate and output files. To run
 
 ```
 mkdir contigs
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 
 ```
-The contigs FASTA is generated in contigs/a.lines.fasta 
-
+The contigs FASTA is generated in ```contigs/a.lines.fasta```
 
 The number of times a kmer must appear in the reads to be included in the small k graph can be controlled with the `--min_freq` parameter:
 
 ```
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 --min_freq 20
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 --min_freq 20
 ```
 
 Ideally, `--min_freq` should be selected to remove erronous kmers, and retain most kmers which are genuinely present in the genome of interest. This value can be determined with the help of the kmer histogram from the kmer spectra generated in Step 1 b). 
@@ -113,7 +112,7 @@ Ideally, `--min_freq` should be selected to remove erronous kmers, and retain mo
 In the above examples we use the default kmer length of 200 but you may want to generate assemblies using different kmer lengths and assess each one. We can vary the value of k used to build the large k graph with the `-K` option, like so:
 
 ```
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
 ```
 
 More detail about these options, and descriptions of the other options, can be found in the full w2rap paper, or by running the contigger with the `--help` parameter:
@@ -132,7 +131,7 @@ We are assembling 11.54 Mb of the 12 Mb *S. cerevisiae*  genome into 1723 contig
 Use KAT comp to compare kmer content of PE reads to kmer content of the contigs using a spectra-cn plot. You expect to see all the content from the reads represented in the contigs and no new content (which could represent missassemblies). See the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots. 
 
 ```
-kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_pe_R?.fastq' contigs/a.lines.fasta
+kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' contigs/a.lines.fasta
 ```
 
 <img src="images/pe_vs_contigs_k27-main.mx.spectra-cn.png"  width="500" height="400">
