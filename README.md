@@ -165,7 +165,7 @@ N's per 100 kbp				  |	55.41
 Statistics without reference |	
 contigs						  | 	1723
 Largest contig				  |	76827
-Total length					  |	11785235
+Total length					  |	11732078
 Total length (>= 1000 bp)	  | 11480625
 Total length (>= 10000 bp)	  | 5930056
 Total length (>= 50000 bp)	  | 282022
@@ -181,11 +181,11 @@ The proportion of BUSCOs present is assumed to be similar to the proportion of a
 
 	Count		|       Type    
 ------------ | -----------------------------------
-        416  |   Complete BUSCOs
-        300  |   Complete and single-copy BUSCOs
-        116  |   Complete and duplicated BUSCOs
-        7    |   Fragmented BUSCOs
-        6    |   Missing BUSCOs
+        407  |   Complete BUSCOs
+        379  |   Complete and single-copy BUSCOs
+        28  |   Complete and duplicated BUSCOs
+        13   |   Fragmented BUSCOs
+        9    |   Missing BUSCOs
         429  |   Total BUSCO groups searched
 
 
@@ -301,7 +301,7 @@ s_scaff -p $NCPUS -g $PREFIX > $PREFIX.scaff.log 2>&1
 
 The prepare script converts the fasta file to the format needed for SOAP mapping. For the majority of use cases, it is suitable to use K = 71. In s_map, K must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs. 
 
-If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension 'scafSeq.'
+If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension 'scafSeq.' Before proceeding from the map step to the scaffolding step, you should check that the mapping has preceeded as expected, as if there are any problems at this stage, then the scaffolding step will not give good results. In particular, you should check that a reasonable proportion of reads have mapped to the contigs. 
 
 
 c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns using the script included. The three input files are output by SOAP.
@@ -324,7 +324,7 @@ b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds
 kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to/pe_R1.fastq /path/to/pe_R2.fastq' /path/to/scaffolds/yeast.scafSeq
 ```
 
-<img src="images/reads_vs_scaffolds_k27-main.png"  width="450" height="400">
+<img src="images/lmp_vs_pe-main.mx.spectra-cn.png"  width="450" height="400">
 
 Again, there is no content from the reads missing in the assembly and no duplication of content, but there are a few erroneos kmers present.
 
@@ -344,33 +344,33 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 
 ```
 mkdir quast
-python /path/to/quast/quast.py -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+python /path/to/quast/quast.py --extensive-mis-size 10000 -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
 ```
-As the N50 of the contigs was greater than the average size of a gene, scaffolding did not increase the number of BUSCOs present. 
+The `--extensive-mis-size` parameter sets a threshold for what is considered to be a local misassembly. By specifying this to be larger than the default value, we exclude very small rearrangements from the misassembly count. As the N50 of the contigs was greater than the average size of a gene, scaffolding did not increase the number of BUSCOs present. 
 
 Genome statistics	 | yeast.scafSeq
 -------------------- |---------------
-Genome fraction (%)			  |	96.159
-Duplication ratio			  |	1.051
-Largest alignment			  |	487548
-Total aligned length		  |	11726512
-NGA50							  |	164971
-LGA50							  |	23
+Genome fraction (%)			  |	93.625
+Duplication ratio			  |	1.260
+Largest alignment			  |	414518
+Total aligned length		  |	13152876
+NGA50							  |	104027
+LGA50							  |	31
 Misassemblies					  |
-misassemblies					  |95
-Misassembled contigs length  |	11382276
+misassemblies					  |71
+Misassembled contigs length  |	4766054
 Mismatches					  |
-mismatches per 100 kbp		  |83.22
-indels per 100 kbp			  |9.27
-N's per 100 kbp				  |	4258.81
+mismatches per 100 kbp		  | 4.10
+indels per 100 kbp			  |1.78
+N's per 100 kbp				  |	8291.35
 Statistics without reference |	
-contigs						  | 	210
-Largest contig				  |	1090329
-Total length					  |	12303836
-Total length (>= 1000 bp)	  | 12216807
-Total length (>= 10000 bp)	  | 12128016
-Total length (>= 50000 bp)	  | 11941412
+contigs						  | 	279
+Largest contig				  |	609133
+Total length					  |	14473629
+Total length (>= 1000 bp)	  | 14327082
+Total length (>= 10000 bp)	  | 14176994
+Total length (>= 50000 bp)	  | 11742048
 Predicted genes	            |
-predicted genes (unique)    |	7333
+predicted genes (unique)    |	7354
 
-We can see that the genome statistics have not changed significantly between the contigging and the scaffolding stage. 
+We can see that the scaffolder has successfully put together a large number of contigs without significantly increasing the number of misassemblies, which indicates that the scaffolds have been constructed correctly. 
