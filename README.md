@@ -270,18 +270,22 @@ q1=/path/to/pe_R1.fastq
 q2=/path/to/pe_R2.fastq
 
 [LIB]
-avg_ins=5000
+avg_ins=7000
 reverse_seq=1
 q1=/path/to/trimmed_lmp_R1_lib1.fastq
-q2=/path/totrimmed_lmp_R2_lib1.fastq
+q2=/path/to/trimmed_lmp_R2_lib1.fastq
 
 [LIB]
-avg_ins=9000
+avg_ins=15000
 reverse_seq=1
 q1=/path/to/trimmed_lmp_R1_lib2.fastq
 q2=/path/to/trimmed_lmp_R2_lib2.fastq
 
 ```
+
+The config file must be correctly configured, and there are lots of options to customize the configuration, details of which can be found in the [SOAP denovo documentation] (http://soap.genomics.org.cn/soapdenovo.html). It is advisable to familiarize yourself with these by varying them and observing the impact different parameters have on the final assembly.
+
+We have kept our configuration file relatively simple, specifying only the paths to the data sets to be used for scaffolding, their type, and their insert size. The `reverse_seq` field indicates whether we have paired end (= 0) or long mate pair (= 1) read sets.
  
 b) Run "prepare->map->scaff" pipeline.  
 
@@ -301,8 +305,43 @@ s_scaff -p $NCPUS -g $PREFIX > $PREFIX.scaff.log 2>&1
 
 The prepare script converts the fasta file to the format needed for SOAP mapping. For the majority of use cases, it is suitable to use K = 71. In s_map, K must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs. 
 
-If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension 'scafSeq.' Before proceeding from the map step to the scaffolding step, you should check that the mapping has preceeded as expected, as if there are any problems at this stage, then the scaffolding step will not give good results. In particular, you should check that a reasonable proportion of reads have mapped to the contigs. 
+Before proceeding from the map step to the scaffolding step, you should check that the mapping results are as expected, as if there are any problems at this stage, then the scaffolding step will not give good results. In particular, you should check that a reasonable proportion of reads have mapped to the contigs. The key part of the log for `s_map` for our example is:
 
+```
+Total reads         4623823
+Reads in gaps       326317
+Ratio               7.1%
+Reads on contigs    3012707
+Ratio               65.2%
+
+```
+
+The reads in gaps are reads which do not fall on a contig at all. As we have reasonable read coverage and have used a kat plot o check that information from the reads is not missing in the contigs, most of the reads should map at least partially to the contigs, which they do. The total number of reads is larger than the number of reads in gaps plus the number of reads on contigs because some reads map partially to a contig, and hang off the end. 
+
+After the mapping has completed successfully, it's time to do the scaffolding. By default, `s_scaff` will scaffold in insert size order, from the smallest to the largest. To change this order, specify the `rank` field in the configuration file. Though `s_scaff` makes its own insert size estimates, it bases this ordering on the user specified insert sizes, so it is important that these are correct. You can check the following part of the log to make sure that the insert sizes calculated by `s_scaff` are similar to those specified in the config file:
+
+ ```
+ 
+ For insert size: 300
+ Total PE links                      1141797
+ Normal PE links on same contig      1131394
+ Incorrect oriented PE links         1239
+ PE links of too small insert size   7894
+ PE links of too large insert size   0
+ Correct PE links                    1089
+ Accumulated connections             348
+Use contigs longer than 300 to estimate insert size:
+ PE links               1131017
+ Average insert size    319
+ SD                     138
+ 
+ ```
+ 
+If the `Aevrage insert size` field is missing, then the software has not been able to calculate it, which indiates that there is a serious issue with either the data or the configuration. As most contigs are significantly longer than the average insert size of the paired end library. most paired end reads map to the same contig. A PE link is a part of the graph which a read and its pair connect. Their distance apart on the graph must be consistent with the insert size. If two edges of the graph are linked by a read pair, then we have an 'Accumulated connection.'
+
+The scaffolding begins after the reads have been loaded onto the graph.  
+
+If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension 'scafSeq.' 
 
 c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns using the script included. The three input files are output by SOAP.
 
@@ -326,7 +365,7 @@ kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to
 
 <img src="images/lmp_vs_pe-main.mx.spectra-cn.png"  width="450" height="400">
 
-Again, there is no content from the reads missing in the assembly and no duplication of content, but there are a few erroneos kmers present.
+Again, there is no content from the reads missing in the assembly and no duplication of content, but there are a few erroneous kmers present.
 
 c) Run QUAST and align sequences to BUSCOs. 
 
