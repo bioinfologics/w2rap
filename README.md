@@ -1,17 +1,22 @@
-# w2rap
-WGS (Wheat) Robust Assembly Pipeline
+# W2rap: the WGS (Wheat) Robust Assembly Pipeline 
+This is a short tutorial on how to use w2rap to get from raw data to scaffolds. We have provided a test *Saccharomyces cerevisiae* dataset consisting of one paired-end library and two long mate-pair libraries.
+
+ * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
+ * LIB6470\_R1.fastq, LIB6470\_R2.fastq - LMP read files from library 1
+ * LIB6471\_R1.fastq, LIB6471\_R2.fastq - LMP read files from library 2
+
+We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes which can also be downloaded from the [Saccharomyces Genome Database] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
 ## Software required
 To run the pipeline you will need to install the following;  
 
-* [KAT] (https://github.com/TGAC/KAT)  
+* [K-mer Analysis Toolkit (KAT)] (https://github.com/TGAC/KAT)  
 * [BWA] (https://sourceforge.net/projects/bio-bwa/files/) (or other short-read aligner)  
 * [FLASh] (https://ccb.jhu.edu/software/FLASH/)  
 * [FASTX toolkit] (http://hannonlab.cshl.edu/fastx_toolkit/)  
 * [Nextclip] (https://github.com/richardmleggett/nextclip/)  
 * Something to calculate assembly stats (eg. [abyss-fac] (http://www.bcgsc.ca/platform/bioinfo/software/abyss))
-* [bioawk](https://github.com/lh3/bioawk)
-* Python with Biopython and Matplotlib installed [python2] (https://www.python.org/downloads/release/python-2711/)
+* [Python] (https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
 
 Other tools are optional depending on how much QC and validation you want to perform on your reads and assembly.  We recommend;  
 
@@ -21,57 +26,56 @@ Other tools are optional depending on how much QC and validation you want to per
 
 This tutorial assumes that you are using a Linux machine. If you do not have access to a Linux machine, you will need to find equivalent tools which run on your operating system to complete some of the steps.
 
-## w2rap steps using Saccharomyces cerevisiae dataset
-### 1) QC PE read files
-a) Run FASTQC to check read metrics.
+## Step 1: QC PE read files
+### a) Run FASTQC to check read metrics.
 
 ```
 mkdir fastqc
-fastqc -o fastqc scer_pe_R1.fastq scer_pe_R2.fastq
+fastqc -o fastqc LIB4432_R1.fastq LIB4432_R2.fastq
 ```
- [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
+[FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
 
 ![] (images/fastqc.png)
 
-FastQC shows we have 2,519,142 PE reads of length 300bp providing 2,519,142 * 300 * 2 = 1,511,485,200 bp coverage   
-The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 1,511,485,200 / 12,495,682 = 121x genome coverage
+FastQC shows we have 1,641,301 PE reads of length 151bp providing 1,641,301 * 151 * 2 = 495,672,902 bp coverage   
+The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 495,672,902 / 12,495,682 = **39.7x genome coverage**
  
-b) Use KAT hist to generate a kmer histogram to estimate kmer coverage. The histogram shows us how often kmers appear in reads 1 and 2, 
+### b) Use KAT hist to estimate kmer coverage. 
 
 ```
-kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 scer_pe_R?.fastq
+kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 LIB4432_R?.fastq
 ```
 <img src="images/scer_pe_hist.png"  width="500" height="400">
 
-We can see that as the frequency approaches zero, the number of distinct kmers increases significantly, these kmers are from erroneous reads. There is a relatively symmetrical distribution, centered at approximately 80, with a reasonably small variance. Hence, the estimated kmer coverage is equal to 80.  
+The histogram shows us how often kmers appear in the PE reads. We can see that at frequency < 5, the number of distinct kmers increases significantly, these kmers are from erroneous reads. The kmers we want to assemble are from the main distribution. This is a relatively symmetrical distribution, centered at approximately 30, with a reasonably small variance. Hence, the estimated kmer coverage is equal to 30.  
 
-c)  To enable a more detailed assessment of the quality of the reads, download the S. cerevisiae S288C [reference] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/), map the reads to it, and generate a SAM file. 
+### c) Check insert size and distribution.
+To enable a more detailed assessment of the quality of the reads, map them to the S288C reference seqeunce, and generate a SAM file. 
 
 ```
-bwa index -p scer_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
-bwa mem -SP -t 8 scer_ref scer_pe_R?.fastq > pe2ref.sam
+bwa index -p S288C_ref -a bwtsw ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+bwa mem -SP -t 8 S288C_ref LIB4432_R?.fastq > pe2ref.sam
 ```
 
-By checking that a reasonable percentage of your reads map to the reference, you can be conifdent that your sequencing data is of a reasonable quality. You can do this by entering the following command:
+By checking that a reasonable percentage of your reads map to the reference, you can be confident that your sequencing data is of a reasonable quality. The following command gives a count of reads mapping to the reference:
 
 ```
 samtools view -F 4  pe2ref.sam | cut -f 1 | sort | uniq | wc -l
 ```
 
-d) From the SAM file generated above, we can obtain the raw data needed to draw an insert size histogram: 
+From the SAM file generated above, we can obtain the raw data needed to draw an insert size histogram (using read pairs mapping with quality 60 only) as follows: 
 
 ```
-grep -v ‘@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5>40) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
+grep -v '@SQ' pe2ref.sam | grep -v '@PG' | awk -v binsize=20 '{if ($5==60) {if ($9>0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=20 '{print $2*binsize","$1}' > pe2ref.is
 ```
 
-Then, simply use your favourite plotting tool to check the insert size and the shape of the distribution.
+Then use your favourite plotting tool to check the insert size and the shape of the distribution.
 
-<img src="images/yeast_pe_insert_size.png" width="550" height="400">
+<img src="images/yeast_pe_insert_size.png" width="700" height="350">
 
-We can see that the insert sizes are roughly symmetrically distributed around 500. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
+We can see that the insert sizes are roughly symmetrically distributed around 250. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
 
-
-### 2) Contigging
+## Step 2: Contigging
 
 Use the w2rap-contigger to generate contigs from the PE reads. The current version of the w2rap contigger runs in 8 steps: 
 
@@ -93,52 +97,48 @@ You need to create a new directory for the intermediate and output files. To run
 
 ```
 mkdir contigs
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 
 ```
-The contigs FASTA is generated in contigs/a.lines.fasta 
-
+The contigs FASTA is generated in ```contigs/a.lines.fasta```
 
 The number of times a kmer must appear in the reads to be included in the small k graph can be controlled with the `--min_freq` parameter:
 
 ```
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 --min_freq 20
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 --min_freq 20
 ```
 
-Ideally, `--min_freq` should be selected to remove most error kmers, and retain most kmers which are genuinely present in the genome of interest. This value can be determined with the help of the kmer histogram from step b) of the QC. 
+Ideally, `--min_freq` should be selected to remove erronous kmers, and retain most kmers which are genuinely present in the genome of interest. This value can be determined with the help of the kmer histogram from the kmer spectra generated in Step 1 b). 
 
 In the above examples we use the default kmer length of 200 but you may want to generate assemblies using different kmer lengths and assess each one. We can vary the value of k used to build the large k graph with the `-K` option, like so:
 
 ```
-w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r scer_pe_R1.fastq,scer_pe_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
+w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
 ```
 
-More detail about these options, and descriptions of the other options, can be found in the full w2rap paper, or by running:
+More detail about these options, and descriptions of the other options, can be found in the full w2rap paper, or by running the contigger with the `--help` parameter:
 
-```
-w2rap-contigger/bin/w2rap-contigger --help
-``` 
-
-### 3) Contig assessment
-a) Check contiguity stats.
+## Step 3: Contig assessment
+### a) Check assembly contiguity.
 
 ```
 abyss-fac contigs/a.lines.fasta
 ```
 ![](images/contigs_fac.png)
 
-We are assembling 11.78e6 bps of our 12Mb genome in contigs longer than 500bp.  The contig-N50 is 173 Kb. The expected number of contigs and N50 will vary significantly between genomes, in particular more complex and repetitive genomes may be more fragmented and hence have a lower N50. 
+We are assembling 11.54 Mb of the 12 Mb *S. cerevisiae*  genome into 1723 contigs longer than 500bp and the contig-N50 is 10.2 Kb. The expected number of contigs and N50 will vary significantly between genomes, in particular more complex and repetitive genomes may be more fragmented and hence have a lower N50. 
 
-b) Use KAT comp to generate a spectra-cn to compare PE reads to contigs
+### b) Compare PE reads to contigs.
+Use KAT comp to compare kmer content of PE reads to kmer content of the contigs using a spectra-cn plot. You expect to see all the content from the reads represented in the contigs and no new content (which could represent missassemblies). See the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots. 
 
 ```
-kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'scer_pe_R?.fastq' contigs/a.lines.fasta
+kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' contigs/a.lines.fasta
 ```
 
 <img src="images/pe_vs_contigs_k27-main.mx.spectra-cn.png"  width="500" height="400">
 
-This spectra shows we are assembling almost all the content from the reads correctly with no evidence of missassembly.  There is some evidence of reads from the error distribution appearing in the assembly (see the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots).
+This spectra shows we are assembling almost all the content from the reads correctly with no evidence of missassembly.  There is some evidence of reads from the error distribution appearing in the assembly.
 
-c) Assess assembly accuracy and completeness using QUAST and aligning BUSCO genes.
+### c) Assess assembly accuracy using QUAST.
 
 ```
 mkdir quast
@@ -146,8 +146,7 @@ python /path/to/quast.py -o ./quast -R ref/S288C_reference_sequence_R64-2-1_2015
 ```
 When a reference is provided, QUAST generates a report containing useful statistics including an estimation of missassemblies:
 
-
-Genome statistics	 | a.lines
+Genome statistic	 | a.lines
 -------------------- |---------------
 Genome fraction (%)			  |	91.919
 Duplication ratio			  |	1.033
@@ -155,14 +154,12 @@ Largest alignment			  |	47316
 Total aligned length		  |	11535940
 NGA50							  |	9669
 LGA50							  |	381
-Misassemblies					  |
-misassemblies					  |28
+Misassemblies					  |28
+Misassembled contigs		  |28
 Misassembled contigs length  |	826088
-Mismatches					  |
-mismatches per 100 kbp		  |3.19
+Mismatches per 100 kbp		  |3.19
 indels per 100 kbp			  |1.56
 N's per 100 kbp				  |	55.41
-Statistics without reference |	
 contigs						  | 	1723
 Largest contig				  |	76827
 Total length					  |	11732078
@@ -170,6 +167,8 @@ Total length (>= 1000 bp)	  | 11480625
 Total length (>= 10000 bp)	  | 5930056
 Total length (>= 50000 bp)	  | 282022
 
+
+### d) Assess assembly completeness by aligning BUSCO genes.
 
 Run BUSCO like so:
 
@@ -184,17 +183,19 @@ The proportion of BUSCOs present is assumed to be similar to the proportion of a
         407  |   Complete BUSCOs
         379  |   Complete and single-copy BUSCOs
         28  |   Complete and duplicated BUSCOs
-        13   |   Fragmented BUSCOs
+        13    |   Fragmented BUSCOs
         9    |   Missing BUSCOs
         429  |   Total BUSCO groups searched
 
 
-### 4) LMP processing
+## Step 4: LMP processing
 There are two LMP libraries. To avoid repetition, we have taken some of these steps for one library only, but they should be performed with both.
  
-a) Run FastQC to check read metrics for LMP as shown above.
+### a) Run FastQC to check read metrics
+This is run for LMP reads in the same way as for PE reads.
 
-b) Run the Python script to remove Nextera adapters from LMP reads and any PE contamination.  
+### b) Identify good LMP reads.
+A Python script is provided to remove Nextera adapters from LMP reads and any PE contamination. Run it as follows;  
 
 ```  
 lmp_processing <read_file_list> <ncpus>  
@@ -212,7 +213,7 @@ eg.
 
 ncpus: the number of CPUs to use.
 
-The processed LMP files will be written to the 'nextclip' directory. These should be used in the subsequent scaffolding. The read counts before and after trimming are written to the log file, for the test dataset we get the following before and after values:
+The processed LMP FASTQ files will be written to the `nextclip` directory. These files should be used in the subsequent scaffolding step. The read counts before and after trimming are written to the log file, for the test dataset we get the following;
 
 ```
 LIB6470 read count before trimming: 576252
@@ -222,25 +223,34 @@ LIB6470 read count after trimming: 435974
 LIB6471 read count after trimming: 443411
 ```
 
-### 5) QC processed LMPs 
-a) Use KAT comp to check for LMP representation issues by comparing LMP reads to PE reads to check for LMP representation issues 
+## Step 5: QC processed LMPs 
+### a) Use KAT comp to check for LMP representation issues.
+KAT comp can also be used to generate a spectra-mx plot which shows kmers that are shared between two datasets and kmers exclusive to each dataset. As PE and LMP reads originate from the same sample, there should be no content in the LMP data which is not present in the PE data, and vice versa. Hence, content should be shared and there should be no exclusive content.
+
+First generate the using KAT comp;
 
 ```
 kat comp -n -t 16 -m 27 -H10000000000 -I10000000000 -o lmp_vs_pe '/path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq' '/path/to/pe_R1.fastq /path/to/pe_R2.fastq'
-
+```
+Then plot the spectra-mx;
+```
 kat plot spectra-mx -o lmp_vs_pe_spectra_mx.png -x 100 --intersection lmp_vs_pe-main.mx
 ```
 
 <img src="images/lmp_vs_pe_spectra_mx.png"  width="450" height="400">
 
-As they come from the same sample, there should be no content in the LMP data which is not present in the PE data, and vice versa. Hence, there should be no exclusive content.
+This shows that the majority of content is shared between PE and LMP reads.
 
-b) Map the reads to a reference and generate an insert size histogram to check the insert size and the shape of the distribution. 
+### b) Check the LMP insert size distribution
+Map the reads to the reference (or the contigs generated in step 2) and generate an insert size histogram to check the insert size and the shape of the distribution. 
 
 ```
 bwa index -p yeast ./contigs/a.lines.fasta
 bwa mem -SP -t 8 yeast /path/to/trimmed_lmp_R1_lib1.fastq /path/to/trimmed_lmp_R2_lib1.fastq > lmp2contig.sam
 
+grep -v '@SQ' lmp1ref.sam | grep -v '@PG' | awk -v binsize=100 '{if ($5==60) {if ($9<0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=100 '{print $2*binsize","$1}' > lmp1ref.is
+
+# old bit
 bioawk -c'sam' '{if ($mapq>=60){if($tlen<0){print int($tlen/100)*100}else{print -int($tlen/100)*100}}}' lmp2ref.sam  | sort -n | uniq -c | awk '{print $2","$1}' > lmp_insert_sizes.txt
 
 ```
@@ -251,17 +261,17 @@ This is the expected distribution of the insert sizes of library 1:
 
 The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 5000. There is no paired end contamination present, as this would cause another peak closer to the origin.  
 
-
-
-c) Calculate the fragment coverage from trimmed read count and insert size
+### c) Calculate the read and fragment coverage.
+From trimmed read count and insert size
 
 TODO
 
-### 6) Scaffolding
+## Step 6: Scaffolding
 
-s_scaff is an edited version of SOAPdenovo which is better suited to complex genomes, and more configurable.
+s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the SOAPdenovo pipeline which are more configurable and thus better suited to complex genomes.
 
-a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html) using both the PE and LMP reads to scaffold. 
+### a) Make a [SOAPdenovo config file] (http://soap.genomics.org.cn/soapdenovo.html).
+It is important to use both the PE and LMP reads to scaffold. 
 
 ```
 [LIB]
@@ -287,23 +297,17 @@ The config file must be correctly configured, and there are lots of options to c
 
 We have kept our configuration file relatively simple, specifying only the paths to the data sets to be used for scaffolding, their type, and their insert size. The `reverse_seq` field indicates whether we have paired end (= 0) or long mate pair (= 1) read sets.
  
-b) Run "prepare->map->scaff" pipeline.  
-
+### b) Run the "prepare -> map -> scaff" pipeline.  
+s\_prepare converts your contig assembly into a format ready for SOAPdenovo scaffolding. For the majority of use cases, it is suitable to use a kmer length of 71. s\_map maps the reads from all libraries to the contigs. In this stage, the kmer length must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs.  Using multiple CPUs will speed this stage up. s\_scaff generates scaffolds using the mapping results.
 
 ```
-/path/to/s_prepare -t 8 -g yeast -K 71 -c ./contigs/a.lines.fasta 2>&1
-
-PREFIX="yeast"
-CONFIG_FILE="./soap.config"
-NCPUS="32"
-
-s_map -k 31 -s $CONFIG_FILE -p $NCPUS -g $PREFIX > $PREFIX.map.log 2>&1
-
-
-s_scaff -p $NCPUS -g $PREFIX > $PREFIX.scaff.log 2>&1
+s_prepare -g yeast -K 71 -c /contigs/a.lines.fasta 2>&1
+s_map -k 31 -s soap.config -p 32 -g yeast > yeast.map.log 2>&1
+s_scaff -p 8 -g yeast > yeast.scaff.log 2>&1
 ```
 
-The prepare script converts the fasta file to the format needed for SOAP mapping. For the majority of use cases, it is suitable to use K = 71. In s_map, K must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs. 
+If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension `scafSeq`.
+
 
 Before proceeding from the map step to the scaffolding step, you should check that the mapping results are as expected, as if there are any problems at this stage, then the scaffolding step will not give good results. In particular, you should check that a reasonable proportion of reads have mapped to the contigs. The key part of the log for `s_map` for our example is:
 
@@ -345,19 +349,25 @@ If this pipeline runs successfully, a number of output files will be created. Th
 
 c) SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns using the script included. The three input files are output by SOAP.
 
+### c) Recover gaps
+SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these back to Ns using the script included. The three input files required are generated by SOAPdenovo.
+
 ```
 python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <output_file>
 ```
 
-### 7) Scaffold validation
-a) Check N50 and total content.  
+## Step 7: Scaffold validation
+### a) Check assembly contiguity.
 
-* Total content: 11.78e6bp
-* N50: 531425bp
+```
+abyss-fac scaffolds/a.lines.fasta
+```
+![](images/scaffolds_fac.png)
 
 The total content is similar to the expected genome size, so the assembly contains roughly the right amount of information. The N50 is reasonable for a genome of this size and complexity.
 
-b) Use KAT comp to generate a spectra-cn to compare PE reads to scaffolds  
+### b) Compare PE reads to scaffolds  
+Use KAT comp to compare kmer content of PE reads to kmer content of the scaffolds using a spectra-cn plot. You expect to see all the content from the reads represented in the scaffolds and no new content (which could represent missassemblies). See the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots. 
 
 ```
 kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to/pe_R1.fastq /path/to/pe_R2.fastq' /path/to/scaffolds/yeast.scafSeq
@@ -367,19 +377,7 @@ kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to
 
 Again, there is no content from the reads missing in the assembly and no duplication of content, but there are a few erroneous kmers present.
 
-c) Run QUAST and align sequences to BUSCOs. 
-
-```
-python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
-```
-   Count      |       Type
-------------- | ------------------------------------
-        417   |   Complete BUSCOs
-        301   |   Complete and single-copy BUSCOs
-        116   |   Complete and duplicated BUSCOs
-        6     |   Fragmented BUSCOs
-        6     |   Missing BUSCOs
-        429   |   Total BUSCO groups searched
+### c) Assess assembly accuracy using QUAST. 
 
 ```
 mkdir quast
@@ -413,3 +411,20 @@ Predicted genes	            |
 predicted genes (unique)    |	7354
 
 We can see that the scaffolder has successfully put together a large number of contigs without significantly increasing the number of misassemblies, which indicates that the scaffolds have been constructed correctly. 
+### d) Check assembly completeness by aligning BUSCO genes.
+```
+python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
+```
+   Count      |       Type
+------------- | ------------------------------------
+        417   |   Complete BUSCOs
+        301   |   Complete and single-copy BUSCOs
+        116   |   Complete and duplicated BUSCOs
+        6     |   Fragmented BUSCOs
+        6     |   Missing BUSCOs
+        429   |   Total BUSCO groups searched
+
+We can see that the genome statistics have not changed significantly between the contigging and the scaffolding stage. 
+
+## Step 8: Create release FASTA
+At this point you should check for contamination in scaffolds (phiX etc.) and Illumina adapters. If you want to remove seqeunces shorter than a certain threshold (eg. below 500 bp) you can use KAT comp to check whether this removes significant content from the assembly in the same way as step 7 b).
