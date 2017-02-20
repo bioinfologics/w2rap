@@ -157,15 +157,19 @@ LGA50							  |	381
 Misassemblies					  |28
 Misassembled contigs		  |28
 Misassembled contigs length  |	826088
-Mismatches per 100 kbp		  |3.19
-indels per 100 kbp			  |1.56
-N's per 100 kbp				  |	55.41
+Mismatches per 100 kbp		  | 3.19
+indels per 100 kbp			  | 1.56
+N's per 100 kbp				  |	 55.41
 contigs						  | 	1723
-Largest contig				  |	76827
+Largest contig				  |	844443
 Total length					  |	11732078
 Total length (>= 1000 bp)	  | 11480625
 Total length (>= 10000 bp)	  | 5930056
 Total length (>= 50000 bp)	  | 282022
+Predicted genes	            |
+predicted genes (unique)    |	7206
+
+Contiguity has increased significantly, while the number of misassemblies has not
 
 
 ### d) Assess assembly completeness by aligning BUSCO genes.
@@ -313,10 +317,10 @@ Before proceeding from the map step to the scaffolding step, you should check th
 
 ```
 Total reads         4623823
-Reads in gaps       326317
-Ratio               7.1%
-Reads on contigs    3012707
-Ratio               65.2%
+Reads in gaps       311638
+Ratio               6.7%
+Reads on contigs    3514319
+Ratio               76.0%
 
 ```
 
@@ -327,23 +331,46 @@ After the mapping has completed successfully, it's time to do the scaffolding. B
  ```
  
  For insert size: 300
- Total PE links                      1141797
- Normal PE links on same contig      1131394
- Incorrect oriented PE links         1239
- PE links of too small insert size   7894
+ Total PE links                      1323619
+ Normal PE links on same contig      1308073
+ Incorrect oriented PE links         1678
+ PE links of too small insert size   11366
  PE links of too large insert size   0
- Correct PE links                    1089
- Accumulated connections             348
+ Correct PE links                    1953
+ Accumulated connections             1036
 Use contigs longer than 300 to estimate insert size:
- PE links               1131017
- Average insert size    319
- SD                     138
+ PE links               1307670
+ Average insert size    320
+ SD                     141
+ 
+ 518 new connections.
  
  ```
  
-If the `Aevrage insert size` field is missing, then the software has not been able to calculate it, which indiates that there is a serious issue with either the data or the configuration. As most contigs are significantly longer than the average insert size of the paired end library. most paired end reads map to the same contig. A PE link is a part of the graph which a read and its pair connect. Their distance apart on the graph must be consistent with the insert size. If two edges of the graph are linked by a read pair, then we have an 'Accumulated connection.'
+If the `Aevrage insert size` field is missing, then the software has not been able to calculate it, which indiates that there is a serious issue with either the data or the configuration. As most contigs are significantly longer than the average insert size of the paired end library. most paired end reads map to the same contig. A PE link is a part of the graph which a read and its pair connect. Their distance apart on the graph must be consistent with the insert size. If two edges of the graph are linked by a read pair from one of the libraries used for scaffolding, then we have an 'Accumulated connection.'
 
-The scaffolding begins after the reads have been loaded onto the graph.  
+The scaffolding begins after the reads have been loaded onto the graph. In cycles, the scaffolder classifies contigs like so:
+
+```
+Total contigs                         4760
+Masked contigs                        72
+Remained contigs                      4688
+None-outgoing-connection contigs      1685 (35.942833%)
+Single-outgoing-connection contigs    2952
+Multi-outgoing-connection contigs     6
+
+```
+
+The masked contigs are ones which are assumed to be repetitive, so are not included in scaffolding. The remaining contigs are then classified in terms of the number of contigs they have been connected to by a read pair. There are either no outgoing connections, one outgoing connection, which can be used for scaffolding, or multiple outgoing connections, in which case we do not know which contig to join to. In some cases, we can work out which contig to join to by looking at transitive connections:
+
+```
+ Two-outgoing-connection contigs     45
+ Potential transitive connections    15
+ Transitive connections              8
+ Transitive ratio                    17.8%
+ ```
+ 
+ Transitive connections are formed when reads in the gaps between contigs overlap, so that we can use these overlaps to deduce which contigs go together.
 
 If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension 'scafSeq.' 
 
@@ -362,7 +389,10 @@ python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <
 ```
 abyss-fac scaffolds/a.lines.fasta
 ```
+
+
 ![](images/scaffolds_fac.png)
+
 
 The total content is similar to the expected genome size, so the assembly contains roughly the right amount of information. The N50 is reasonable for a genome of this size and complexity.
 
@@ -388,43 +418,44 @@ The `--extensive-mis-size` parameter sets a threshold for what is considered to 
 Genome statistics	 | yeast.scafSeq
 -------------------- |---------------
 Genome fraction (%)			  |	93.625
-Duplication ratio			  |	1.260
-Largest alignment			  |	414518
-Total aligned length		  |	13152876
-NGA50							  |	104027
-LGA50							  |	31
-Misassemblies					  |
-misassemblies					  |71
-Misassembled contigs length  |	4766054
+Duplication ratio			  |	1.256
+Largest alignment			  |	526228
+Total aligned length		  |	11428998
+NGA50							  |	165179
+LGA50							  |	24
+Misassemblies					  | 28
+misassemblies					  | 27
+Misassembled contigs length  |	3417630
 Mismatches					  |
-mismatches per 100 kbp		  | 4.10
-indels per 100 kbp			  |1.78
-N's per 100 kbp				  |	8291.35
+mismatches per 100 kbp		  | 4.36
+indels per 100 kbp			  | 2.12
+N's per 100 kbp				  |17775.96
 Statistics without reference |	
 contigs						  | 	279
-Largest contig				  |	609133
-Total length					  |	14473629
-Total length (>= 1000 bp)	  | 14327082
-Total length (>= 10000 bp)	  | 14176994
-Total length (>= 50000 bp)	  | 11742048
+Largest contig				  |	844443
+Total length					  |	14100232
+Total length (>= 1000 bp)	  | 13865071
+Total length (>= 10000 bp)	  | 13723685
+Total length (>= 50000 bp)	  | 13010778
 Predicted genes	            |
-predicted genes (unique)    |	7354
+predicted genes (unique)    |	7130
 
 We can see that the scaffolder has successfully put together a large number of contigs without significantly increasing the number of misassemblies, which indicates that the scaffolds have been constructed correctly. 
+
 ### d) Check assembly completeness by aligning BUSCO genes.
 ```
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
 ```
    Count      |       Type
 ------------- | ------------------------------------
-        417   |   Complete BUSCOs
-        301   |   Complete and single-copy BUSCOs
-        116   |   Complete and duplicated BUSCOs
-        6     |   Fragmented BUSCOs
-        6     |   Missing BUSCOs
+        411   |   Complete BUSCOs
+        383   |   Complete and single-copy BUSCOs
+        28   |   Complete and duplicated BUSCOs
+        9     |   Fragmented BUSCOs
+        9     |   Missing BUSCOs
         429   |   Total BUSCO groups searched
 
-We can see that the genome statistics have not changed significantly between the contigging and the scaffolding stage. 
+The number of BUSCO genes has increased slightly, corresponding to the decrease in the number of fragmented BUSCOs, indicating that the scaffolding step has assembled them correctly. We would not expect a significant increase here as genetic regions tend ot be easier to assemble, so are likely to be present in the assembly after the contigging step. 
 
 ## Step 8: Create release FASTA
 At this point you should check for contamination in scaffolds (phiX etc.) and Illumina adapters. If you want to remove seqeunces shorter than a certain threshold (eg. below 500 bp) you can use KAT comp to check whether this removes significant content from the assembly in the same way as step 7 b).
