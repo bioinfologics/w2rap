@@ -200,7 +200,7 @@ The proportion of BUSCOs present is assumed to be similar to the proportion of a
 This is run in the same way as for PE reads to assess read quality etc.
 
 ### b) Identify good LMP reads.
-A Python script is provided to process raw LMP to identify reads containing the Nextera adapter and remove it. Run it as follows;  
+A Python script is provided to process raw LMP to identify reads containing the Nextera adapter and remove it. This also removes PE contamination which is often present in LMP seqeuncing datasets. Run it as follows;  
 
 ```  
 lmp_processing <read_file_list> <ncpus>  
@@ -255,7 +255,7 @@ The distribution looks like this;
 
 <img src="images/yeast_lmp.png"  width="500" height="400">
 
-The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 6500bp. There is very little paired end contamination present, as this would cause another peak closer to the origin.  
+The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 6500bp. There is very little paired end contamination present, as this would cause another peak closer to the origin. Be aware that if you are mapping a LMP library with an insert size larger than the average length of your contigs, many LMP reads will map incorrectly to smaller contigs and the resulting insert size distribution will contain lots of artificially small mappings which could look like PE contamination. 
 
 ### c) Calculate the read and fragment coverage.
 
