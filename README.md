@@ -212,7 +212,6 @@ eg.
 ```  
 /path/to/LIB6471_R1.fastq 
 /path/to/LIB6471_R2.fastq  
- 
 ```
 
 ncpus: the number of CPUs to use.
@@ -250,7 +249,6 @@ bwa index -p yeast ./contigs/a.lines.fasta
 bwa mem -SP -t 8 yeast ./nextclip/LIB6471_nc_ABC_R1.fastq ./nextclip/LIB6471_nc_ABC_R2.fastq > lmp2contig.sam
 
 grep -v '@SQ' lmp2contig.sam | grep -v '@PG' | awk -v binsize=100 '{if ($5==60) {if ($9<0) {print int($9/binsize)}else{print int($9/binsize*-1)}}}' | sort -n | uniq -c | awk -v binsize=100 '{print $2*binsize","$1}' > lmp2contig.is
-
 ```
 
 The distribution looks like this;
@@ -287,7 +285,6 @@ avg_ins=6500
 reverse_seq=1
 q1=/path/to/LIB6471_nc_ABC_R1.fastq
 q2=/path/to/LIB6471_nc_ABC_R2.fastq
-
 ```
 
 The config file must be correctly configured, and there are lots of options to customize the configuration, details of which can be found in the [SOAP denovo documentation] (http://soap.genomics.org.cn/soapdenovo.html). It is advisable to familiarize yourself with these by varying them and observing the impact different parameters have on the final assembly.
@@ -311,7 +308,6 @@ Reads in gaps       311638
 Ratio               6.7%
 Reads on contigs    3514319
 Ratio               76.0%
-
 ```
 
 The reads in gaps are reads which do not fall on a contig at all. As we have reasonable read coverage and have used a kat plot to check that information from the reads is not missing in the contigs, most of the reads should map at least partially to the contigs, which they do. The total number of reads is larger than the number of reads in gaps plus the number of reads on contigs because some reads map partially to a contig, and hang off the end. 
@@ -333,7 +329,6 @@ Use contigs longer than 300 to estimate insert size:
  SD                     141
  
  518 new connections.
- 
  ```
  
 If the `Average insert size` field is missing, then the software has not been able to calculate it, which indiates that there is a serious issue with either the data or the configuration. As most contigs are significantly longer than the average insert size of the paired end library, most paired end reads map to the same contig. A PE link is a part of the graph which a read and its pair connect. Their distance apart on the graph must be consistent with the insert size. If two edges of the graph are linked by a read pair from one of the libraries used for scaffolding, then we have an 'Accumulated connection.'
@@ -347,7 +342,6 @@ Remained contigs                      4688
 None-outgoing-connection contigs      1685 (35.942833%)
 Single-outgoing-connection contigs    2952
 Multi-outgoing-connection contigs     6
-
 ```
 
 The masked contigs are ones which are assumed to be repetitive, so are not included in scaffolding. The remaining contigs are then classified in terms of the number of contigs they have been connected to by a read pair. There are either no outgoing connections, one outgoing connection, which can be used for scaffolding, or multiple outgoing connections, in which case we do not know which contig to join to. In some cases, we can work out which contig to join to by looking at transitive connections:
@@ -357,7 +351,6 @@ The masked contigs are ones which are assumed to be repetitive, so are not inclu
  Potential transitive connections    15
  Transitive connections              8
  Transitive ratio                    17.8%
- 
 ```
  
 Transitive connections are formed when reads which map to gaps between contigs overlap, so that we can use these overlaps to deduce which contigs go together.
@@ -379,7 +372,6 @@ abyss-fac scaffolds/a.lines.fasta
 ```
 
 ![](images/scaffolds_fac.tiff)
-
 
 The total content is similar to the expected genome size, so the assembly contains roughly the right amount of information. The number of sequences is slightly reduced as contigs have been connected into scaffolds and the N50 is reasonable for a genome of this size and complexity.
 
