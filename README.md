@@ -367,7 +367,7 @@ python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <
 abyss-fac scaffolds/a.lines.fasta
 ```
 
-<img src="images/scaffolds_fac.tiff">
+<img src="images/scaffolds_fac.png">
 
 The total content is similar to the expected genome size, so the assembly contains roughly the right amount of information. The number of sequences is slightly reduced as contigs have been connected into scaffolds and the N50 is reasonable for a genome of this size and complexity.
 
