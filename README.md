@@ -34,7 +34,7 @@ fastqc -o fastqc LIB4432_R1.fastq LIB4432_R2.fastq
 ```
 [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
 
-![] (images/fastqc.png)
+<img src="images/fastqc.png" width="500" height="400">
 
 FastQC shows we have 1,641,301 PE reads of length 151bp providing 1,641,301 * 151 * 2 = 495,672,902 bp coverage   
 The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 495,672,902 / 12,495,682 = **39.7x genome coverage**
@@ -44,7 +44,7 @@ The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is
 ```
 kat hist -o scer_pe_hist -h 80 -t 8 -m 27 -H 100000000 LIB4432_R?.fastq
 ```
-<img src="images/scer_pe_hist.png"  width="500" height="400">
+<img src="images/scer_pe_hist.png" width="500" height="400">
 
 The histogram shows us how often kmers appear in the PE reads. We can see that at frequency < 5, the number of distinct kmers increases significantly, these kmers are from erroneous reads. The kmers we want to assemble are from the main distribution. This is a relatively symmetrical distribution, centered at approximately 30, with a reasonably small variance. Hence, the estimated kmer coverage is equal to 30.  
 
