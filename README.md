@@ -386,7 +386,7 @@ Again, most of the content from the reads is present in the assembly. There are 
 
 ```
 mkdir quast
-python /path/to/quast/quast.py --extensive-mis-size 10000 -o ./quast -R ./yeast.scafSeq -t 8 -f ref/S288C_reference_sequence_R64-2-1_20150113.fsa
+python /path/to/quast/quast.py --extensive-mis-size 10000 -o ./quast -R ref/S288C_reference_sequence_R64-2-1_20150113.fsa -t 8 -f ./yeast.scafSeq
 ```
 The `--extensive-mis-size` parameter sets a threshold for what is considered to be a local misassembly. By specifying this to be larger than the default value, we exclude very small rearrangements from the misassembly count.
 
