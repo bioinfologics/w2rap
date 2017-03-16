@@ -78,7 +78,6 @@ We can see that the insert sizes are roughly symmetrically distributed around 25
 
 Use the w2rap-contigger to generate contigs from the PE reads. The current version of the w2rap contigger runs in 8 steps: 
 
-
 Step # | Description | Outputs
 :---|---|---
 1 | Read loading | binary-formatted reads
@@ -203,7 +202,7 @@ A Python script is provided to process raw LMP to identify reads containing the 
 lmp_processing <read_file_list> <ncpus>  
 ```
 
-read\_file\_list: a text file containing a list of LMP FASTQ files to process.  Files must be uncompressed and end in _R1.fastq or _R2.fastq.  
+read\_file\_list: a text file containing a list of LMP FASTQ files to process.  Files must be uncompressed and end in \_R1.fastq or \_R2.fastq.  
 eg.  
 
 ```  
@@ -266,7 +265,7 @@ From the read count after trimming and the insert size, we can calculate the fra
 
 ## Step 6: Scaffolding
 
-s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo] (http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes.
+s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes.
 
 ### a) Make a SOAPdenovo config file.
 It is important to use both the PE and LMP reads to scaffold. 
@@ -284,7 +283,7 @@ q1=/path/to/LIB6471_nc_ABC_R1.fastq
 q2=/path/to/LIB6471_nc_ABC_R2.fastq
 ```
 
-The config file must be correctly configured, and there are lots of options to customize the configuration, details of which can be found in the [SOAP denovo documentation] (http://soap.genomics.org.cn/soapdenovo.html). It is advisable to familiarize yourself with these by varying them and observing the impact different parameters have on the final assembly.
+The config file must be correctly configured, and there are lots of options to customize the configuration, details of which can be found in the [SOAP denovo documentation](http://soap.genomics.org.cn/soapdenovo.html). It is advisable to familiarize yourself with these by varying them and observing the impact different parameters have on the final assembly.
 
 We have kept our configuration file relatively simple, specifying only the paths to the data sets to be used for scaffolding, their type, and their insert size. The `reverse_seq` field indicates whether we have paired end (= 0, the default) or long mate pair (= 1) read sets.
  
