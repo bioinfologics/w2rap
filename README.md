@@ -100,8 +100,6 @@ w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.
 ```
 The contigs FASTA is generated in ```contigs/a.lines.fasta```
 
-TODO: GFA
-
 The number of times a kmer must appear in the reads to be included in the small k graph can be controlled with the `--min_freq` parameter:
 
 ```
@@ -116,7 +114,7 @@ In the above examples we use the default kmer length of 200 but you may want to 
 w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
 ```
 
-More detail about these options, and descriptions of the other options, can be found in the w2rap paper (TODO: cite when submitted), or by running the contigger with the `--help` parameter:
+More detail about these options, and descriptions of the other options, can be found in the [w2rap paper] (http://biorxiv.org/content/early/2017/02/22/110999), or by running the contigger with the `--help` parameter:
 
 ## Step 3: Contig assessment
 ### a) Check assembly contiguity.
@@ -184,7 +182,7 @@ python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_
 
 The proportion of BUSCOs present is assumed to be similar to the proportion of all genes present, so the summary table enables us to estimate how well the assembly captures the genetic content of the genome:
 
-	Count		|       Type    
+Count		|       Type    
 ------------ | -----------------------------------
         407  |   Complete BUSCOs
         379  |   Complete and single-copy BUSCOs
@@ -423,11 +421,12 @@ predicted genes (unique)    |	7130
 We can see that the scaffolder has successfully put together a large number of contigs without increasing the number of misassemblies, which indicates that the scaffolds have been constructed correctly. 
 
 ### d) Check assembly completeness by aligning BUSCO genes.
+
 ```
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
 ```
 
-   Count      |       Type
+Count      |       Type
 ------------- | ------------------------------------
         411   |   Complete BUSCOs
         383   |   Complete and single-copy BUSCOs
