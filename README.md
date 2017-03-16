@@ -9,19 +9,19 @@ We also provide the *Saccharomyces cerevisiae* reference sequence for QC purpose
 ## Software required
 To run the pipeline you will need to install the following;  
 
-* [K-mer Analysis Toolkit (KAT)] (https://github.com/TGAC/KAT)  
-* [BWA] (https://sourceforge.net/projects/bio-bwa/files/) (or other short-read aligner)  
-* [FLASh] (https://ccb.jhu.edu/software/FLASH/)  
-* [FASTX toolkit] (http://hannonlab.cshl.edu/fastx_toolkit/)  
-* [Nextclip] (https://github.com/richardmleggett/nextclip/)  
-* Something to calculate assembly stats (eg. [abyss-fac] (http://www.bcgsc.ca/platform/bioinfo/software/abyss))
-* [Python] (https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
+* [K-mer Analysis Toolkit (KAT)](https://github.com/TGAC/KAT)  
+* [BWA](https://sourceforge.net/projects/bio-bwa/files/) (or other short-read aligner)  
+* [FLASh](https://ccb.jhu.edu/software/FLASH/)  
+* [FASTX toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)  
+* [Nextclip](https://github.com/richardmleggett/nextclip/)  
+* Something to calculate assembly stats (eg. [abyss-fac](http://www.bcgsc.ca/platform/bioinfo/software/abyss))
+* [Python](https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
 
 Other tools are optional depending on how much QC and validation you want to perform on your reads and assembly.  We recommend;  
 
-* [FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  
-* [BUSCO] (http://busco.ezlab.org/)
-* [QUAST] (http://quast.sourceforge.net/quast)
+* [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  
+* [BUSCO](http://busco.ezlab.org/)
+* [QUAST](http://quast.sourceforge.net/quast)
 
 This tutorial assumes that you are using a Linux machine. If you do not have access to a Linux machine, you will need to find equivalent tools which run on your operating system to complete some of the steps.
 
@@ -32,12 +32,12 @@ This tutorial assumes that you are using a Linux machine. If you do not have acc
 mkdir fastqc
 fastqc -o fastqc LIB4432_R1.fastq LIB4432_R2.fastq
 ```
-[FastQC] (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
+[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)  generates an HTML report in the fastqc directory. The report will give some indications about the quality of your reads, and the success of your sequencing run. Consult the documentation on the website, and the example reports from good and bad Illumina runs for further information. You should calculate the read coverage using the read count. 
 
 <img src="images/fastqc.png">
 
 FastQC shows we have 1,641,301 PE reads of length 151bp providing 1,641,301 * 151 * 2 = 495,672,902 bp coverage   
-The [S. cerevisiae genome] (http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 495,672,902 / 12,495,682 = **39.7x genome coverage**
+The [S. cerevisiae genome](http://www.biology-pages.info/G/GenomeSizes.html) is ~12.5 Mb which means we have 495,672,902 / 12,495,682 = **39.7x genome coverage**
  
 ### b) Use KAT hist to estimate kmer coverage. 
 
@@ -114,7 +114,7 @@ In the above examples we use the default kmer length of 200 but you may want to 
 w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.fastq -o contigs -p scer_k200 -K 220 --from_step 3
 ```
 
-More detail about these options, and descriptions of the other options, can be found in the [w2rap paper] (http://biorxiv.org/content/early/2017/02/22/110999), or by running the contigger with the `--help` parameter:
+More detail about these options, and descriptions of the other options, can be found in the [w2rap paper](http://biorxiv.org/content/early/2017/02/22/110999), or by running the contigger with the `--help` parameter:
 
 ## Step 3: Contig assessment
 ### a) Check assembly contiguity.
@@ -183,7 +183,7 @@ python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_
 The proportion of BUSCOs present is assumed to be similar to the proportion of all genes present, so the summary table enables us to estimate how well the assembly captures the genetic content of the genome:
 
 Count		|       Type    
------------- | -----------------------------------
+:------------ | -----------------------------------
         407  |   Complete BUSCOs
         379  |   Complete and single-copy BUSCOs
         28  |   Complete and duplicated BUSCOs
