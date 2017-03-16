@@ -426,13 +426,13 @@ python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/
 ```
 
 Count      |       Type
-------------- | ------------------------------------
-        411   |   Complete BUSCOs
-        383   |   Complete and single-copy BUSCOs
-        28   |   Complete and duplicated BUSCOs
-        9     |   Fragmented BUSCOs
-        9     |   Missing BUSCOs
-        429   |   Total BUSCO groups searched
+------------- | -------------------------
+411   |   Complete BUSCOs
+383   |   Complete and single-copy BUSCOs
+28   |   Complete and duplicated BUSCOs
+9     |   Fragmented BUSCOs
+9     |   Missing BUSCOs
+429   |   Total BUSCO groups searched
 
 The number of BUSCO genes has increased slightly, corresponding to the decrease in the number of fragmented BUSCOs, indicating that the scaffolding step has assembled them correctly. We would not expect a significant increase here as genetic regions tend to be easier to assemble, so are likely to be present in the assembly after the contigging step. 
 
