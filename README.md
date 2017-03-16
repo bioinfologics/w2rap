@@ -426,6 +426,7 @@ We can see that the scaffolder has successfully put together a large number of c
 ```
 python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_ns_remapped.fasta -l ~/busco_data/eukaryota -m genome -f
 ```
+
    Count      |       Type
 ------------- | ------------------------------------
         411   |   Complete BUSCOs
