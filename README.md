@@ -4,7 +4,7 @@ This is a short tutorial on how to use w2rap to get from raw data to scaffolds. 
  * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
  * LIB6471\_R1.fastq, LIB6471\_R2.fastq - LMP read files
 
-We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes. This can also be downloaded from the [Saccharomyces Genome Database] (http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
+We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes. This can also be downloaded from the [Saccharomyces Genome Database](http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
 ## Software required
 To run the pipeline you will need to install the following;  
@@ -183,14 +183,13 @@ python /path/to/busco2/BUSCO.py -o busco_pe -in contigs/a.line.fasta -l ~/busco_
 The proportion of BUSCOs present is assumed to be similar to the proportion of all genes present, so the summary table enables us to estimate how well the assembly captures the genetic content of the genome:
 
 Count		|       Type    
-:------------ | -----------------------------------
-        407  |   Complete BUSCOs
-        379  |   Complete and single-copy BUSCOs
-        28  |   Complete and duplicated BUSCOs
-        13    |   Fragmented BUSCOs
-        9    |   Missing BUSCOs
-        429  |   Total BUSCO groups searched
-
+------------ | -----------------------------------
+407  |   Complete BUSCOs
+379  |   Complete and single-copy BUSCOs
+28  |   Complete and duplicated BUSCOs
+13    |   Fragmented BUSCOs
+9    |   Missing BUSCOs
+429  |   Total BUSCO groups searched
 
 ## Step 4: LMP processing
  
