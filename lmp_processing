@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 import shutil
+import stat
 
 def file_len(fname):
   p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -58,7 +59,9 @@ def write_nc_chunk_script():
     f.write("wait\n\n")
 
     f.write("rm $1.part_* $2.part_* $3.$1.part_*.fastq\n")
-
+  st=os.stat('nextclip/nextclip_chunk.sh')
+  os.chmod('nextclip/nextclip_chunk.sh', st.st_mode | stat.S_IEXEC)
+	
 if __name__ == '__main__':
 
   if len(sys.argv) != 3 or sys.argv[1] == "--help":
@@ -172,6 +175,8 @@ if __name__ == '__main__':
 
   # run the script in the flash directory
   os.chdir("flash")
+  st=os.stat('./run.sh')
+  os.chmod('./run.sh', st.st_mode | stat.S_IEXEC)
   subprocess.call(['./run.sh'])
 
   # move back to cwd
@@ -206,6 +211,8 @@ if __name__ == '__main__':
 
   # run the script in the nextclip directory
   os.chdir("nextclip")
+  st=os.stat('./run.sh')
+  os.chmod('./run.sh', st.st_mode | stat.S_IEXEC)
   subprocess.call(['./run.sh'])
  
   for lib in libraries:
