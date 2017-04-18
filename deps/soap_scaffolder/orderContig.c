@@ -28,6 +28,7 @@ static boolean static_f = 0;
 static double OverlapPercent = 0.05;
 static double ConflPercent = 0.05;
 static int MinWeakCut = 3;
+static int weakPE = 3;
 static int gapCounter;
 static int orienCounter;
 static int orienCounter2;
@@ -2172,24 +2173,16 @@ Output:
 Return:
     None.
 *************************************************/
-static void ordering ( boolean deWeak, boolean downS, boolean nonlinear, char * infile )
+static void ordering ( boolean deWeak, boolean downS, boolean nonlinear)
 {
-	int conf0, conf1, conf2, conf3, conf4, conf5;
 	debugging();
 
-	if ( downS )
-	{
+	if ( downS ) {
 		downSlide();
 		debugging();
+	}
 
-		if ( deWeak )
-			{ deleteWeakCnt ( weakPE ); }
-	}
-	else
-	{
-		if ( deWeak )
-			{ deleteWeakCnt ( weakPE ); }
-	}
+	if ( deWeak ) deleteWeakCnt ( weakPE );
 
 	debugging();
 	simplifyCnt();
@@ -5282,9 +5275,9 @@ void Links2Scaf ( char * infile )
 {
 	char name[256], *line;
 	FILE * fp;
-	int i, j = 1, lib_n = 0, cutoff_sum = 0;
+	int i, j = 1;
 	int flag = 0, flag2;
-	boolean downS, nonLinear = 0, smallPE = 0, isPrevSmall = 0, markSmall;
+	boolean downS, nonLinear = 0, isPrevSmall = 0;
 
 	if ( cvg4SNP > 0.001 )
 	{
@@ -5311,114 +5304,90 @@ void Links2Scaf ( char * infile )
 	scaf5 = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
 	gap3 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
 	gap5 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
-	weakPE = 3;
 	fprintf ( stderr, "\n" );
 
+
+	weakPE = 3;
+	int lib_n = 0, cutoff_sum = 0;
 	for ( i = 0; i < gradsCounter; i++ )
 	{
-		if ( MinWeakCut == 0 && i == 0 )
-			{ MinWeakCut = pes[i].pair_num_cut; }
-
-		if ( pes[i].insertS < 1000 )
-		{
+		if ( MinWeakCut > pes[i].pair_num_cut ) MinWeakCut = pes[i].pair_num_cut;
+		if ( pes[i].insertS < 1000 ) { //if there is small-pe distances, use the library's connection cutoff
 			isPrevSmall = 1;
-
-			if ( MinWeakCut > pes[i].pair_num_cut )
-				{ MinWeakCut = pes[i].pair_num_cut; }
 		}
-		else if ( pes[i].insertS > 1000 && isPrevSmall )
-		{
+		else if ( pes[i].insertS >= 1000 && isPrevSmall ) { //if this is the first LMP library, run smallScaf()
 			smallScaf();
 			isPrevSmall = 0;
 		}
 
 		Insert_size = pes[i].insertS;
 		discardCntCounter = 0;
-		flag2 = inputLinks ( fp, pes[i].insertS, line );
+		flag2 = inputLinks ( fp, pes[i].insertS, line ); //links in library
 
-		if ( flag2 )
+		if ( flag2 ) //if there's any links in the library
 		{
-			lib_n++;
-			cutoff_sum += pes[i].pair_num_cut;
+			lib_n++; //count of libraries in rank
+			cutoff_sum += pes[i].pair_num_cut; //total of cutoff to compute mean later
 		}
+		else fprintf ( stderr, "WARNING: library not adding any links\n" );
 
 		flag += flag2;
 
-		if ( !flag )
+		if ( !flag ) //if there is no links so far in the rank, continue
 		{
-			fprintf ( stderr, "\n" );
+			fprintf ( stderr, "WARNING: rank is empty after library processing\n" );
 			continue;
 		}
 
-		if ( i == gradsCounter - 1 || pes[i + 1].rank != pes[i].rank )
-		{
-			flag = nonLinear = downS = markSmall = 0;
+		if ( i == gradsCounter - 1 || pes[i + 1].rank != pes[i].rank ) { //if this is the last library in the rank (i.e. do the damn scaffolding!)
+			flag = nonLinear = downS = 0;
 
-			if ( pes[i].insertS > 1000 && pes[i].rank > 1 ) //XXX: assuming PE is always used????
-				{ downS = 1; }
-
-			if ( pes[i].insertS <= 1000 )
-				{ smallPE = 1; }
-
-			if ( pes[i].insertS >= 1000 )
-			{
-				ins_size_var = 50;
-				OverlapPercent = 0.05;
-			}
-			else if ( pes[i].insertS >= 300 )
-			{
-				ins_size_var = 30;
-				OverlapPercent = 0.05;
-			}
-			else
-			{
-				ins_size_var = 20;
-				OverlapPercent = 0.05;
-			}
-
-			if ( pes[i].insertS > 1000 )
-				{ weakPE = 5; } //XXX: always asks for at least 5 links from a LMP library
-
-			bySmall = Insert_size > 1000 ? 0 : 1;
-
+			//always asks for at least 5 links from a LMP library (TODO: enable override)
+			if ( pes[i].insertS > 1000 ) weakPE = 5;
+			//at least mean links for all libraries in the range (if there is a higly over-represented library, this will make the others unusable)
 			if ( lib_n > 0 )
 			{
 				weakPE = weakPE < cutoff_sum / lib_n ? cutoff_sum / lib_n : weakPE;
 				lib_n = cutoff_sum = 0;
 			}
 
-			if ( MinWeakCut > weakPE )
-				{ MinWeakCut = weakPE; }
-
 			fprintf ( stderr, "Cutoff of PE links to make a reliable connection: %d\n", weakPE );
+
+			//OverlapPercent is really hard-coded here.
+			OverlapPercent = 0.05;
+
+
+			if ( pes[i].insertS < 1000 ) { //scaffolding with PE
+				bySmall=1;
+				//TODO: replace this hardcoded insert size variation, which makes little sense!
+				ins_size_var=30;
+				downS=0;
+			}
+			else{ //scaffolding with LMP
+				bySmall=0;
+				//TODO: replace this hardcoded insert size variation, which makes little sense!
+				ins_size_var = 50;
+				downS=1;
+				detectBreakScaff();
+			}
 
 			if ( i == gradsCounter - 1 )
 				{ nonLinear = 1; }
 
-			if ( Insert_size > 1000 )
-			{
-				detectBreakScaff();
-			}
 
-			ordering ( 1, downS, nonLinear, infile );
 
-			if ( i == gradsCounter - 1 )
-			{
-				recoverMask();
-			}
-			else
-			{
-				scaffold_count ( j, 100 );
-				j++;
-				fprintf ( stderr, "\n" );
-			}
+			ordering ( 1, downS, nonLinear );
 
-			if ( Insert_size > 1000 && i != gradsCounter - 1 )
-			{
-				clearNewInsFlag();
-			}
+			//print stats
+			scaffold_count ( j, 100 );
+			j++;
+			fprintf ( stderr, "\n" );
+
 		}
 	}
+
+	recoverMask();
+	clearNewInsFlag();
 
 	freeDarray ( tempArray );
 	freeDarray ( solidArray );

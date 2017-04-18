@@ -72,7 +72,6 @@ extern unsigned int num_ctg;
 extern unsigned int * index_array;
 extern CONTIG * contig_array;
 extern int lineLen;
-extern int weakPE;
 extern long long newCntCounter;
 extern CONNECT ** cntLookupTable;
 extern unsigned int ctg_short;
