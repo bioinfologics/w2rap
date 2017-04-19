@@ -373,20 +373,6 @@ static int procGap ( char * line, STACK * ctgsStack )
 	return length;
 }
 
-static void debugging2 ( int index, STACK * ctgsStack )
-{
-	CTGinSCAF * actg;
-	stackBackup ( ctgsStack );
-	fprintf ( stderr, ">scaffold%d\t%d 0.0\n", index, ctgsStack->item_c );
-
-	while ( ( actg = stackPop ( ctgsStack ) ) != NULL )
-	{
-		fprintf ( stderr, "%d\t%d\t%d\t%d\n", actg->ctgID, actg->start, actg->end, actg->scaftig_start );
-	}
-
-	stackRecover ( ctgsStack );
-}
-
 static int cmp_reads ( const void * a, const void * b )
 {
 	READNEARBY * A, *B;

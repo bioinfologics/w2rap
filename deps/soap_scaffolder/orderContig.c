@@ -18,9 +18,6 @@
 
 #define MaxCntNode 1000
 
-static int DEBUG = 0;
-static int DEBUG1 = 0;
-static int DEBUG2 = 0;
 
 static int bySmall = 1;
 
@@ -84,7 +81,6 @@ static int setConnectMask ( unsigned int from_c, unsigned int to_c, char mask );
 static int setConnectWP ( unsigned int from_c, unsigned int to_c, char flag );
 
 static void general_linearization ( boolean strict );
-static void debugging2();
 static void smallScaf();
 static void clearNewInsFlag();
 static void detectBreakScaff();
@@ -1243,7 +1239,6 @@ static int maskPuzzle ( int num_connect, unsigned int contigLen )
 		if ( in_num > 1 || out_num > 1 )
 		{
 			puzzleCounter++;
-			//debugging2(i);
 		}
 
 		if ( isSmallerThanTwin ( i ) )
@@ -1609,28 +1604,6 @@ static void consolidate()
 	}
 }
 
-static void debugging1 ( unsigned int ctg1, unsigned int ctg2 )
-{
-	CONNECT * cn1;
-	cn1 = getCntBetween ( ctg1, ctg2 );
-
-	if ( cn1 )
-	{
-		fprintf ( stderr, "(%d,%d) mask %d deleted %d w %d,singleInScaf %d\n",
-		          ctg1, ctg2, cn1->mask, cn1->deleted, cn1->weight, cn1->singleInScaf );
-
-		if ( cn1->nextInScaf )
-			{ fprintf ( stderr, "%d->%d->%d\n", ctg1, ctg2, cn1->nextInScaf->contigID ); }
-
-		if ( cn1->prevInScaf )
-			{ fprintf ( stderr, "*->%d->%d\n", ctg1, ctg2 ); }
-		else if ( !cn1->nextInScaf )
-			{ fprintf ( stderr, "NULL->%d->%d->NULL\n", ctg1, ctg2 ); }
-	}
-	else
-		{ fprintf ( stderr, "%d -X- %d\n", ctg1, ctg2 ); }
-}
-
 /*************************************************
 Function:
     removeTransitive
@@ -1821,33 +1794,6 @@ static void removeTransitive()
 	}
 }
 
-static void debugging2 ( unsigned int ctg )
-{
-	if ( ctg > num_ctg )
-	{
-		return;
-	}
-
-	CONNECT * cn1 = contig_array[ctg].downwardConnect;
-
-	while ( cn1 )
-	{
-		if ( cn1->nextInScaf )
-			{ fprintf ( stderr, "with nextInScaf %u,", cn1->nextInScaf->contigID ); }
-
-		if ( cn1->prevInScaf )
-			{ fprintf ( stderr, "with prevInScaf," ); }
-
-		fprintf ( stderr, "%u >> %u, weight %d, gapLen %d, mask %d deleted %d, inherit %d, singleInScaf %d, bySmall %d\n",
-		          ctg, cn1->contigID, cn1->weight, cn1->gapLen, cn1->mask, cn1->deleted, cn1->inherit, cn1->singleInScaf, cn1->bySmall );
-		cn1 = cn1->next;
-	}
-}
-static void debugging()
-{
-	//  debugging1(13298356, 13245956);
-}
-
 /*************************************************
 Function:
     simplifyCnt
@@ -1866,9 +1812,8 @@ Return:
 static void simplifyCnt()
 {
 	removeTransitive();
-	debugging();
 	general_linearization ( 1 );
-	debugging();
+
 }
 
 /*************************************************
@@ -2175,22 +2120,13 @@ Return:
 *************************************************/
 static void ordering ( boolean deWeak, boolean downS, boolean nonlinear)
 {
-	debugging();
 
-	if ( downS ) {
-		downSlide();
-		debugging();
-	}
-
+	if ( downS ) downSlide();
 	if ( deWeak ) deleteWeakCnt ( weakPE );
 
-	debugging();
 	simplifyCnt();
-	debugging();
 	maskRepeat();
-	debugging();
 	simplifyCnt();
-	debugging();
 
 	if ( nonlinear )
 	{
@@ -2199,9 +2135,8 @@ static void ordering ( boolean deWeak, boolean downS, boolean nonlinear)
 	}
 
 	maskPuzzle ( 2, 0 );//XXX:this masks anything with more than 2 connections going forward! // should this be = to library number
-	debugging();
 	freezing();
-	debugging();
+
 }
 
 
@@ -2555,11 +2490,6 @@ static void recoverMask()
 			{
 				fprintf ( stderr, "Warning from recoverMask: no connection (%d %d), start at %d\n",
 				          start, finish, i );
-				cnt = getCntBetween ( start, finish );
-
-				if ( cnt )
-					{ debugging1 ( start, finish ); }
-
 				continue;
 			}
 
@@ -5256,6 +5186,7 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 	fprintf ( stderr, " Total PE links                %d\n", counter );
 	fprintf ( stderr, " PE links to masked contigs    %d\n", maskCounter );
 	fprintf ( stderr, " On same scaffold PE links     %d\n", onScafCounter );
+	fprintf ( stderr, "***************************\n\n" );
 	return counter;
 }
 
