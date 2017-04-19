@@ -120,63 +120,6 @@ void loadPEgrads ( char * infile )
 		return;
 	}
 
-	int lastRank = 0;
-
-	for ( i = 0; i < gradsCounter; i++ )
-	{
-		if ( i == 0 )
-		{
-			pes[i].rank = ++lastRank;
-		}
-		else if ( pes[i].insertS < 300 )
-		{
-			pes[i].rank = lastRank;
-		}
-		else if ( pes[i].insertS < 800 )
-		{
-			if ( pes[i - 1].insertS < 300 )
-			{
-				pes[i].rank = ++lastRank;
-			}
-			else
-			{
-				pes[i].rank = lastRank;
-			}
-		}
-		else if ( pes[i].insertS < 3000 )
-		{
-			if ( pes[i - 1].insertS < 800 )
-			{
-				pes[i].rank = ++lastRank;
-			}
-			else
-			{
-				pes[i].rank = lastRank;
-			}
-		}
-		else if ( pes[i].insertS < 7000 )
-		{
-			if ( pes[i - 1].insertS < 3000 )
-			{
-				pes[i].rank = ++lastRank;
-			}
-			else
-			{
-				pes[i].rank = lastRank;
-			}
-		}
-		else
-		{
-			if ( pes[i - 1].insertS < 7000 )
-			{
-				pes[i].rank = ++lastRank;
-			}
-			else
-			{
-				pes[i].rank = lastRank;
-			}
-		}
-	}
 }
 
 /*************************************************
