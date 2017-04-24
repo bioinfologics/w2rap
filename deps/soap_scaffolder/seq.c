@@ -53,15 +53,15 @@ void printTightString ( char * tightSeq, int len )
 
 	for ( i = 0; i < len; i++ )
 	{
-		fprintf ( stderr, "%c", int2base ( ( int ) getCharInTightString ( tightSeq, i ) ) );
+		printf ( "%c", int2base ( ( int ) getCharInTightString ( tightSeq, i ) ) );
 
 		if ( ( i + 1 ) % 100 == 0 && i < len - 1 )
 		{
-			fprintf ( stderr, "\n" );
+			printf ( "\n" );
 		}
 	}
 
-	fprintf ( stderr, "\n" );
+	printf ( "\n" );
 }
 
 /*************************************************

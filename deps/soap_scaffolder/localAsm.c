@@ -653,11 +653,11 @@ static void traceAlongDBgraph ( Kmer currW, int steps, int min, int max, int * n
 	//  #ifdef DEBUG
 	if ( !found )
 	{
-		fprintf ( stderr, "%s Trace: can't find kmer ", __FUNCTION__ );
-		PrintKmer ( stderr, word );
-		fprintf ( stderr, " (input " );
-		PrintKmer ( stderr, currW );
-		fprintf ( stderr, ") at step %d.\n", steps );
+		printf ( "%s Trace: can't find kmer ", __FUNCTION__ );
+		PrintKmer ( stdout, word );
+		printf ( " (input " );
+		PrintKmer ( stdout, currW );
+		printf ( ") at step %d.\n", steps );
 		/*
 		#ifdef MER127
 		fprintf (stderr, "%s Trace: can't find kmer %llx %llx %llx %llx (input %llx %llx %llx %llx) at step %d.\n",
@@ -875,7 +875,7 @@ static int searchFgap ( KmerSet * kset, CTGinSCAF * ctg1, CTGinSCAF * ctg2, Kmer
 
 			if ( num_route < 1 )
 			{
-				fprintf ( stderr, "After trace4Repeat: non route was found.\n" );
+				printf ( "After trace4Repeat: non route was found.\n" );
 				continue;
 			}
 
@@ -1136,11 +1136,11 @@ static void trace4Repeat ( Kmer currW, int steps, int min, int max, int * num_ro
 	//  #ifdef DEBUG
 	if ( !found )
 	{
-		fprintf ( stderr, "%s Trace: can't find kmer ", __FUNCTION__ );
-		PrintKmer ( stderr, word );
-		fprintf ( stderr, " (input " );
-		PrintKmer ( stderr, currW );
-		fprintf ( stderr, ") at step %d.\n", steps );
+		printf ( "%s Trace: can't find kmer ", __FUNCTION__ );
+		PrintKmer ( stdout, word );
+		printf ( " (input " );
+		PrintKmer ( stdout, currW );
+		printf ( ") at step %d.\n", steps );
 		/*
 		#ifdef MER127
 		printf ( "%s Trace: can't find kmer %llx %llx %llx %llx (input %llx %llx %llx %llx) at step %d\n",
@@ -1806,7 +1806,7 @@ static void mapSlowOntoFast ( int slowSeqLength, int fastSeqLength )
 		}
 		else
 		{
-			fprintf ( stderr, "CompareSequence: Error trace.\n" );
+			printf ( "CompareSequence: Error trace.\n" );
 			abort ();
 		}
 	}
@@ -2059,7 +2059,7 @@ static int cutSeqFromRead ( char * src_seq, int length, int start, int end, char
 {
 	if ( end >= length )
 	{
-		fprintf ( stderr, "The index is bigger than the length: end %d length %d.\n", end, length );
+		printf ( "The index is bigger than the length: end %d length %d.\n", end, length );
 	}
 
 	end = end < length ? end : length - 1;

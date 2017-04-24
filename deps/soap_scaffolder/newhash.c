@@ -348,7 +348,7 @@ PROTECTED_FUNC static inline void encap_kmerset ( KmerSet * set, ubyte8 num )
 		}
 		else
 		{
-			fprintf ( stderr, "-- Static memory pool exploded, please define a larger value. --\n" );
+			printf ( "-- Static memory pool exploded, please define a larger value. --\n" );
 			abort();
 		}
 	}
@@ -373,7 +373,7 @@ PROTECTED_FUNC static inline void encap_kmerset ( KmerSet * set, ubyte8 num )
 
 	if ( set->array == NULL )
 	{
-		fprintf ( stderr, "-- Out of memory --\n" );
+		printf ( "-- Out of memory --\n" );
 		abort ();
 	}
 

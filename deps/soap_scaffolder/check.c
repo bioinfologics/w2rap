@@ -29,7 +29,7 @@ FILE * ckopen ( char * name, char * mode )
 
 	if ( ( fp = fopen ( name, mode ) ) == NULL )
 	{
-		fprintf ( stderr, "Cannot open %s. Now exit to system...\n", name );
+		printf ( "Cannot open %s. Now exit to system...\n", name );
 		exit ( -1 );
 	}
 
@@ -98,11 +98,11 @@ void * ckalloc ( unsigned long long amount )
 
 	if ( ( p = ( void * ) calloc ( 1, ( unsigned long long ) amount ) ) == NULL && amount != 0 )
 	{
-		fprintf ( stderr, "Ran out of memory while applying %lldbytes\n", amount );
-		fprintf ( stderr, "There may be errors as follows:\n" );
-		fprintf ( stderr, "1) Not enough memory.\n" );
-		fprintf ( stderr, "2) The ARRAY may be overrode.\n" );
-		fprintf ( stderr, "3) The wild pointers.\n" );
+		printf ( "Ran out of memory while applying %lldbytes\n", amount );
+		printf ( "There may be errors as follows:\n" );
+		printf ( "1) Not enough memory.\n" );
+		printf ( "2) The ARRAY may be overrode.\n" );
+		printf ( "3) The wild pointers.\n" );
 		exit ( -1 );
 	}
 

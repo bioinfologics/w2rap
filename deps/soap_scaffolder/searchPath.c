@@ -67,7 +67,7 @@ void traceAlongMaskedCnt ( unsigned int destE, unsigned int currE, int max_steps
 
 	if ( currE == destE && index == 0 )
 	{
-		fprintf ( stderr, "The traceAlongMaskedCnt: start and destination are the same.\n" );
+		printf ( "The traceAlongMaskedCnt: start and destination are the same.\n" );
 		return;
 	}
 
@@ -133,7 +133,7 @@ void traceAlongConnect ( unsigned int destE, CONNECT * currCNT, int max_steps, i
 	 */
 	if ( currE == destE && index == 1 )
 	{
-		fprintf ( stderr, "The traceAlongConnect: start and destination are the same.\n" );
+		printf ( "The traceAlongConnect: start and destination are the same.\n" );
 		return;
 	}
 
@@ -200,7 +200,7 @@ void traceAlongArc ( unsigned int destE, unsigned int currE, int max_steps, int 
 
 	if ( currE == destE && pos == 0 )
 	{
-		fprintf ( stderr, "The traceAlongArc: start and destination are the same.\n" );
+		printf ( "The traceAlongArc: start and destination are the same.\n" );
 		return;
 	}
 

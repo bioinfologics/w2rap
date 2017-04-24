@@ -234,7 +234,7 @@ int data_prepare(){
 		}
 		
 	}
-	fprintf(stderr,"All contigs loaded.\n");
+	printf("All contigs loaded.\n");
 	sprintf(file_name, "%s.updated.edge", graphfile);
 	update=ckopen(file_name,"w");
 	sprintf(file_name, "%s.ContigIndex", graphfile);

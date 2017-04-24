@@ -83,7 +83,7 @@ void loadPEgrads ( char * infile )
 
 	if ( !fp )
 	{
-		fprintf ( stderr, "Can not open file %s.\n", name );
+		printf ( "Can not open file %s.\n", name );
 		gradsCounter = 0;
 		return;
 	}
@@ -93,7 +93,7 @@ void loadPEgrads ( char * infile )
 		if ( line[0] == 'g' )
 		{
 			sscanf ( line + 10, "%d %lld %d", &gradsCounter, &n_solexa, &maxReadLen );
-			fprintf ( stderr, "There are %d grad(s), %lld read(s), max read len %d.\n", gradsCounter, n_solexa, maxReadLen );
+			printf ( "There are %d grad(s), %lld read(s), max read len %d.\n", gradsCounter, n_solexa, maxReadLen );
 			break;
 		}
 	}
@@ -339,7 +339,7 @@ int connectByPE_grad_gz ( char * infile, int peGrad, char * line )
 
 	if ( peGrad < 0 || peGrad > gradsCounter )
 	{
-		fprintf ( stderr, "Specified pe grad is out of bound.\n" );
+		printf ( "Specified pe grad is out of bound.\n" );
 		return 0;
 	}
 
@@ -399,16 +399,16 @@ int connectByPE_grad_gz ( char * infile, int peGrad, char * line )
 		pre_pos = pos;
 	}
 
-	fprintf ( stderr, "For insert size: %d\n", PE );
-	fprintf ( stderr, " Total PE links                      %d\n", Total_PE );
-	fprintf ( stderr, " Normal PE links on same contig      %d\n", onsameCtgPE );
-	fprintf ( stderr, " Incorrect oriented PE links         %d\n", ignorePE1 );
-	fprintf ( stderr, " PE links of too small insert size   %d\n", ignorePE2 );
-	fprintf ( stderr, " PE links of too large insert size   %d\n", ignorePE3 );
-	fprintf ( stderr, " Correct PE links                    %d\n", count );
-	fprintf ( stderr, " Accumulated connections             %d\n", newCntCounter );
-	fprintf ( stderr, "Use contigs longer than %d to estimate insert size: \n", PE );
-	fprintf ( stderr, " PE links               %d\n", isStack->item_c );
+	printf ( "For insert size: %d\n", PE );
+	printf ( " Total PE links                      %d\n", Total_PE );
+	printf ( " Normal PE links on same contig      %d\n", onsameCtgPE );
+	printf ( " Incorrect oriented PE links         %d\n", ignorePE1 );
+	printf ( " PE links of too small insert size   %d\n", ignorePE2 );
+	printf ( " PE links of too large insert size   %d\n", ignorePE3 );
+	printf ( " Correct PE links                    %d\n", count );
+	printf ( " Accumulated connections             %d\n", newCntCounter );
+	printf ( "Use contigs longer than %d to estimate insert size: \n", PE );
+	printf ( " PE links               %d\n", isStack->item_c );
 	calcuIS ( isStack );
 	freeStack ( isStack );
 	gzclose(fp);
@@ -437,7 +437,7 @@ static int calcuIS ( STACK * intStack )
 
 	if ( num < 100 )
 	{
-		fprintf ( stderr, "Too few PE links.\n" );
+		printf ( "Too few PE links.\n" );
 		return avg;
 	}
 
@@ -463,7 +463,7 @@ static int calcuIS ( STACK * intStack )
 
 	if ( SD == 0 )
 	{
-		fprintf ( stderr, " Average insert size    %d\n SD                     %d\n", avg, SD );
+		printf ( " Average insert size    %d\n SD                     %d\n", avg, SD );
 		return avg;
 	}
 
@@ -480,7 +480,7 @@ static int calcuIS ( STACK * intStack )
 	if ( num == 0 ) { avg = 0; }
 	else { avg = sum / num; }
 
-	fprintf ( stderr, " Average insert size    %d\n SD                     %d\n", avg, SD );
+	printf ( " Average insert size    %d\n SD                     %d\n", avg, SD );
 	return avg;
 }
 

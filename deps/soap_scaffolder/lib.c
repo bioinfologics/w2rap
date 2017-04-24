@@ -168,7 +168,7 @@ void scan_libInfo ( char * libfile )
 
 	if ( num_libs == 0 )
 	{
-		fprintf ( stderr, "Config file error: no [LIB] in file\n" );
+		printf ( "Config file error: no [LIB] in file\n" );
 		exit ( -1 );
 	}
 
@@ -262,13 +262,13 @@ void scan_libInfo ( char * libfile )
 	{
 		if ( lib_array[i].num_a2_file != lib_array[i].num_a1_file )
 		{
-			fprintf ( stderr, "Config file error: the number of mark \"f1\" is not the same as \"f2\"!\n" );
+			printf ( "Config file error: the number of mark \"f1\" is not the same as \"f2\"!\n" );
 			exit ( -1 );
 		}
 
 		if ( lib_array[i].num_q2_file != lib_array[i].num_q1_file )
 		{
-			fprintf ( stderr, "Config file error: the number of mark \"q1\" is not the same as \"q2\"!\n" );
+			printf ( "Config file error: the number of mark \"q1\" is not the same as \"q2\"!\n" );
 			exit ( -1 );
 		}
 
@@ -408,9 +408,9 @@ void scan_libInfo ( char * libfile )
 
 			if ( strcmp ( lib_array[i].a2_fname[index], lib_array[i].a1_fname[index] ) == 0 )
 			{
-				fprintf ( stderr, "Config file error: f2 file is the same as f1 file\n" );
-				fprintf ( stderr, "f1=%s\n", lib_array[i].a1_fname[index] );
-				fprintf ( stderr, "f2=%s\n", lib_array[i].a2_fname[index] );
+				printf ( "Config file error: f2 file is the same as f1 file\n" );
+				printf ( "f1=%s\n", lib_array[i].a1_fname[index] );
+				printf ( "f2=%s\n", lib_array[i].a2_fname[index] );
 				exit ( -1 );
 			}
 		}
@@ -421,9 +421,9 @@ void scan_libInfo ( char * libfile )
 
 			if ( strcmp ( lib_array[i].q2_fname[index], lib_array[i].q1_fname[index] ) == 0 )
 			{
-				fprintf ( stderr, "Config file error: q2 file is the same as q1 file\n" );
-				fprintf ( stderr, "q1=%s\n", lib_array[i].q1_fname[index] );
-				fprintf ( stderr, "q2=%s\n", lib_array[i].q2_fname[index] );
+				printf ( "Config file error: q2 file is the same as q1 file\n" );
+				printf ( "q1=%s\n", lib_array[i].q1_fname[index] );
+				printf ( "q2=%s\n", lib_array[i].q2_fname[index] );
 				exit ( -1 );
 			}
 		}
@@ -494,7 +494,7 @@ void scan_libInfo ( char * libfile )
 	{
 		if ( pe[i] && lib_array[i].avg_ins == 0 )
 		{
-			fprintf ( stderr, "Config file error: PE reads need avg_ins in [LIB] %d\n", i + 1 );
+			printf ( "Config file error: PE reads need avg_ins in [LIB] %d\n", i + 1 );
 			exit ( -1 );
 		}
 	}
@@ -511,11 +511,11 @@ void free_libs ()
 	}
 
 	int i, j;
-	fprintf ( stderr, "LIB(s) information:\n" );
+	printf ( "LIB(s) information:\n" );
 
 	for ( i = 0; i < num_libs; i++ )
 	{
-		fprintf ( stderr, " [LIB] %d, avg_ins %d, reverse %d.\n", i, lib_array[i].avg_ins, lib_array[i].reverse );
+		printf ( " [LIB] %d, avg_ins %d, reverse %d.\n", i, lib_array[i].avg_ins, lib_array[i].reverse );
 
 		if ( lib_array[i].num_s_a_file )
 		{

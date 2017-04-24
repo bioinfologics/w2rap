@@ -286,7 +286,7 @@ void loadUpdatedEdges ( char * graphfile )
 		if ( line[0] == 'V' )
 		{
 			sscanf ( line + 6, "%d %c %d", &num_kmer, &c, &overlaplen );
-			fprintf ( stderr, "Kmer size: %d\n", overlaplen );
+			printf ( "Kmer size: %d\n", overlaplen );
 			break;
 		}
 	}
@@ -310,7 +310,7 @@ void loadUpdatedEdges ( char * graphfile )
 		if ( line[0] == 'E' )
 		{
 			sscanf ( line + 5, "%d", &num_ctgge );
-			fprintf ( stderr, "There are %d edge(s) in edge file.\n", num_ctgge );
+			printf ( "There are %d edge(s) in edge file.\n", num_ctgge );
 			break;
 		}
 	}
@@ -399,7 +399,7 @@ void loadUpdatedEdges ( char * graphfile )
 		high_cvg_cutoff2 = cvg_high * cvgAvg * 0.8;
 		low_cvg_cutoff = cvg_low * cvgAvg;
 		counter = 0;
-		fprintf ( stderr, "Mask contigs with coverage lower than %.1f or higher than %.1f, and strict length %d.\n", low_cvg_cutoff, high_cvg_cutoff1, ctg_short_cutoff );
+		printf ( "Mask contigs with coverage lower than %.1f or higher than %.1f, and strict length %d.\n", low_cvg_cutoff, high_cvg_cutoff1, ctg_short_cutoff );
 
 		for ( i = 1; i <= num_ctg; i++ )
 		{
@@ -436,7 +436,7 @@ void loadUpdatedEdges ( char * graphfile )
 			}
 		}
 
-		fprintf ( stderr, "Average contig coverage is %d, %lld contig(s) masked.\n", cvgAvg, counter );
+		printf ( "Average contig coverage is %d, %lld contig(s) masked.\n", cvgAvg, counter );
 	}
 
 	counter = 0;
@@ -465,14 +465,14 @@ void loadUpdatedEdges ( char * graphfile )
 		}
 	}
 
-	fprintf ( stderr, "Mask contigs shorter than %d, %lld contig(s) masked.\n", ctg_short, counter );
+	printf ( "Mask contigs shorter than %d, %lld contig(s) masked.\n", ctg_short, counter );
 	avg_arc_wt = loadArcs ( graphfile );
 	counter = 0;
 	//counter = maskRepeatByArc(avg_arc_wt);
 	//printf ("Mask contigs with multi arcs, %d contig masked\n", counter);
 	//tipsCount();
 	loadContig ( graphfile );
-	fprintf ( stderr, "Done loading updated edges.\n" );
+	printf ( "Done loading updated edges.\n" );
 	free ( ( void * ) length_array );
 	free ( ( void * ) flag_array );
 	fclose ( fp );
@@ -541,7 +541,7 @@ static unsigned int loadArcs ( char * graphfile )
 		avg_weight = weight_sum / arc_num;
 	}
 
-	fprintf ( stderr, "%lld arc(s) loaded, average weight is %u.\n", arcCounter, avg_weight );
+	printf ( "%lld arc(s) loaded, average weight is %u.\n", arcCounter, avg_weight );
 	fclose ( fp );
 	return avg_weight;
 }
@@ -608,7 +608,7 @@ void loadContig ( char * graphfile )
 		contig_array[newIndex].seq = tightSeq;
 	}
 
-	fprintf ( stderr, "%d contig(s) loaded.\n", index + 1 );
+	printf ( "%d contig(s) loaded.\n", index + 1 );
 	fclose ( fp );
 	//printf("the %dth contig with index 107\n",index);
 }

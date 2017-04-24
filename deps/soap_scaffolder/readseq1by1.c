@@ -557,8 +557,8 @@ void openFileInLib ( int libNo )
 
 	if ( lib_array[i].curr_type == 1 )
 	{
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].a1_fname[lib_array[i].curr_index] );
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].a2_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].a1_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].a2_fname[lib_array[i].curr_index] );
 		lib_array[i].fp1 = openFile4read ( lib_array[i].a1_fname[lib_array[i].curr_index] );
 		lib_array[i].fp2 = openFile4read ( lib_array[i].a2_fname[lib_array[i].curr_index] );
 		lib_array[i].curr_index++;
@@ -566,8 +566,8 @@ void openFileInLib ( int libNo )
 	}
 	else if ( lib_array[i].curr_type == 2 )
 	{
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].q1_fname[lib_array[i].curr_index] );
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].q2_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].q1_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].q2_fname[lib_array[i].curr_index] );
 		lib_array[i].fp1 = openFile4read ( lib_array[i].q1_fname[lib_array[i].curr_index] );
 		lib_array[i].fp2 = openFile4read ( lib_array[i].q2_fname[lib_array[i].curr_index] );
 		lib_array[i].curr_index++;
@@ -575,21 +575,21 @@ void openFileInLib ( int libNo )
 	}
 	else if ( lib_array[i].curr_type == 3 )
 	{
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].p_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].p_fname[lib_array[i].curr_index] );
 		lib_array[i].fp1 = openFile4read ( lib_array[i].p_fname[lib_array[i].curr_index] );
 		lib_array[i].curr_index++;
 		lib_array[i].paired = 0;
 	}
 	else if ( lib_array[i].curr_type == 5 )
 	{
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].s_a_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].s_a_fname[lib_array[i].curr_index] );
 		lib_array[i].fp1 = openFile4read ( lib_array[i].s_a_fname[lib_array[i].curr_index] );
 		lib_array[i].curr_index++;
 		lib_array[i].paired = 0;
 	}
 	else if ( lib_array[i].curr_type == 6 )
 	{
-		fprintf ( stderr, "Import reads from file:\n %s\n", lib_array[i].s_q_fname[lib_array[i].curr_index] );
+		printf ( "Import reads from file:\n %s\n", lib_array[i].s_q_fname[lib_array[i].curr_index] );
 		lib_array[i].fp1 = openFile4read ( lib_array[i].s_q_fname[lib_array[i].curr_index] );
 		lib_array[i].curr_index++;
 		lib_array[i].paired = 0;
@@ -1013,7 +1013,7 @@ boolean read1seqInLibpos ( char * src_seq, char * src_name, int * len_seq, // FI
 		file = openFile4read ( fileName[*file_No] );
 
 		if ( file != NULL )
-			{ fprintf ( stderr, "Import reads from file:\n %s\n", fileName[*file_No] ); }
+			{ printf ( "Import reads from file:\n %s\n", fileName[*file_No] ); }
 
 		if ( fileType[*file_No] == 1 || fileType[*file_No] == 3 )
 		{

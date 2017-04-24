@@ -98,9 +98,9 @@ int main ( int argc, char ** argv )
 {
 	time_t start_t, stop_t, time_bef, time_aft;
 	time ( &start_t );
-	fprintf ( stderr, "\n********************\n" );
-	fprintf ( stderr, "Scaffolder: s_map\n" );
-	fprintf ( stderr, "********************\n\n" );
+	printf ( "\n********************\n" );
+	printf ( "Scaffolder: s_map\n" );
+	printf ( "********************\n\n" );
 	initenv ( argc, argv );
 	overlaplen = getMinOverlap ( graphfile );
 #ifdef MER127
@@ -120,26 +120,26 @@ int main ( int argc, char ** argv )
 	}
 
 #endif
-	fprintf ( stderr, "Kmer size: %d.\n", overlaplen );
+	printf ( "Kmer size: %d.\n", overlaplen );
 	time ( &time_bef );
 	ctg_short = overlaplen + 2;
-	fprintf ( stderr, "Contig length cutoff: %d.\n", ctg_short );
+	printf ( "Contig length cutoff: %d.\n", ctg_short );
 	prlContig2nodes ( graphfile, ctg_short );
 	time ( &time_aft );
-	fprintf ( stderr, "Time spent on graph construction: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
+	printf ( "Time spent on graph construction: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 	//map long read (asm_flags=4) to edge one by one
 	time ( &time_bef );
 	prlLongRead2Ctg ( shortrdsfile, graphfile );
 	time ( &time_aft );
-	fprintf ( stderr, "Time spent on aligning long reads: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
+	printf ( "Time spent on aligning long reads: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 	//map read to edge one by one
 	time ( &time_bef );
 	prlRead2Ctg ( shortrdsfile, graphfile );
 	time ( &time_aft );
-	fprintf ( stderr, "Time spent on aligning reads: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
+	printf ( "Time spent on aligning reads: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 	free_Sets ( KmerSets, thrd_num );
 	time ( &stop_t );
-	fprintf ( stderr, "Overall time spent on alignment: %dm.\n\n", ( int ) ( stop_t - start_t ) / 60 );
+	printf ( "Overall time spent on alignment: %dm.\n\n", ( int ) ( stop_t - start_t ) / 60 );
 	return 0;
 }
 
@@ -158,7 +158,7 @@ void initenv ( int argc, char ** argv )
 	char temp[100];
 	optind = 1;
 	inpseq = outseq = 0;
-	fprintf ( stderr, "Parameters: s_map " );
+	printf ( "Parameters: s_map " );
 
 	while ( ( copt = getopt ( argc, argv, "s:g:K:p:k:f" ) ) != EOF )
 	{
@@ -166,33 +166,33 @@ void initenv ( int argc, char ** argv )
 		switch ( copt )
 		{
 			case 's':
-				fprintf ( stderr, "-s %s ", optarg );
+				printf ( "-s %s ", optarg );
 				inpseq = 1;
 				sscanf ( optarg, "%s", shortrdsfile );
 				break;
 			case 'g':
-				fprintf ( stderr, "-g %s ", optarg );
+				printf ( "-g %s ", optarg );
 				outseq = 1;
 				sscanf ( optarg, "%s", graphfile );
 				break;
 			case 'K':
-				fprintf ( stderr, "-K %s ", optarg );
+				printf ( "-K %s ", optarg );
 				sscanf ( optarg, "%s", temp );
 				overlaplen = atoi ( temp );
 				break;
 			case 'p':
-				fprintf ( stderr, "-p %s ", optarg );
+				printf ( "-p %s ", optarg );
 				sscanf ( optarg, "%s", temp );
 				thrd_num = atoi ( temp );
 				break;
 			case 'k':
-				fprintf ( stderr, "-k %s ", optarg );
+				printf ( "-k %s ", optarg );
 				sscanf ( optarg, "%s", temp );
 				smallKmer = atoi ( temp );
 				break;
 			case 'f':
 				fill = 1;
-				fprintf ( stderr, "-f " );
+				printf ( "-f " );
 				break;
 			default:
 
@@ -204,7 +204,7 @@ void initenv ( int argc, char ** argv )
 		}
 	}
 
-	fprintf ( stderr, "\n\n" );
+	printf ( "\n\n" );
 
 	if ( inpseq == 0 || outseq == 0 )
 	{
@@ -215,14 +215,14 @@ void initenv ( int argc, char ** argv )
 
 static void display_map_usage ()
 {
-	fprintf ( stderr, "\ns_map -s configFile -g inputGraph [-f] [-p n_cpu -k kmer_R2C]\n" );
-	fprintf ( stderr, "  -s <string>        configFile: the config file of solexa reads\n" );
-	fprintf ( stderr, "  -g <string>        inputGraph: prefix of input graph file names\n" );
-	fprintf ( stderr, "  -f (optional)      output gap related reads in map step for using SRkgf to fill gap, [NO]\n" );
-	fprintf ( stderr, "  -p <int>           n_cpu: number of cpu for use, [8]\n" );
+	printf ( "\ns_map -s configFile -g inputGraph [-f] [-p n_cpu -k kmer_R2C]\n" );
+	printf ( "  -s <string>        configFile: the config file of solexa reads\n" );
+	printf ( "  -g <string>        inputGraph: prefix of input graph file names\n" );
+	printf ( "  -f (optional)      output gap related reads in map step for using SRkgf to fill gap, [NO]\n" );
+	printf ( "  -p <int>           n_cpu: number of cpu for use, [8]\n" );
 #ifdef MER127
-	fprintf ( stderr, "  -k <int>           kmer_R2C(min 13, max 127): kmer size used for mapping read to contig, [K]\n" );
+	printf ( "  -k <int>           kmer_R2C(min 13, max 127): kmer size used for mapping read to contig, [K]\n" );
 #else
-	fprintf ( stderr, "  -k <int>           kmer_R2C(min 13, max 63): kmer size used for mapping read to contig, [K]\n" );
+	printf ( "  -k <int>           kmer_R2C(min 13, max 63): kmer size used for mapping read to contig, [K]\n" );
 #endif
 }

@@ -70,12 +70,12 @@ static void creatThrds ( pthread_t * threads, PARAMETER * paras )
 	{
 		if ( ( temp = pthread_create ( &threads[i], NULL, ( void * ) threadRoutine, & ( paras[i] ) ) ) != 0 )
 		{
-			fprintf ( stderr, "Create threads failed.\n" );
+			printf ( "Create threads failed.\n" );
 			exit ( 1 );
 		}
 	}
 
-	fprintf ( stderr, "%d thread(s) initialized.\n", thrd_num );
+	printf ( "%d thread(s) initialized.\n", thrd_num );
 }
 
 static void threadRoutine ( void * para )
@@ -725,7 +725,7 @@ void basicContigInfo ( char * infile )
 	fp = ckopen ( name, "r" );
 	fgets ( lldne, sizeof ( lldne ), fp );
 	sscanf ( lldne + 8, "%d %d", &num_all, &num_long );
-	fprintf ( stderr, "%d edge(s) in the graph.\n", num_all );
+	printf ( "%d edge(s) in the graph.\n", num_all );
 	num_ctg = num_all;
 	contig_array = ( CONTIG * ) ckalloc ( ( num_all + 1 ) * sizeof ( CONTIG ) );
 	fgets ( lldne, sizeof ( lldne ), fp );
@@ -739,7 +739,7 @@ void basicContigInfo ( char * infile )
 
 		if ( index != num_long )
 		{
-			fprintf ( stderr, "BasicContigInfo: %d vs %d.\n", index, num_long );
+			printf ( "BasicContigInfo: %d vs %d.\n", index, num_long );
 		}
 
 		if ( bal_ed == 0 )
@@ -790,7 +790,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 		maxReadLen = 100;
 	}
 
-	fprintf ( stderr, "In file: %s, max seq len %d, max name len %d\n", libfile, maxReadLen, maxNameLen );
+	printf ( "In file: %s, max seq len %d, max name len %d\n", libfile, maxReadLen, maxNameLen );
 
 	if ( maxReadLen > maxReadLen4all )
 	{
@@ -905,7 +905,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 				ALIGNLEN = ALIGNLEN < 32 ? 32 : ALIGNLEN;
 			}
 
-			fprintf ( stderr, "Current insert size is %d, map_len is %d.\n", insSize, ALIGNLEN );
+			printf ( "Current insert size is %d, map_len is %d.\n", insSize, ALIGNLEN );
 		}
 
 		insSizeArray[read_c] = insSize;
@@ -917,7 +917,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 
 		if ( ( ++i ) % 100000000 == 0 )
 		{
-			fprintf ( stderr, "--- %lldth reads.\n", i );
+			printf ( "--- %lldth reads.\n", i );
 		}
 
 		indexArray[read_c] = kmer_c;
@@ -948,13 +948,13 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 		sendWorkSignal ( 1, thrdSignal ); //searchKmer
 		sendWorkSignal ( 3, thrdSignal ); //parse1read
 		recordAlldgn ( fo, insSizeArray, outfp1, outfp2, outfp4 );
-		fprintf ( stderr, "\nTotal reads         %lld\n", readCounter );
-		fprintf ( stderr, "Reads in gaps       %lld\n", readsInGap );
-		fprintf ( stderr, "Ratio               %.1f%%\n", ( float ) readsInGap / readCounter * 100 );
+		printf ( "\nTotal reads         %lld\n", readCounter );
+		printf ( "Reads in gaps       %lld\n", readsInGap );
+		printf ( "Ratio               %.1f%%\n", ( float ) readsInGap / readCounter * 100 );
 	}
 
-	fprintf ( stderr, "Reads on contigs    %lld\n", mapCounter );
-	fprintf ( stderr, "Ratio               %.1f%%\n", ( float ) mapCounter / readCounter * 100 );
+	printf ( "Reads on contigs    %lld\n", mapCounter );
+	printf ( "Ratio               %.1f%%\n", ( float ) mapCounter / readCounter * 100 );
 	sendWorkSignal ( 5, thrdSignal ); //stop threads
 	thread_wait ( threads );
 	gzclose ( fo );
@@ -965,10 +965,10 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 	if ( pairs )
 	{
 		if ( gradsCounter )
-			{ fprintf ( stderr, "%d pe insert size, the largest boundary is %lld.\n\n", gradsCounter, pes[gradsCounter - 1].PE_bound ); }
+			{ printf ( "%d pe insert size, the largest boundary is %lld.\n\n", gradsCounter, pes[gradsCounter - 1].PE_bound ); }
 		else
 		{
-			fprintf ( stderr, "No paired reads found.\n" );
+			printf ( "No paired reads found.\n" );
 		}
 
 		for ( i = 0; i < gradsCounter; i++ )
@@ -1090,7 +1090,7 @@ void prlLongRead2Ctg ( char * libfile, char * outfile )
 	}
 
 	maxReadLen4all = maxReadLen < longReadLen ? longReadLen : maxReadLen;
-	fprintf ( stderr, "In file: %s, long read len %d, max name len %d.\n", libfile, longReadLen, maxNameLen );
+	printf ( "In file: %s, long read len %d, max name len %d.\n", libfile, longReadLen, maxNameLen );
 	maxReadLen = longReadLen;
 	src_name = ( char * ) ckalloc ( ( maxNameLen + 1 ) * sizeof ( char ) );
 	next_name = ( char * ) ckalloc ( ( maxNameLen + 1 ) * sizeof ( char ) );
@@ -1186,14 +1186,14 @@ void prlLongRead2Ctg ( char * libfile, char * outfile )
 			prevLibNo = libNo;
 			ALIGNLEN = lib_array[libNo].map_len;
 			ALIGNLEN = ALIGNLEN < 35 ? 35 : ALIGNLEN;
-			fprintf ( stderr, "Map_len %d.\n", ALIGNLEN );
+			printf ( "Map_len %d.\n", ALIGNLEN );
 		}
 
 		insSizeArray[read_c] = 18;
 
 		if ( ( ++i ) % 100000000 == 0 )
 		{
-			fprintf ( stderr, "--- %lldth reads.\n", i );
+			printf ( "--- %lldth reads.\n", i );
 		}
 
 		indexArray[read_c] = kmer_c;
@@ -1224,7 +1224,7 @@ void prlLongRead2Ctg ( char * libfile, char * outfile )
 		sendWorkSignal ( 1, thrdSignal ); //searchKmer
 		sendWorkSignal ( 3, thrdSignal ); //parse1read
 		recordLongRead ( outfp1, outfp2 );
-		fprintf ( stderr, "Output %lld out of %lld (%.1f)%% reads in gaps.\n", readsInGap, readCounter, ( float ) readsInGap / readCounter * 100 );
+		printf ( "Output %lld out of %lld (%.1f)%% reads in gaps.\n", readsInGap, readCounter, ( float ) readsInGap / readCounter * 100 );
 	}
 
 	sendWorkSignal ( 5, thrdSignal ); //stop
@@ -1245,7 +1245,7 @@ void prlLongRead2Ctg ( char * libfile, char * outfile )
 		}
 	}
 
-	fprintf ( stderr, "%d reads deleted.\n", deletion[0] );
+	printf ( "%d reads deleted.\n", deletion[0] );
 	free ( ( void * ) rcSeq );
 	free ( ( void * ) deletion );
 

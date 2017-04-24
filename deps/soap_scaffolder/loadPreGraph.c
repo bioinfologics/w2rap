@@ -77,12 +77,12 @@ void loadVertex ( char * graphfile )
 		if ( line[0] == 'V' )
 		{
 			sscanf ( line + 6, "%d %c %d", &num_kmer, &ch, &overlaplen );
-			fprintf ( stderr, "There are %d kmer(s) in vertex file.\n", num_kmer );
+			printf ( "There are %d kmer(s) in vertex file.\n", num_kmer );
 		}
 		else if ( line[0] == 'E' )
 		{
 			sscanf ( line + 5, "%d", &num_ed );
-			fprintf ( stderr, "There are %d edge(s) in edge file.\n", num_ed );
+			printf ( "There are %d edge(s) in edge file.\n", num_ed );
 		}
 		else if ( line[0] == 'M' )
 		{
@@ -93,12 +93,12 @@ void loadVertex ( char * graphfile )
 			if ( line[7] == 'V' )
 			{
 				sscanf ( line, "Backup VERTEX %d %c %d", &num_kmer, &ch, &overlaplen );
-				fprintf ( stderr, "Backup there are %d kmer(s) in vertex file.\n", num_kmer );
+				printf ( "Backup there are %d kmer(s) in vertex file.\n", num_kmer );
 			}
 			else if ( line[7] == 'E' )
 			{
 				sscanf ( line, "Backup EDGEs %d", &num_ed );
-				fprintf ( stderr, "Backup there are %d edge(s) in edge file.\n", num_ed );
+				printf ( "Backup there are %d edge(s) in edge file.\n", num_ed );
 			}
 			else if ( line[7] == 'M' )
 			{
@@ -134,7 +134,7 @@ void loadVertex ( char * graphfile )
 
 	temp = vt_array[num_kmer - 1].kmer;
 	qsort ( &vt_array[0], num_kmer, sizeof ( vt_array[0] ), cmp_vertex );
-	fprintf ( stderr, "Kmers sorted.\n" );
+	printf ( "Kmers sorted.\n" );
 	fclose ( fp );
 
 	for ( i = 0; i < num_kmer; i++ )
@@ -218,16 +218,9 @@ int kmer2vt ( Kmer kmer )
 
 		if ( vt_id < 0 )
 		{
-			fprintf ( stderr, "There is no vertex for kmer " );
-			PrintKmer ( stderr, kmer );
-			fprintf ( stderr, " .\n" );
-			/*
-			#ifdef MER127
-			fprintf (stderr,"There is not the vertex for kmer %llx %llx %llx %llx.\n", kmer.high1, kmer.low1, kmer.high2, kmer.low2);
-			#else
-			fprintf (stderr,"There is not the vertex for kmer %llx %llx.\n", kmer.high, kmer.low);
-			#endif
-			*/
+			printf ( "There is no vertex for kmer " );
+			PrintKmer ( stdout, kmer );
+			printf ( " .\n" );
 		}
 
 		return vt_id;
@@ -242,16 +235,10 @@ int kmer2vt ( Kmer kmer )
 		}
 		else
 		{
-			fprintf ( stderr, "There is no vertex for kmer " );
-			PrintKmer ( stderr, kmer );
-			fprintf ( stderr, " .\n" );
-			/*
-			#ifdef MER127
-			fprintf (stderr,"There is not the vertex for kmer %llx %llx %llx %llx.\n", kmer.high1, kmer.low1, kmer.high2, kmer.low2);
-			#else
-			fprintf (stderr,"There is not the vertex for kmer %llx %llx.\n", kmer.high, kmer.low);
-			#endif
-			*/
+			printf ( "There is no vertex for kmer " );
+			PrintKmer ( stdout, kmer );
+			printf ( " .\n" );
+
 		}
 
 		return vt_id;
@@ -537,7 +524,7 @@ void loadEdge ( char * graphfile )
 		}
 	}
 
-	fprintf ( stderr, "%d edge(s) input.\n", index + 1 );
+	printf ( "%d edge(s) input.\n", index + 1 );
 	gzclose ( fp );
 	createArcMemo ();
 	loadPreArcs ( graphfile );
@@ -680,7 +667,7 @@ void loadPreArcs ( char * graphfile )
 		}
 	}
 
-	fprintf ( stderr, "%lli pre-arcs loaded.\n", arcCounter );
+	printf ( "%lli pre-arcs loaded.\n", arcCounter );
 	fclose ( fp );
 }
 

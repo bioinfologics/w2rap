@@ -118,12 +118,12 @@ boolean checkFiles4Scaff ( char * infile )
 
 		if ( !filesOK )
 		{
-			fprintf ( stderr, "%s: no such file or empty file!\n\n", name[i] );
+			printf ( "%s: no such file or empty file!\n\n", name[i] );
 			return filesOK;
 		}
 	}
 
-	fprintf ( stderr, "Files for scaffold construction are OK.\n\n" );
+	printf ( "Files for scaffold construction are OK.\n\n" );
 	return filesOK;
 }
 
@@ -290,14 +290,14 @@ static void add1LongPEcov ( unsigned int fromCtg, unsigned int toCtg, int weight
 	if ( contig_array[fromCtg].from_vt != contig_array[toCtg].from_vt ||
 	        contig_array[fromCtg].to_vt != contig_array[toCtg].to_vt )
 	{
-		fprintf ( stderr, "Warning from add1LongPEcov: contig %d and %d not on the same scaffold\n",
+		printf ( "Warning from add1LongPEcov: contig %d and %d not on the same scaffold\n",
 		          fromCtg, toCtg );
 		return;
 	}
 
 	if ( contig_array[fromCtg].indexInScaf >= contig_array[toCtg].indexInScaf )
 	{
-		fprintf ( stderr, "Warning from add1LongPEcov: wrong about order between contig %d and %d\n",
+		printf ( "Warning from add1LongPEcov: wrong about order between contig %d and %d\n",
 		          fromCtg, toCtg );
 		return;
 	}
@@ -314,7 +314,7 @@ static void add1LongPEcov ( unsigned int fromCtg, unsigned int toCtg, int weight
 			{ bindCnt->maxGap = 1000; }
 
 		if ( fromCtg == 0 && toCtg == 0 )
-			fprintf ( stderr, "link (%d %d ) covered by link (%d %d), wt %d\n",
+			printf ( "link (%d %d ) covered by link (%d %d), wt %d\n",
 			          prevCtg, bindCnt->contigID, fromCtg, toCtg, weight );
 
 		if ( bindCnt->contigID == toCtg )
@@ -337,7 +337,7 @@ static void add1LongPEcov ( unsigned int fromCtg, unsigned int toCtg, int weight
 			{ bindCnt->maxGap = 1000; }
 
 		if ( fromCtg == 0 && toCtg == 0 )
-			fprintf ( stderr, "link (%d %d ) covered by link (%d %d), wt %d\n",
+			printf ( "link (%d %d ) covered by link (%d %d), wt %d\n",
 			          prevCtg, bindCnt->contigID, fromCtg, toCtg, weight );
 
 		if ( bindCnt->contigID == bal_fc )
@@ -461,11 +461,11 @@ static void downSlide()
 					if ( temp_cnt->contigID == i )
 					{
 						orienConflict = 1;
-						fprintf ( stderr, "Warning from downSlide: still on the same scaff: %d and %d\n"
+						printf ( "Warning from downSlide: still on the same scaff: %d and %d\n"
 						          , i, targetCtg );
-						fprintf ( stderr, "on scaff %d and %d\n",
+						printf ( "on scaff %d and %d\n",
 						          contig_array[i].from_vt, contig_array[targetCtg].from_vt );
-						fprintf ( stderr, "on bal_scaff %d and %d\n",
+						printf ( "on bal_scaff %d and %d\n",
 						          contig_array[bal_target].to_vt, contig_array[bal_i].to_vt );
 						break;
 					}
@@ -512,11 +512,11 @@ static void downSlide()
 					//check if this route reaches bal_i
 					if ( temp_cnt->contigID == bal_i )
 					{
-						fprintf ( stderr, "Warning from downSlide: (B) still on the same scaff: %d and %d (%d and %d)\n",
+						printf ( "Warning from downSlide: (B) still on the same scaff: %d and %d (%d and %d)\n",
 						          i, targetCtg, bal_target, bal_i );
-						fprintf ( stderr, "on scaff %d and %d\n",
+						printf ( "on scaff %d and %d\n",
 						          contig_array[i].from_vt, contig_array[targetCtg].from_vt );
-						fprintf ( stderr, "on bal_scaff %d and %d\n",
+						printf ( "on bal_scaff %d and %d\n",
 						          contig_array[bal_target].to_vt, contig_array[bal_i].to_vt );
 						getThrough = 1;
 						break;
@@ -594,15 +594,14 @@ static void downSlide()
 					{ slideexchange2++; }
 
 				if ( contig_array[bottomCtg].mask || contig_array[topCtg].mask )
-					{ fprintf ( stderr, "downSlide to masked contig, bottomCtg %u[mask %d], topCtg %u[mask %d]\n", bottomCtg, contig_array[bottomCtg].mask, topCtg, contig_array[topCtg].mask ); }
+					{ printf ( "downSlide to masked contig, bottomCtg %u[mask %d], topCtg %u[mask %d]\n", bottomCtg, contig_array[bottomCtg].mask, topCtg, contig_array[topCtg].mask ); }
 			}
 
 			ite_cnt = ite_cnt->next;
 		}
 	}
 
-	//    fprintf(stderr,"downSliding stat:\norienConflict\tfall_inside\tslidebreak1\tslidebreak2\trecoverCnt\tslideexchange1\tslideexchange2\n%d\t%d\t%d\t%d\t%d\t%d\t%d\n",orienCounter, throughCounter, slidebreak1, slidebreak2, recoverCnt,  slideexchange1, slideexchange2);
-	fprintf ( stderr, "Add large insert size PE links: %d orientation-conflict links, %d contigs acrossed by normal links.\n", orienCounter, throughCounter );
+	printf ( "Add large insert size PE links: %d orientation-conflict links, %d contigs acrossed by normal links.\n", orienCounter, throughCounter );
 }
 
 /*************************************************
@@ -622,7 +621,7 @@ static boolean setNextInScaf ( CONNECT * cnt, CONNECT * nextCnt )
 {
 	if ( !cnt )
 	{
-		fprintf ( stderr, "setNextInScaf: empty pointer\n" );
+		printf ( "setNextInScaf: empty pointer\n" );
 		return 0;
 	}
 
@@ -634,13 +633,13 @@ static boolean setNextInScaf ( CONNECT * cnt, CONNECT * nextCnt )
 
 	if ( cnt->mask || cnt->deleted )
 	{
-		fprintf ( stderr, "setNextInScaf: cnt is masked or deleted\n" );
+		printf ( "setNextInScaf: cnt is masked or deleted\n" );
 		return 0;
 	}
 
 	if ( nextCnt->deleted || nextCnt->mask )
 	{
-		fprintf ( stderr, "setNextInScaf: nextCnt is masked or deleted\n" );
+		printf ( "setNextInScaf: nextCnt is masked or deleted\n" );
 		return 0;
 	}
 
@@ -665,7 +664,7 @@ static boolean setPrevInScaf ( CONNECT * cnt, boolean flag )
 {
 	if ( !cnt )
 	{
-		fprintf ( stderr, "setPrevInScaf: empty pointer\n" );
+		printf ( "setPrevInScaf: empty pointer\n" );
 		return 0;
 	}
 
@@ -677,7 +676,7 @@ static boolean setPrevInScaf ( CONNECT * cnt, boolean flag )
 
 	if ( cnt->mask || cnt->deleted )
 	{
-		fprintf ( stderr, "setPrevInScaf: cnt is masked or deleted\n" );
+		printf ( "setPrevInScaf: cnt is masked or deleted\n" );
 		return 0;
 	}
 
@@ -722,7 +721,7 @@ static void substitueUSinScaf ( CONNECT * origin, unsigned int from_c_new )
 
 	if ( !bal_nextCNT )
 	{
-		fprintf ( stderr, "substitueUSinScaf: no connect between %d and %d\n", bal_to_c, bal_branch_c );
+		printf ( "substitueUSinScaf: no connect between %d and %d\n", bal_to_c, bal_branch_c );
 		return;
 	}
 
@@ -773,7 +772,7 @@ static void substitueDSinScaf ( CONNECT * origin, unsigned int branch_c, unsigne
 
 	if ( !bal_origin )
 	{
-		fprintf ( stderr, "substitueDSinScaf: no connect between %d and %d\n", bal_to_c, bal_branch_c );
+		printf ( "substitueDSinScaf: no connect between %d and %d\n", bal_to_c, bal_branch_c );
 		return;
 	}
 
@@ -781,7 +780,7 @@ static void substitueDSinScaf ( CONNECT * origin, unsigned int branch_c, unsigne
 		{ bal_from_c = bal_origin->nextInScaf->contigID; }
 	else
 	{
-		fprintf ( stderr, "next null! %d\t%d\n", bal_to_c, bal_branch_c );
+		printf ( "next null! %d\t%d\n", bal_to_c, bal_branch_c );
 		exit ( 3 );
 	}
 
@@ -868,7 +867,7 @@ static CONNECT * getNextContig ( unsigned int ctg, CONNECT * preCNT, boolean * e
 	if ( preCNT && preCNT->nextInScaf )
 	{
 		if ( preCNT->contigID != ctg )
-			{ fprintf ( stderr, "pre cnt does not lead to %d\n", ctg ); }
+			{ printf ( "pre cnt does not lead to %d\n", ctg ); }
 
 		nextCtg = preCNT->nextInScaf->contigID;
 		cn_temp = getCntBetween ( ctg, nextCtg );
@@ -885,13 +884,13 @@ static CONNECT * getNextContig ( unsigned int ctg, CONNECT * preCNT, boolean * e
 			}
 
 			if ( !cn_temp->prevInScaf )
-				{ fprintf ( stderr, "not even has a prevInScaf %d and %d, %d and %d with before %d with twin %d\n", ctg, nextCtg, getTwinCtg ( nextCtg ), getTwinCtg ( ctg ), id1, id2 ); }
+				{ printf ( "not even has a prevInScaf %d and %d, %d and %d with before %d with twin %d\n", ctg, nextCtg, getTwinCtg ( nextCtg ), getTwinCtg ( ctg ), id1, id2 ); }
 
 			cn_temp = getCntBetween ( getTwinCtg ( nextCtg ),
 			                          getTwinCtg ( ctg ) );
 
 			if ( !cn_temp->nextInScaf )
-				{ fprintf ( stderr, "its twin cnt not  has a nextInScaf\n" ); }
+				{ printf ( "its twin cnt not  has a nextInScaf\n" ); }
 
 			fflush ( stdout );
 			*exception = 1;
@@ -1211,7 +1210,7 @@ static int maskPuzzle ( int num_connect, unsigned int contigLen )
 {
 	int in_num, out_num, flag = 0, puzzleCounter = 0;
 	unsigned int i, bal_i;
-	fprintf ( stderr, "Start to mask puzzles.\n" );
+	printf ( "Start to mask puzzles.\n" );
 
 	for ( i = 1; i <= num_ctg; i++ )
 	{
@@ -1245,7 +1244,7 @@ static int maskPuzzle ( int num_connect, unsigned int contigLen )
 			{ i++; }
 	}
 
-	fprintf ( stderr, " Masked contigs      %d\n Remained puzzles    %d\n", flag, puzzleCounter );
+	printf ( " Masked contigs      %d\n Remained puzzles    %d\n", flag, puzzleCounter );
 	return flag;
 }
 
@@ -1306,7 +1305,7 @@ static void deleteWeakCnt ( int cut_off )
 	}
 
 	if ( counter > 0 )
-		{ fprintf ( stderr, " Active connections    %d\n Weak connections      %d\n Weak ratio            %.1f%%\n", counter, weaks, ( float ) weaks / counter * 100 ); }
+		{ printf ( " Active connections    %d\n Weak connections      %d\n Weak ratio            %.1f%%\n", counter, weaks, ( float ) weaks / counter * 100 ); }
 
 	checkCircle();
 }
@@ -1348,7 +1347,7 @@ static int linearC2C ( unsigned int starter, CONNECT * cnt2c1, unsigned int c2, 
 
 	if ( c1 == c2 )
 	{
-		fprintf ( stderr, "linearC2C: c1(%d) and c2(%d) are the same contig.\n", c1, c2 );
+		printf ( "linearC2C: c1(%d) and c2(%d) are the same contig.\n", c1, c2 );
 		return -1;
 	}
 
@@ -1379,7 +1378,7 @@ static int linearC2C ( unsigned int starter, CONNECT * cnt2c1, unsigned int c2, 
 
 		if ( dsCtgCounter >= MAXCinBetween )
 		{
-			fprintf ( stderr, "%d downstream contigs, start at %d, max_dis %d, current dis %d\n"
+			printf ( "%d downstream contigs, start at %d, max_dis %d, current dis %d\n"
 			          , dsCtgCounter, starter, max_dis, len );
 			return 0;
 		}
@@ -1409,7 +1408,7 @@ static int linearC2C ( unsigned int starter, CONNECT * cnt2c1, unsigned int c2, 
 
 		if ( usCtgCounter >= MAXCinBetween )
 		{
-			fprintf ( stderr, "%d upstream contigs, start at %d, max_dis %d, current dis %d\n"
+			printf ( "%d upstream contigs, start at %d, max_dis %d, current dis %d\n"
 			          , usCtgCounter, starter, max_dis, len );
 			return 0;
 		}
@@ -1417,7 +1416,7 @@ static int linearC2C ( unsigned int starter, CONNECT * cnt2c1, unsigned int c2, 
 
 	if ( dsCtgCounter + usCtgCounter > MAXCinBetween )
 	{
-		fprintf ( stderr, "%d downstream and %d upstream contigs.\n", dsCtgCounter, usCtgCounter );
+		printf ( "%d downstream and %d upstream contigs.\n", dsCtgCounter, usCtgCounter );
 		return 0;
 	}
 
@@ -1554,13 +1553,13 @@ static void consolidate()
 
 		if ( !cnt )
 		{
-			fprintf ( stderr, "consolidate A: no connect from %d to %d\n",
+			printf ( "consolidate A: no connect from %d to %d\n",
 			          from_ctg, to_ctg );
 
 			for ( j = 0; j < solidCounter; j++ )
-				{ fprintf ( stderr, "%d-->", * ( unsigned int * ) darrayGet ( solidArray, j ) ); }
+				{ printf ( "%d-->", * ( unsigned int * ) darrayGet ( solidArray, j ) ); }
 
-			fprintf ( stderr, "\n" );
+			printf ( "\n" );
 			return;
 		}
 
@@ -1587,7 +1586,7 @@ static void consolidate()
 
 		if ( !cnt )
 		{
-			fprintf ( stderr, "consolidate B: no connect from %d to %d\n", from_ctg, to_ctg );
+			printf ( "consolidate B: no connect from %d to %d\n", from_ctg, to_ctg );
 			return;
 		}
 
@@ -1628,7 +1627,7 @@ static void removeTransitive()
 	int flag = 1, out_num, in_num, count, min, max, linear;
 	CONNECT * cn_temp, *cn1 = NULL, *cn2 = NULL;
 	int multi_out = 0, single_out = 0, two_out = 0, may_transitive = 0, not_transitive = 0, cycle_num = 0, mask_ctg = 0, no_out = 0;
-	fprintf ( stderr, "Start to remove transitive connection.\n" );
+	printf ( "Start to remove transitive connection.\n" );
 
 	while ( flag )
 	{
@@ -1692,7 +1691,7 @@ static void removeTransitive()
 
 			if ( count > 2 )
 			{
-				fprintf ( stderr, "%d valid connections from ctg %d\n", count, i );
+				printf ( "%d valid connections from ctg %d\n", count, i );
 				continue;
 			}
 
@@ -1768,25 +1767,25 @@ static void removeTransitive()
 
 		if ( cycle_num == 1 )
 		{
-			fprintf ( stderr, "Total contigs                         %u\n", num_ctg );
-			fprintf ( stderr, "Masked contigs                        %d\n", mask_ctg );
-			fprintf ( stderr, "Remained contigs                      %u\n", num_ctg - mask_ctg );
-			fprintf ( stderr, "None-outgoing-connection contigs      %d", no_out );
+			printf ( "Total contigs                         %u\n", num_ctg );
+			printf ( "Masked contigs                        %d\n", mask_ctg );
+			printf ( "Remained contigs                      %u\n", num_ctg - mask_ctg );
+			printf ( "None-outgoing-connection contigs      %d", no_out );
 
 			if ( num_ctg - mask_ctg > 0 )
 			{
-				fprintf ( stderr, " (%1f%%)", ( float ) no_out / ( num_ctg - mask_ctg ) * 100 );
+				printf ( " (%1f%%)", ( float ) no_out / ( num_ctg - mask_ctg ) * 100 );
 			}
 
-			fprintf ( stderr, "\nSingle-outgoing-connection contigs    %d\n", single_out );
-			fprintf ( stderr, "Multi-outgoing-connection contigs     %d\n", multi_out );
+			printf ( "\nSingle-outgoing-connection contigs    %d\n", single_out );
+			printf ( "Multi-outgoing-connection contigs     %d\n", multi_out );
 		}
 
-		fprintf ( stderr, "Cycle %d\n Two-outgoing-connection contigs     %d\n Potential transitive connections    %d\n Transitive connections              %d\n", cycle_num, two_out, may_transitive, flag );
+		printf ( "Cycle %d\n Two-outgoing-connection contigs     %d\n Potential transitive connections    %d\n Transitive connections              %d\n", cycle_num, two_out, may_transitive, flag );
 
 		if ( two_out > 0 )
 		{
-			fprintf ( stderr, " Transitive ratio                    %.1f%%\n", ( float ) flag / two_out * 100 );
+			printf ( " Transitive ratio                    %.1f%%\n", ( float ) flag / two_out * 100 );
 		}
 
 		if ( flag == 0 )
@@ -2068,7 +2067,7 @@ static void maskRepeat()
 			{ i++; }
 	}
 
-	fprintf ( stderr, "Mask repeats:\n Puzzles           %d\n Masked contigs    %d\n", puzzleCounter, counter );
+	printf ( "Mask repeats:\n Puzzles           %d\n Masked contigs    %d\n", puzzleCounter, counter );
 }
 
 /*************************************************
@@ -2130,7 +2129,7 @@ static void ordering ( boolean deWeak, boolean downS, boolean nonlinear)
 
 	if ( nonlinear )
 	{
-		fprintf ( stderr, "Non-strict linearization.\n" );
+		printf ( "Non-strict linearization.\n" );
 		general_linearization ( 0 );
 	}
 
@@ -2227,7 +2226,7 @@ static boolean setUsed ( unsigned int start, unsigned int * array, int max_steps
 
 		if ( !cnt )
 		{
-			fprintf ( stderr, "setUsed: no connect between %d and %d\n", prevCtg, array[j] );
+			printf ( "setUsed: no connect between %d and %d\n", prevCtg, array[j] );
 			prevCtg = array[j];
 			continue;
 		}
@@ -2488,7 +2487,7 @@ static void recoverMask()
 
 			if ( !cnt )
 			{
-				fprintf ( stderr, "Warning from recoverMask: no connection (%d %d), start at %d\n",
+				printf ( "Warning from recoverMask: no connection (%d %d), start at %d\n",
 				          start, finish, i );
 				continue;
 			}
@@ -2501,9 +2500,9 @@ static void recoverMask()
 			if ( finish == start )
 			{
 				for ( j = 0; j < tempCounter; j++ )
-					{ fprintf ( stderr, "->%d", * ( unsigned int * ) darrayGet ( tempArray, j ) ); }
+					{ printf ( "->%d", * ( unsigned int * ) darrayGet ( tempArray, j ) ); }
 
-				fprintf ( stderr, ": start at %d\n", i );
+				printf ( ": start at %d\n", i );
 			}
 
 			if ( num_route == 1 )
@@ -2647,10 +2646,10 @@ static void recoverMask()
 			{ consolidate(); }
 	}
 
-	fprintf ( stderr, "\nRecover contigs.\n" );
-	fprintf ( stderr, " Total recovered contigs    %d\n", recoverCounter );
-	fprintf ( stderr, " Single-route cases         %d\n", stat[0] );
-	fprintf ( stderr, " Multi-route cases          %d\n", stat[1] );
+	printf ( "\nRecover contigs.\n" );
+	printf ( " Total recovered contigs    %d\n", recoverCounter );
+	printf ( " Single-route cases         %d\n", stat[0] );
+	printf ( " Multi-route cases          %d\n", stat[1] );
 
 	for ( i = 1; i <= num_ctg; i++ )
 	{
@@ -2867,14 +2866,14 @@ static void freezing()
 
 		if ( firstCtg == 0 || lastCtg == 0 )
 		{
-			fprintf ( stderr, "scaffold start at %d, stop at %d, freezing began with %d\n", firstCtg, lastCtg, i );
+			printf ( "scaffold start at %d, stop at %d, freezing began with %d\n", firstCtg, lastCtg, i );
 
 			for ( j = 0; j < solidCounter; j++ )
-				fprintf ( stderr, "->%d(%d %d)", * ( unsigned int * ) darrayGet ( solidArray, j )
+				printf ( "->%d(%d %d)", * ( unsigned int * ) darrayGet ( solidArray, j )
 				          , contig_array[* ( unsigned int * ) darrayGet ( solidArray, j )].mask
 				          , contig_array[* ( unsigned int * ) darrayGet ( solidArray, j )].flag );
 
-			fprintf ( stderr, "\n" );
+			printf ( "\n" );
 		}
 		else
 		{
@@ -2890,7 +2889,7 @@ static void freezing()
 			{
 				contig_array[ctg].mask = 1;
 				contig_array[getTwinCtg ( ctg )].mask = 1;
-				fprintf ( stderr, "Repeat: contig %d (%d) appears more than once\n", ctg, getTwinCtg ( ctg ) );
+				printf ( "Repeat: contig %d (%d) appears more than once\n", ctg, getTwinCtg ( ctg ) );
 			}
 			else
 			{
@@ -2906,7 +2905,7 @@ static void freezing()
 		consolidate();
 	}
 
-	fprintf ( stderr, "Freezing done.\n" );
+	printf ( "Freezing done.\n" );
 	fflush ( stdout );
 
 	for ( i = 1; i <= num_ctg; i++ )
@@ -4214,7 +4213,7 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 			nextCnt = getNextContig ( cnt->contigID, cnt, &excep );
 
 			if ( excep && prevCNT )
-				{ fprintf ( stderr, "scaffolding: exception --- prev cnt from %u\n", prevCNT->contigID ); }
+				{ printf ( "scaffolding: exception --- prev cnt from %u\n", prevCNT->contigID ); }
 
 			if ( nextCnt && nextCnt->used )
 				{ break; }
@@ -4245,7 +4244,7 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 			nextCnt = getNextContig ( cnt->contigID, cnt, &excep );
 
 			if ( excep && prevCNT )
-				{ fprintf ( stderr, "scaffolding: exception -- prev cnt from %u\n", prevCNT->contigID ); }
+				{ printf ( "scaffolding: exception -- prev cnt from %u\n", prevCNT->contigID ); }
 
 			if ( nextCnt && nextCnt->used )
 				{ break; }
@@ -4274,7 +4273,7 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 
 		if ( num5 + num3 < 1 )
 		{
-			fprintf ( stderr, "no scaffold created for contig %d\n", i );
+			printf ( "no scaffold created for contig %d\n", i );
 			continue;
 		}
 
@@ -4594,11 +4593,11 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 	freeDarray ( tempArray );
 	fclose ( fp );
 	fclose ( fo );
-	fprintf ( stderr, "\nThe final rank\n" );
+	printf ( "\nThe final rank\n" );
 
 	if ( count == 0 )
 	{
-		fprintf ( stderr, "\n\nNo scaffold was constructed.\n\n" );
+		printf ( "\n\nNo scaffold was constructed.\n\n" );
 		free ( ( void * ) length_array );
 
 		for ( j = 0; j < max_n_routes; j++ )
@@ -4609,12 +4608,12 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 		return;
 	}
 
-	fprintf ( stderr, "\n*******************************\n" );
-	fprintf ( stderr, " Scaffold number                  %d\n", count );
-	fprintf ( stderr, " In-scaffold contig number        %u\n", num_lctg / 2 );
-	fprintf ( stderr, " Total scaffold length            %lld\n", sum );
-	fprintf ( stderr, " Average scaffold length          %lld\n", sum / count );
-	fprintf ( stderr, " Filled gap number                %d\n", gap_c );
+	printf ( "\n*******************************\n" );
+	printf ( " Scaffold number                  %d\n", count );
+	printf ( " In-scaffold contig number        %u\n", num_lctg / 2 );
+	printf ( " Total scaffold length            %lld\n", sum );
+	printf ( " Average scaffold length          %lld\n", sum / count );
+	printf ( " Filled gap number                %d\n", gap_c );
 
 	//output singleton
 	for ( i = 1; i <= num_ctg; i++ )
@@ -4654,14 +4653,14 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 		}
 	}
 
-	fprintf ( stderr, " Longest scaffold                 %lld\n", length_array[count - 1] );
-	fprintf ( stderr, " Scaffold and singleton number    %d\n", count );
-	fprintf ( stderr, " Scaffold and singleton length    %lld\n", total_len );
-	fprintf ( stderr, " Average length                   %d\n", total_len / count );
-	fprintf ( stderr, " N50                              %d\n", N50length );
-	fprintf ( stderr, " N90                              %d\n", N90length );
-	fprintf ( stderr, " Weak points                      %d\n", weakCounter );
-	fprintf ( stderr, "\n*******************************\n" );
+	printf ( " Longest scaffold                 %lld\n", length_array[count - 1] );
+	printf ( " Scaffold and singleton number    %d\n", count );
+	printf ( " Scaffold and singleton length    %lld\n", total_len );
+	printf ( " Average length                   %d\n", total_len / count );
+	printf ( " N50                              %d\n", N50length );
+	printf ( " N90                              %d\n", N90length );
+	printf ( " Weak points                      %d\n", weakCounter );
+	printf ( "\n*******************************\n" );
 	fflush ( stdout );
 	free ( ( void * ) length_array );
 
@@ -4751,7 +4750,7 @@ void scaffold_count ( int rank, unsigned int len_cut )
 			nextCnt = getNextContig ( cnt->contigID, cnt, &excep );
 
 			if ( excep && prevCNT )
-				{ fprintf ( stderr, "scaffolding: exception --- prev cnt from %u\n", prevCNT->contigID ); }
+				{ printf ( "scaffolding: exception --- prev cnt from %u\n", prevCNT->contigID ); }
 
 			if ( nextCnt && nextCnt->used )
 				{ break; }
@@ -4782,7 +4781,7 @@ void scaffold_count ( int rank, unsigned int len_cut )
 			nextCnt = getNextContig ( cnt->contigID, cnt, &excep );
 
 			if ( excep && prevCNT )
-				{ fprintf ( stderr, "scaffolding: exception -- prev cnt from %u\n", prevCNT->contigID ); }
+				{ printf ( "scaffolding: exception -- prev cnt from %u\n", prevCNT->contigID ); }
 
 			if ( nextCnt && nextCnt->used )
 				{ break; }
@@ -4805,7 +4804,7 @@ void scaffold_count ( int rank, unsigned int len_cut )
 
 		if ( num5 + num3 < 1 )
 		{
-			fprintf ( stderr, "no scaffold created for contig %d\n", i );
+			printf ( "no scaffold created for contig %d\n", i );
 			continue;
 		}
 
@@ -4861,7 +4860,7 @@ void scaffold_count ( int rank, unsigned int len_cut )
 
 	if ( count == 0 )
 	{
-		fprintf ( stderr, "\n\nNo scaffold was constructed.\n\n" );
+		printf ( "\n\nNo scaffold was constructed.\n\n" );
 		free ( ( void * ) length_array );
 
 		for ( j = 0; j < max_n_routes; j++ )
@@ -4872,12 +4871,12 @@ void scaffold_count ( int rank, unsigned int len_cut )
 		return;
 	}
 
-	fprintf ( stderr, "\nRank %d\n", rank );
-	fprintf ( stderr, " Scaffold number                  %d\n", count );
-	fprintf ( stderr, " In-scaffold contig number        %u\n", num_lctg / 2 );
-	fprintf ( stderr, " Total scaffold length            %lld\n", sum );
-	fprintf ( stderr, " Average scaffold length          %lld\n", sum / count );
-	fprintf ( stderr, " Filled gap number                %d\n", gap_c );
+	printf ( "\nRank %d\n", rank );
+	printf ( " Scaffold number                  %d\n", count );
+	printf ( " In-scaffold contig number        %u\n", num_lctg / 2 );
+	printf ( " Total scaffold length            %lld\n", sum );
+	printf ( " Average scaffold length          %lld\n", sum / count );
+	printf ( " Filled gap number                %d\n", gap_c );
 
 	//output singleton
 	for ( i = 1; i <= num_ctg; i++ )
@@ -4918,12 +4917,12 @@ void scaffold_count ( int rank, unsigned int len_cut )
 		}
 	}
 
-	fprintf ( stderr, " Longest scaffold                 %lld\n", length_array[count - 1] );
-	fprintf ( stderr, " Scaffold and singleton number    %d\n", count );
-	fprintf ( stderr, " Scaffold and singleton length    %lld\n", total_len );
-	fprintf ( stderr, " Average length                   %d\n", total_len / count );
-	fprintf ( stderr, " N50                              %d\n", N50length );
-	fprintf ( stderr, " N90                              %d\n", N90length );
+	printf ( " Longest scaffold                 %lld\n", length_array[count - 1] );
+	printf ( " Scaffold and singleton number    %d\n", count );
+	printf ( " Scaffold and singleton length    %lld\n", total_len );
+	printf ( " Average length                   %d\n", total_len / count );
+	printf ( " N50                              %d\n", N50length );
+	printf ( " N90                              %d\n", N90length );
 	free ( ( void * ) length_array );
 
 	for ( j = 0; j < max_n_routes; j++ )
@@ -5002,20 +5001,18 @@ void PE2Links ( char * infile )
 	int flag = 0;
 	unsigned int j;
 	sprintf ( name, "%s.links", infile );
-	boolean filesOK = check_file ( name );
 
-	if ( filesOK )
+	if ( check_file ( name ) )
 	{
-		fprintf ( stderr, "File %s exists, skip creating the links...\n", name );
+		printf ( "File %s exists, skip creating the links...\n", name );
 		return;
 	}
 
 	linkF = ckopen ( name, "w" );
 
-	if ( !pes )
-		{ loadPEgrads ( infile ); }
+	if ( !pes ) { loadPEgrads ( infile ); }
 
-	fprintf ( stderr, "*****************************************************\nStart to load paired-end reads information.\n\n" );
+	printf ( "*****************************************************\nCreating links from readOnContig.gz.\n\n" );
 
 	lineLen = 1024;
 	line = ( char * ) ckalloc ( lineLen * sizeof ( char ) );
@@ -5028,29 +5025,15 @@ void PE2Links ( char * infile )
 		createCntLookupTable();
 		newCntCounter = 0;
 
-		flag += connectByPE_grad_gz ( infile, i, line );
+		flag = connectByPE_grad_gz ( infile, i, line );
 
-		fprintf ( stderr, "%lld new connections.\n\n", newCntCounter / 2 );
+		printf ( "%lld new connections.\n\n", newCntCounter / 2 );
 
-		if ( !flag )
-		{
-			destroyConnectMem();
-			deleteCntLookupTable();
-
-			for ( j = 1; j <= num_ctg; j++ )
-				{ contig_array[j].downwardConnect = NULL; }
-
-			fprintf ( stderr, "\n" );
-			continue;
-		}
-
+		if (flag > 0) outputLinks(linkF, pes[i].insertS);
 		flag = 0;
-		outputLinks ( linkF, pes[i].insertS );
 		destroyConnectMem();
 		deleteCntLookupTable();
-
-		for ( j = 1; j <= num_ctg; j++ )
-			{ contig_array[j].downwardConnect = NULL; }
+		for (j = 1; j <= num_ctg; j++) { contig_array[j].downwardConnect = NULL; }
 	}
 
 	free ( ( void * ) line );
@@ -5058,7 +5041,7 @@ void PE2Links ( char * infile )
 	gzclose ( fp2 );
 
 	fclose ( linkF );
-	fprintf ( stderr, "All paired-end reads information loaded.\n" );
+	printf ( "All paired-end reads information loaded.\n" );
 }
 
 /*************************************************
@@ -5116,12 +5099,12 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 			{ maskCounter++; }
 	}
 
-	fprintf ( stderr, "***************************\nPairs processed for size %d\n", insertS );
-	fprintf ( stderr, " Links analysed                %d / %d\n", size_linecounter,linecounter );
-	fprintf ( stderr, " Total PE links                %d\n", counter );
-	fprintf ( stderr, " PE links to masked contigs    %d\n", maskCounter );
-	fprintf ( stderr, " On same scaffold PE links     %d\n", onScafCounter );
-	fprintf ( stderr, "***************************\n\n" );
+	printf ( "***************************\nPairs processed for size %d\n", insertS );
+	printf ( " Links analysed                %d / %d\n", size_linecounter,linecounter );
+	printf ( " Total PE links                %d\n", counter );
+	printf ( " PE links to masked contigs    %d\n", maskCounter );
+	printf ( " On same scaffold PE links     %d\n", onScafCounter );
+	printf ( "***************************\n\n" );
 	return counter;
 }
 
@@ -5170,7 +5153,7 @@ void Links2Scaf ( char * infile )
 	scaf5 = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
 	gap3 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
 	gap5 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
-	fprintf ( stderr, "\n" );
+	printf ( "\n" );
 
 
 	weakPE = 3;
@@ -5178,7 +5161,7 @@ void Links2Scaf ( char * infile )
 	uint64_t previous_lib_end=0;
 	for ( i = 0; i < gradsCounter; i++ )
 	{
-		fprintf ( stderr, "Processing library #%d (rank %d): %d read pairs with insert size %d\n",
+		printf ( "Processing library #%d (rank %d): %d read pairs with insert size %d\n",
 				  i, pes[i].rank, (pes[i].PE_bound-previous_lib_end/2), pes[i].insertS );
 		if ( MinWeakCut > pes[i].pair_num_cut ) MinWeakCut = pes[i].pair_num_cut;
 		if ( pes[i].insertS < 1000 ) { //if there is small-pe distances, use the library's connection cutoff
@@ -5197,13 +5180,13 @@ void Links2Scaf ( char * infile )
 			lib_n++; //count of libraries in rank
 			cutoff_sum += pes[i].pair_num_cut; //total of cutoff to compute mean later
 		}
-		else fprintf ( stderr, "WARNING: library not adding any links\n" );
+		else printf ( "WARNING: library not adding any links\n" );
 
 		flag += flag2;
 
 		if ( !flag ) //if there is no links so far in the rank, continue
 		{
-			fprintf ( stderr, "WARNING: rank is empty after library processing\n" );
+			printf ( "WARNING: rank is empty after library processing\n" );
 			continue;
 		}
 
@@ -5221,7 +5204,7 @@ void Links2Scaf ( char * infile )
 				lib_n = cutoff_sum = 0;
 			}
 
-			fprintf ( stderr, "Cutoff of PE links to make a reliable connection: %d\n", weakPE );
+			printf ( "Cutoff of PE links to make a reliable connection: %d\n", weakPE );
 
 			//OverlapPercent is really hard-coded here.
 			OverlapPercent = 0.05;
@@ -5251,7 +5234,7 @@ void Links2Scaf ( char * infile )
 			//print stats
 			scaffold_count ( j, 100 );
 			j++;
-			fprintf ( stderr, "\n" );
+			printf ( "\n" );
 
 		}
 	}
@@ -5273,7 +5256,7 @@ void Links2Scaf ( char * infile )
 		fclose ( snp_fp );
 	}
 
-	fprintf ( stderr, "\nAll links loaded.\n" );
+	printf ( "\nAll links loaded.\n" );
 }
 
 /*************************************************
@@ -6373,7 +6356,7 @@ static void arrangeNodes_general()
 
 			if ( !affected_cnt )
 			{
-				fprintf ( stderr, "affected cnt between %u(%u) and %u(%u) doesn't exists!\n", affected_node1, bal_affected_node1, affected_node2, bal_affected_node2 );
+				printf ( "affected cnt between %u(%u) and %u(%u) doesn't exists!\n", affected_node1, bal_affected_node1, affected_node2, bal_affected_node2 );
 				exit ( 1 );
 			}
 
@@ -6475,7 +6458,7 @@ static void arrangeNodes_general()
 
 				if ( !affected_cnt )
 				{
-					fprintf ( stderr, "affected cnt between %u(%u) and %u(%u) doesn't exists!\n", affected_node1, bal_affected_node1, affected_node2, bal_affected_node2 );
+					printf ( "affected cnt between %u(%u) and %u(%u) doesn't exists!\n", affected_node1, bal_affected_node1, affected_node2, bal_affected_node2 );
 					exit ( 1 );
 				}
 
@@ -7368,7 +7351,7 @@ static void general_linearization ( boolean strict )
 	int SNPCtgCounter = 0;
 	double overlapTolerance, conflTolerance;
 	canexchange = 0, exchange_num = 0, failexchange = 0;
-	fprintf ( stderr, "Start to linearize sub-graph.\n" );
+	printf ( "Start to linearize sub-graph.\n" );
 
 	for ( i = num_ctg; i > 0; i-- )
 	{
@@ -7437,7 +7420,7 @@ static void general_linearization ( boolean strict )
 		setInGraph ( 0 );
 	}
 
-	fprintf ( stderr, " Picked sub-graphs          %d\n Connection-conflict        %d\n Significant overlapping    %d\n Eligible                   %d\n Bubble structures          %d\n", subCounter, conflCounter, overlapCounter, eligibleCounter, SNPCtgCounter );
+	printf ( " Picked sub-graphs          %d\n Connection-conflict        %d\n Significant overlapping    %d\n Eligible                   %d\n Bubble structures          %d\n", subCounter, conflCounter, overlapCounter, eligibleCounter, SNPCtgCounter );
 }
 
 /****       the fowllowing codes for detecting and break down scaffold at weak point  **********/
@@ -7517,7 +7500,7 @@ static void smallScaf()
 		}
 	}
 
-	fprintf ( stderr, "Report from smallScaf: %d scaffolds by smallPE.\n", counter );
+	printf ( "Report from smallScaf: %d scaffolds by smallPE.\n", counter );
 
 	for ( i = 1; i <= num_ctg; i++ )
 	{
@@ -8232,7 +8215,7 @@ static void detectBreakScaf()
 		if ( contig_array[prevCtg].from_vt != contig_array[thisCtg].from_vt ||
 		        contig_array[prevCtg].indexInScaf > contig_array[thisCtg].indexInScaf )
 		{
-			fprintf ( stderr, "contig %d and %d not on the same scaff\n", prevCtg, thisCtg );
+			printf ( "contig %d and %d not on the same scaff\n", prevCtg, thisCtg );
 			continue;
 		}
 
@@ -8304,7 +8287,7 @@ static void detectBreakScaf()
 
 	freeStack ( scafStack1 );
 	freeStack ( scafStack2 );
-	fprintf ( stderr, "Report from checkScaf: %d scaffold segments broken.\n", counter );
+	printf ( "Report from checkScaf: %d scaffold segments broken.\n", counter );
 }
 
 
@@ -8536,7 +8519,7 @@ static void detectBreakScaff()
 
 	freeStack ( scafStack1 );
 	freeStack ( scafStack2 );
-	fprintf ( stderr, "Report from checkScaf: %d scaffold segments broken.\n", counter );
+	printf ( "Report from checkScaf: %d scaffold segments broken.\n", counter );
 }
 
 /*************************************************
@@ -8623,5 +8606,5 @@ static void checkCircle()
 		}
 	}
 
-	fprintf ( stderr, "%d circles removed.\n", counter );
+	printf ( "%d circles removed.\n", counter );
 }

@@ -162,12 +162,12 @@ static void creatThrds ( pthread_t * threads, PARAMETER * paras )
 	{
 		if ( ( temp = pthread_create ( &threads[i], NULL, ( void * ) threadRoutine, & ( paras[i] ) ) ) != 0 )
 		{
-			fprintf ( stderr, "Create threads failed.\n" );
+			printf ( "Create threads failed.\n" );
 			exit ( 1 );
 		}
 	}
 
-	fprintf ( stderr, "%d thread(s) initialized.\n", thrd_num );
+	printf ( "%d thread(s) initialized.\n", thrd_num );
 }
 
 static void thread_wait ( pthread_t * threads )
@@ -340,11 +340,11 @@ boolean prlContig2nodes ( char * grapfile, int len_cut )
 	maxCtgLen = nameLen = 10;
 	minCtgLen = 1000;
 	num_seq = readseqpar ( &maxCtgLen, &minCtgLen, &nameLen, fp );
-	fprintf ( stderr, "\n%lld contig(s), maximum sequence length %d, minimum sequence length %d, maximum name length %d.\n", num_seq, maxCtgLen, minCtgLen, nameLen );
+	printf ( "\n%lld contig(s), maximum sequence length %d, minimum sequence length %d, maximum name length %d.\n", num_seq, maxCtgLen, minCtgLen, nameLen );
 	maxReadLen = maxCtgLen;
 	fclose ( fp );
 	time ( &stop_t );
-	fprintf ( stderr, "Time spent on parsing contigs file: %ds.\n", ( int ) ( stop_t - start_t ) );
+	printf ( "Time spent on parsing contigs file: %ds.\n", ( int ) ( stop_t - start_t ) );
 	next_name = ( char * ) ckalloc ( ( maxNameLen + 1 ) * sizeof ( char ) );
 	// extract all the EDONs
 	seq_buffer_size = buffer_size * 2;
@@ -391,7 +391,7 @@ boolean prlContig2nodes ( char * grapfile, int len_cut )
 
 		if ( ( ++i ) % 10000000 == 0 )
 		{
-			fprintf ( stderr, "--- %lldth contig(s).\n", i );
+			printf ( "--- %lldth contig(s).\n", i );
 		}
 
 		if ( lenBuffer[read_c] < overlaplen + 1 || lenBuffer[read_c] < len_cut )
@@ -426,7 +426,7 @@ boolean prlContig2nodes ( char * grapfile, int len_cut )
 	sendWorkSignal ( 3, thrdSignal ); //stop threads
 	thread_wait ( threads );
 	time ( &stop_t );
-	fprintf ( stderr, "Time spent on hashing contigs: %ds.\n", ( int ) ( stop_t - start_t ) );
+	printf ( "Time spent on hashing contigs: %ds.\n", ( int ) ( stop_t - start_t ) );
 
 	if ( 1 )
 	{
@@ -440,7 +440,7 @@ boolean prlContig2nodes ( char * grapfile, int len_cut )
 			free ( ( void * ) rcSeq[i + 1] );
 		}
 
-		fprintf ( stderr, "%lli node(s) allocated, %lli kmer(s) in contigs, %lli kmer(s) processed.\n", alloCounter, kmerCounter[0], allKmerCounter );
+		printf ( "%lli node(s) allocated, %lli kmer(s) in contigs, %lli kmer(s) processed.\n", alloCounter, kmerCounter[0], allKmerCounter );
 	}
 
 	free ( ( void * ) rcSeq );

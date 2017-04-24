@@ -47,16 +47,6 @@ static char * scaffBuffer;
 
 static void MarkCtgOccu ( unsigned int ctg );
 
-/*
-static void printRead(int len,char *seq)
-{
-    int j;
-    fprintf(stderr,">read\n");
-    for(j=0;j<len;j++)
-        fprintf(stderr,"%c",int2base((int)getCharInTightString(seq,j)));
-    fprintf(stderr,"\n");
-}
-*/
 static void attach1read2contig ( unsigned int ctgID, int len, int pos, long long starter )
 {
 	unsigned int ctg = index_array[ctgID];  //new index in contig array
@@ -218,7 +208,7 @@ static boolean loadReads4gap ( char * graphfile )
 
 	if ( !fp && !fp2 )
 	{
-		fprintf ( stderr, "Can't open %s.readInGap.gz and %s.longReadInGap!\n", graphfile, graphfile );
+		printf ( "Can't open %s.readInGap.gz and %s.longReadInGap!\n", graphfile, graphfile );
 		return 0;
 	}
 
@@ -233,14 +223,14 @@ static boolean loadReads4gap ( char * graphfile )
 	if ( fp )
 	{
 		readCounter = getRead1by1_gz ( fp, readSeqInGap );
-		fprintf ( stderr, "Loaded %lld reads from %s.readInGap.\n", readCounter, graphfile );
+		printf ( "Loaded %lld reads from %s.readInGap.\n", readCounter, graphfile );
 		gzclose ( fp );
 	}
 
 	if ( fp2 )
 	{
 		readCounter = getRead1by1 ( fp2, readSeqInGap );
-		fprintf ( stderr, "Loaded %lld reads from %s.LongReadInGap.\n", readCounter, graphfile );
+		printf ( "Loaded %lld reads from %s.LongReadInGap.\n", readCounter, graphfile );
 		fclose ( fp2 );
 	}
 
@@ -293,20 +283,20 @@ static void debugging1 ()
 			continue;
 		}
 
-		fprintf ( stderr, "Contig %d, len %d: \n", index_array[i], contig_array[i].length );
+		printf ( "Contig %d, len %d: \n", index_array[i], contig_array[i].length );
 		stackBackup ( contig_array[i].closeReads );
 
 		while ( ( rd = ( READNEARBY * ) stackPop ( contig_array[i].closeReads ) ) != NULL )
 		{
-			fprintf ( stderr, "%d\t%d\t%lld\t", rd->dis, rd->len, rd->seqStarter );
+			printf ( "%d\t%d\t%lld\t", rd->dis, rd->len, rd->seqStarter );
 			pt = ( char * ) darrayGet ( readSeqInGap, rd->seqStarter );
 
 			for ( j = 0; j < rd->len; j++ )
 			{
-				fprintf ( stderr, "%c", int2base ( ( int ) getCharInTightString ( pt, j ) ) );
+				printf ( "%c", int2base ( ( int ) getCharInTightString ( pt, j ) ) );
 			}
 
-			fprintf ( stderr, "\n" );
+			printf ( "\n" );
 		}
 
 		stackRecover ( contig_array[i].closeReads );
@@ -654,20 +644,20 @@ static void outputGapInfo ( unsigned int ctg1, unsigned int ctg2 )
 
 	if ( isLargerThanTwin ( ctg1 ) )
 	{
-		fprintf ( stderr, "%d\t", index_array[bal_ctg1] );
+		printf ( "%d\t", index_array[bal_ctg1] );
 	}
 	else
 	{
-		fprintf ( stderr, "%d\t", index_array[ctg1] );
+		printf ( "%d\t", index_array[ctg1] );
 	}
 
 	if ( isLargerThanTwin ( ctg2 ) )
 	{
-		fprintf ( stderr, "%d\n", index_array[bal_ctg2] );
+		printf ( "%d\n", index_array[bal_ctg2] );
 	}
 	else
 	{
-		fprintf ( stderr, "%d\n", index_array[ctg2] );
+		printf ( "%d\n", index_array[ctg2] );
 	}
 }
 
@@ -1190,7 +1180,7 @@ static void fill1scaf ( int index, STACK * ctgsStack, int thrdID )
 
 	if ( numRd2 != numRd )
 	{
-		fprintf ( stderr, "##reads numbers doesn't match, %d vs %d when scaffold %d.\n", numRd, numRd2, index );
+		printf ( "##reads numbers doesn't match, %d vs %d when scaffold %d.\n", numRd, numRd2, index );
 	}
 
 	qsort ( rdArray, numRd, sizeof ( READNEARBY ), cmp_reads );
@@ -1200,7 +1190,6 @@ static void fill1scaf ( int index, STACK * ctgsStack, int thrdID )
 	boolean flag;
 	int buffer_size = maxReadLen > 100 ? maxReadLen : 100;
 	int maxGSLen = maxGLen + GLDiff < 10 ? 10 : maxGLen + GLDiff;
-	//fprintf(stderr,"maxGlen %d, maxGSlen %d\n",maxGLen,maxGSLen);
 	char * seqGap = ( char * ) ckalloc ( maxGSLen * sizeof ( char ) ); // temp array for gap sequence
 	Kmer * kmerCtg1 = ( Kmer * ) ckalloc ( buffer_size * sizeof ( Kmer ) );
 	Kmer * kmerCtg2 = ( Kmer * ) ckalloc ( buffer_size * sizeof ( Kmer ) );
@@ -1245,12 +1234,6 @@ static void fill1scaf ( int index, STACK * ctgsStack, int thrdID )
 			}
 		}
 
-		/*
-		   if(count==0)
-		   printf("Gap closed without reads\n");
-		   if(!flag)
-		   fprintf(stderr,"Between ctg %d and %d, NO routes found\n",prevCtg->ctgID,actg->ctgID);
-		 */
 		prevCtg = actg;
 	}
 
@@ -1297,7 +1280,7 @@ static Kmer tightStr2Kmer ( char * tightStr, int start, int length, int revS )
 	{
 		if ( start + overlaplen > length )
 		{
-			fprintf ( stderr, "The tightStr2Kmer A: no enough bases for kmer.\n" );
+			printf ( "The tightStr2Kmer A: no enough bases for kmer.\n" );
 			return word;
 		}
 
@@ -1311,7 +1294,7 @@ static Kmer tightStr2Kmer ( char * tightStr, int start, int length, int revS )
 	{
 		if ( length - start - overlaplen < 0 )
 		{
-			fprintf ( stderr, "The tightStr2Kmer B: no enough bases for kmer.\n" );
+			printf ( "The tightStr2Kmer B: no enough bases for kmer.\n" );
 			return word;
 		}
 
@@ -1350,7 +1333,7 @@ static Kmer tightStr2Kmer ( char * tightStr, int start, int length, int revS )
 	{
 		if ( start + overlaplen > length )
 		{
-			fprintf ( stderr, "The tightStr2Kmer A: no enough bases for kmer.\n" );
+			printf ( "The tightStr2Kmer A: no enough bases for kmer.\n" );
 			return word;
 		}
 
@@ -1364,7 +1347,7 @@ static Kmer tightStr2Kmer ( char * tightStr, int start, int length, int revS )
 	{
 		if ( length - start - overlaplen < 0 )
 		{
-			fprintf ( stderr, "The tightStr2Kmer B: no enough bases for kmer.\n" );
+			printf ( "The tightStr2Kmer B: no enough bases for kmer.\n" );
 			return word;
 		}
 
@@ -1512,12 +1495,12 @@ static void creatThrds ( pthread_t * threads, PARAMETER * paras )
 	{
 		if ( ( temp = pthread_create ( &threads[i], NULL, ( void * ) threadRoutine, & ( paras[i] ) ) ) != 0 )
 		{
-			fprintf ( stderr, "Create threads failed.\n" );
+			printf ( "Create threads failed.\n" );
 			exit ( 1 );
 		}
 	}
 
-	fprintf ( stderr, "%d thread(s) initialized.\n", thrd_num );
+	printf ( "%d thread(s) initialized.\n", thrd_num );
 }
 
 static void sendWorkSignal ( unsigned char SIG, unsigned char * thrdSignals )
@@ -1619,8 +1602,8 @@ void prlReadsCloseGap ( char * graphfile )
 	if ( fillGap )
 	{
 		boolean flag;
-		fprintf ( stderr, "\nStart to load reads for gap filling. %d length discrepancy is allowed.\n", GLDiff );
-		fprintf ( stderr, "...\n" );
+		printf ( "\nStart to load reads for gap filling. %d length discrepancy is allowed.\n", GLDiff );
+		printf ( "...\n" );
 		flag = loadReads4gap ( graphfile );
 
 		if ( !flag )
@@ -1727,7 +1710,7 @@ void prlReadsCloseGap ( char * graphfile )
 
 				if ( index % 1000 == 0 )
 				{
-					fprintf ( stderr, "%d scaffolds processed.\n", index );
+					printf ( "%d scaffolds processed.\n", index );
 				}
 			}
 
@@ -1779,22 +1762,11 @@ void prlReadsCloseGap ( char * graphfile )
 			{
 				if ( prev_ctg && ( starter - prev_start - ( int ) contig_array[prev_ctg].length ) < ( ( int ) overlaplen * 4 ) )
 				{
-					/*
-					   if(fillGap)
-					   catchable = contigCatch(prev_ctg,ctg);
-					   else
-					 */
 					catchable = 0;
 
 					if ( catchable ) // prev_ctg and ctg overlap **bp
 					{
 						allGaps--;
-						/*
-						   if(isLargerThanTwin(prev_ctg))
-						   fprintf(stderr,"%d #######  by_overlap\n",getTwinCtg(prev_ctg));
-						   else
-						   fprintf(stderr,"%d ####### by_overlap\n",prev_ctg);
-						 */
 						actg->scaftig_start = 0;
 						actg->cutHead = catchable;
 						offset += - ( starter - prev_start - contig_array[prev_ctg].length ) + ( overlaplen - catchable );
@@ -1864,7 +1836,7 @@ void prlReadsCloseGap ( char * graphfile )
 		output_ctg ( ctg, fo );
 	}
 
-	fprintf ( stderr, "\nDone with %d scaffolds, %d gaps finished, %d gaps overall.\n", index, allGaps - Ncounter, allGaps );
+	printf ( "\nDone with %d scaffolds, %d gaps finished, %d gaps overall.\n", index, allGaps - Ncounter, allGaps );
 	index = 0;
 
 	for ( i = 0; i < thrd_num; i++ )
@@ -1875,7 +1847,7 @@ void prlReadsCloseGap ( char * graphfile )
 
 	if ( fillGap )
 	{
-		fprintf ( stderr, "Threads processed %d scaffolds.\n", index );
+		printf ( "Threads processed %d scaffolds.\n", index );
 	}
 
 	free ( ( void * ) darrayBuf );

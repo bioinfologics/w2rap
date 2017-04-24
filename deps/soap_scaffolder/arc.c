@@ -128,7 +128,7 @@ void createArcMemo ()
 	}
 	else
 	{
-		fprintf ( stderr, "Warning from createArcMemo: arc_mem_manager is a active pointer.\n" );
+		printf ( "Warning from createArcMemo: arc_mem_manager is a active pointer.\n" );
 	}
 }
 
@@ -212,7 +212,7 @@ void removeArcInLookupTable ( unsigned int from_ed, unsigned int to_ed )
 
 	if ( !ite_arc )
 	{
-		fprintf ( stderr, "RemoveArcInLookupTable: not found A.\n" );
+		printf ( "RemoveArcInLookupTable: not found A.\n" );
 		return;
 	}
 
@@ -234,7 +234,7 @@ void removeArcInLookupTable ( unsigned int from_ed, unsigned int to_ed )
 		return;
 	}
 
-	fprintf ( stderr, "RemoveArcInLookupTable: not found B.\n" );
+	printf ( "RemoveArcInLookupTable: not found B.\n" );
 	return;
 }
 

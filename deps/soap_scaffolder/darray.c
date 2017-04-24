@@ -64,7 +64,7 @@ void * darrayGet ( DARRAY * darray, long long index )
 		return ( void * ) ( ( void * ) darray->array + darray->item_size * index );
 	}
 
-	fprintf ( stderr, "Index %lld of the array is out of range and the size is %lld.\n", index, darray->array_size );
+	printf ( "Index %lld of the array is out of range and the size is %lld.\n", index, darray->array_size );
 	return NULL;
 }
 

@@ -36,7 +36,7 @@ void createCntMemManager ()
 	}
 	else
 	{
-		fprintf ( stderr, "The cn_mem_manger created.\n" );
+		printf ( "The cn_mem_manger created.\n" );
 	}
 }
 

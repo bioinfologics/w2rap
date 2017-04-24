@@ -228,12 +228,12 @@ void output_contig ( EDGE * ed_array, unsigned int ed_num, char * outfile, int c
 
 	if ( len_c > 0 )
 	{
-		fprintf ( stderr, "\nThere are %d contig(s) longer than %d, sum up %lld bp, with average length %lld.\n", len_c, len_bar, sum, sum / len_c );
-		fprintf ( stderr, "The longest length is %d bp, ", length_array[len_c - 1] );
+		printf ( "\nThere are %d contig(s) longer than %d, sum up %lld bp, with average length %lld.\n", len_c, len_bar, sum, sum / len_c );
+		printf ( "The longest length is %d bp, ", length_array[len_c - 1] );
 	}
 	else
 	{
-		fprintf ( stderr, "No contig was constructed!\n" );
+		printf ( "No contig was constructed!\n" );
 	}
 
 	N50 = sum * 0.5;
@@ -246,13 +246,13 @@ void output_contig ( EDGE * ed_array, unsigned int ed_num, char * outfile, int c
 
 		if ( !flag && sum >= N50 )
 		{
-			fprintf ( stderr, "contig N50 is %d bp,", length_array[signI] );
+			printf ( "contig N50 is %d bp,", length_array[signI] );
 			flag = 1;
 		}
 
 		if ( sum >= N90 )
 		{
-			fprintf ( stderr, "contig N90 is %d bp.\n", length_array[signI] );
+			printf ( "contig N90 is %d bp.\n", length_array[signI] );
 			break;
 		}
 	}
@@ -286,7 +286,7 @@ void output_contig ( EDGE * ed_array, unsigned int ed_num, char * outfile, int c
 	fclose ( fp );
 	free ( ( void * ) kmerSeq );
 	free ( ( void * ) length_array );
-	fprintf ( stderr, "%d contig(s) longer than %d output.\n", count, cut_len );
+	printf ( "%d contig(s) longer than %d output.\n", count, cut_len );
 	sprintf ( temp, "%s.ContigIndex", outfile );
 	fp_contig = ckopen ( temp, "w" );
 	fprintf ( fp_contig, "Edge_num %d %d\n", ed_num, count );
