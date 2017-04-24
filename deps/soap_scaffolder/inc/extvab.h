@@ -79,8 +79,6 @@ extern int cvgAvg;
 extern boolean orig2new;
 extern int Insert_size;
 extern int score_mask;
-extern long long discardCntCounter;
-extern int COMPATIBLE_MODE;
 extern float cvg4SNP;
 /**** used for gapFilling ****/
 extern DARRAY * readSeqInGap;

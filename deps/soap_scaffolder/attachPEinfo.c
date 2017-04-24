@@ -292,6 +292,7 @@ int attach1PE ( unsigned int e1, int pre_pos, unsigned int bal_e2, int pos, int 
 
 	gap = insert_size - overlaplen + pre_pos + pos - contig_array[e1].length - contig_array[e2].length;
 
+	//TODO:this is really important!!
 	if ( gap < - ( insert_size / 10 ) )
 	{
 		ignorePE2++;
@@ -311,117 +312,6 @@ int attach1PE ( unsigned int e1, int pre_pos, unsigned int bal_e2, int pos, int 
 
 /*************************************************
  Function:
-    connectByPE_grad
- Description:
-    Loads alignment information of paired-end reads of specified LIB
-    and updates connection between contigs.
- Input:
-    1. fp:          alignment information file
-    2. peGrad:      LIB number
-    3. line:        buffer to store one alignment record
- Output:
-    None.
- Return:
-    Loaded alignment record number.
- *************************************************/
-int connectByPE_grad ( FILE * fp, int peGrad, char * line )
-{
-	long long pre_readno, readno, minno, maxno;
-	int pre_pos, pos, flag, PE, count = 0, Total_PE = 0;
-	unsigned int pre_contigno, contigno, newIndex;
-
-	if ( peGrad < 0 || peGrad > gradsCounter )
-	{
-		fprintf ( stderr, "Specified pe grad is out of bound.\n" );
-		return 0;
-	}
-
-	maxno = pes[peGrad].PE_bound;
-
-	if ( peGrad == 0 )
-	{
-		minno = 0;
-	}
-	else
-	{
-		minno = pes[peGrad - 1].PE_bound;
-	}
-
-	onsameCtgPE = peSUM = 0;
-	PE = pes[peGrad].insertS;
-
-	if ( strlen ( line ) )
-	{
-		sscanf ( line, "%lld %d %d", &pre_readno, &pre_contigno, &pre_pos );
-
-		if ( pre_readno <= minno )
-		{
-			pre_readno = -1;
-		}
-	}
-	else
-	{
-		pre_readno = -1;
-	}
-
-	ignorePE1 = ignorePE2 = ignorePE3 = 0;
-	static_flag = 1;
-	isStack = ( STACK * ) createStack ( CNBLOCKSIZE, sizeof ( int ) );
-
-	while ( fgets ( line, lineLen, fp ) != NULL )
-	{
-		sscanf ( line, "%lld %d %d", &readno, &contigno, &pos );
-
-		if ( readno > maxno )
-		{
-			break;
-		}
-
-		if ( readno <= minno )
-		{
-			continue;
-		}
-
-		newIndex = index_array[contigno];
-
-		if ( isSameAsTwin ( newIndex ) )
-		{
-			continue;
-		}
-
-		if ( PE && ( readno % 2 == 0 ) && ( pre_readno == readno - 1 ) ) // they are a pair of reads
-		{
-			Total_PE++;
-			flag = attach1PE ( pre_contigno, pre_pos, newIndex, pos, PE );
-
-			if ( flag == 1 )
-			{
-				count++;
-			}
-		}
-
-		pre_readno = readno;
-		pre_contigno = newIndex;
-		pre_pos = pos;
-	}
-
-	fprintf ( stderr, "For insert size: %d\n", PE );
-	fprintf ( stderr, " Total PE links                      %d\n", Total_PE );
-	fprintf ( stderr, " Normal PE links on same contig      %d\n", onsameCtgPE );
-	fprintf ( stderr, " Abnormal PE links on same contig    %d\n", ignorePE1 );
-	fprintf ( stderr, " PE links of minus distance          %d\n", ignorePE2 );
-	fprintf ( stderr, " PE links of plus distance           %d\n", ignorePE3 );
-	fprintf ( stderr, " Correct PE links                    %d\n", count );
-	fprintf ( stderr, " Accumulated connections             %d\n", newCntCounter );
-	fprintf ( stderr, "Use contigs longer than %d to estimate insert size: \n", PE );
-	fprintf ( stderr, " PE links               %d\n", isStack->item_c );
-	calcuIS ( isStack );
-	freeStack ( isStack );
-	return count;
-}
-
-/*************************************************
- Function:
     connectByPE_grad_gz
  Description:
     Loads alignment information of paired-end reads of specified LIB
@@ -435,8 +325,14 @@ int connectByPE_grad ( FILE * fp, int peGrad, char * line )
  Return:
     Loaded alignment record number.
  *************************************************/
-int connectByPE_grad_gz ( gzFile * fp, int peGrad, char * line )
+int connectByPE_grad_gz ( char * infile, int peGrad, char * line )
 {
+	char name[256];
+	gzFile * fp;
+	sprintf ( name, "%s.readOnContig.gz", infile );
+	fp = gzopen ( name, "r" );
+	gzgets ( fp, line, lineLen );
+
 	long long pre_readno, readno, minno, maxno;
 	int pre_pos, pos, flag, PE, count = 0, Total_PE = 0;
 	unsigned int pre_contigno, contigno, newIndex;
@@ -461,24 +357,11 @@ int connectByPE_grad_gz ( gzFile * fp, int peGrad, char * line )
 	onsameCtgPE = peSUM = 0;
 	PE = pes[peGrad].insertS;
 
-	if ( strlen ( line ) )
-	{
-		sscanf ( line, "%lld %d %d", &pre_readno, &pre_contigno, &pre_pos );
-
-		if ( pre_readno <= minno )
-		{
-			pre_readno = -1;
-		}
-	}
-	else
-	{
-		pre_readno = -1;
-	}
+	pre_readno = -1;
 
 	ignorePE1 = ignorePE2 = ignorePE3 = 0;
 	static_flag = 1;
 	isStack = ( STACK * ) createStack ( CNBLOCKSIZE, sizeof ( int ) );
-
 	while ( gzgets ( fp, line, lineLen ) != NULL )
 	{
 		sscanf ( line, "%lld %d %d", &readno, &contigno, &pos );
@@ -528,6 +411,7 @@ int connectByPE_grad_gz ( gzFile * fp, int peGrad, char * line )
 	fprintf ( stderr, " PE links               %d\n", isStack->item_c );
 	calcuIS ( isStack );
 	freeStack ( isStack );
+	gzclose(fp);
 	return count;
 }
 

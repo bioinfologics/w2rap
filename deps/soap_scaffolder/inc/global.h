@@ -67,7 +67,6 @@ long long * markersArray = NULL;
 boolean deLowKmer = 0;  //remove the kmers which coverage are not bigger than deLowKmer
 boolean deLowEdge = 1;  //remove the edges which coverage are not bigger than deLowEdge
 long long newCntCounter;        // record the number of the new connection in one insert-size
-long long discardCntCounter;
 boolean repsTie = 0;            //sovle tiny repeat or not
 CONNECT ** cntLookupTable = NULL;
 int num_libs = 0;                   //number of LIBs in read config file
@@ -99,7 +98,6 @@ double len_times = 0;
 float ins_var_idx = 1.5;
 int Insert_size = 0;        // the current insert-size
 int score_mask = 1;
-int COMPATIBLE_MODE = 0;     // 1 for the gz file ; 0 for the normal file
 float cvg4SNP = 0.6;
 
 MEM_MANAGER * edgeid_mem_manager = NULL;

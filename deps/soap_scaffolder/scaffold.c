@@ -121,7 +121,7 @@ void initenv ( int argc, char ** argv )
 	optind = 1;
 	fprintf ( stderr, "Parameters: s_scaff " );
 
-	while ( ( copt = getopt ( argc, argv, "g:L:p:G:N:c:C:b:B:FzuSVw" ) ) != EOF )
+	while ( ( copt = getopt ( argc, argv, "g:L:p:G:N:c:C:b:B:FuSVw" ) ) != EOF )
 	{
 		switch ( copt )
 		{
@@ -190,10 +190,6 @@ void initenv ( int argc, char ** argv )
 				sscanf ( optarg, "%s", temp );
 				cvg4SNP = atof ( temp ) > 0 ? atof ( temp ) : 0.0;
 				break;
-			case 'z':
-				COMPATIBLE_MODE = 1;
-				fprintf ( stderr, "-m " );
-				break;
 			default:
 
 				if ( inGraph == 0 )
@@ -218,7 +214,6 @@ static void display_scaff_usage ()
 	fprintf ( stderr, "\ns_scaff -g inputGraph [-F -z -u -S -w] [-G gapLenDiff -L minContigLen -c minContigCvg -C maxContigCvg -b insertSizeUpperBound -B bubbleCoverage -N genomeSize -p n_cpu]\n" );
 	fprintf ( stderr, "  -g <string>        inputGraph: prefix of input graph file names\n" );
 	fprintf ( stderr, "  -F (optional)      fill gaps in scaffold, [No]\n" );
-	fprintf ( stderr, "  -z (optional)      use compatible mode to build scaffold with contig produced by Version 1.05, [No]\n" );
 	fprintf ( stderr, "  -u (optional)      un-mask contigs with high/low coverage before scaffolding, [mask]\n" );
 	fprintf ( stderr, "  -S (optional)      if scaffold structure exists, do gapfilling only(-F), [NO]\n" );
 	fprintf ( stderr, "  -w (optional)      keep contigs weakly connected to other contigs in scaffold, [NO]\n" );

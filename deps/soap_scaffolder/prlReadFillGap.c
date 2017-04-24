@@ -210,26 +210,13 @@ static boolean loadReads4gap ( char * graphfile )
 	char name[1024];
 	long long readCounter;
 
-	if ( COMPATIBLE_MODE == 1 )
-	{
-		sprintf ( name, "%s.readInGap", graphfile );
-		fp1 = fopen ( name, "rb" );
-	}
-	else
-	{
-		sprintf ( name, "%s.readInGap.gz", graphfile );
-		fp = gzopen ( name, "rb" );
-	}
+	sprintf ( name, "%s.readInGap.gz", graphfile );
+	fp = gzopen ( name, "rb" );
 
 	sprintf ( name, "%s.longReadInGap", graphfile );
 	fp2 = fopen ( name, "rb" );
 
-	if ( COMPATIBLE_MODE == 1 && !fp1 && !fp2 )
-	{
-		fprintf ( stderr, "Can't open %s.readInGap and %s.longReadInGap!\n", graphfile, graphfile );
-		return 0;
-	}
-	else if ( COMPATIBLE_MODE == 0 && !fp && !fp2 )
+	if ( !fp && !fp2 )
 	{
 		fprintf ( stderr, "Can't open %s.readInGap.gz and %s.longReadInGap!\n", graphfile, graphfile );
 		return 0;
@@ -243,13 +230,7 @@ static boolean loadReads4gap ( char * graphfile )
 
 	readSeqInGap = ( DARRAY * ) createDarray ( 1000000, sizeof ( char ) );
 
-	if ( COMPATIBLE_MODE == 1 && fp1 )
-	{
-		readCounter = getRead1by1 ( fp1, readSeqInGap );
-		fprintf ( stderr, "Loaded %lld reads from %s.readInGap.\n", readCounter, graphfile );
-		fclose ( fp1 );
-	}
-	else if ( COMPATIBLE_MODE == 0 && fp )
+	if ( fp )
 	{
 		readCounter = getRead1by1_gz ( fp, readSeqInGap );
 		fprintf ( stderr, "Loaded %lld reads from %s.readInGap.\n", readCounter, graphfile );

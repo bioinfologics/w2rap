@@ -5017,28 +5017,8 @@ void PE2Links ( char * infile )
 
 	fprintf ( stderr, "*****************************************************\nStart to load paired-end reads information.\n\n" );
 
-	if ( COMPATIBLE_MODE == 1 )
-	{
-		sprintf ( name, "%s.readOnContig", infile );
-		fp1 = ckopen ( name, "r" );
-	}
-	else
-	{
-		sprintf ( name, "%s.readOnContig.gz", infile );
-		fp2 = gzopen ( name, "r" );
-	}
-
 	lineLen = 1024;
 	line = ( char * ) ckalloc ( lineLen * sizeof ( char ) );
-
-	if ( COMPATIBLE_MODE == 1 )
-	{
-		fgets ( line, lineLen, fp1 );
-	}
-	else
-	{
-		gzgets ( fp2, line, lineLen );
-	}
 
 	line[0] = '\0';
 
@@ -5048,14 +5028,7 @@ void PE2Links ( char * infile )
 		createCntLookupTable();
 		newCntCounter = 0;
 
-		if ( COMPATIBLE_MODE == 1 )
-		{
-			flag += connectByPE_grad ( fp1, i, line );
-		}
-		else
-		{
-			flag += connectByPE_grad_gz ( fp2, i, line );
-		}
+		flag += connectByPE_grad_gz ( infile, i, line );
 
 		fprintf ( stderr, "%lld new connections.\n\n", newCntCounter / 2 );
 
@@ -5082,14 +5055,7 @@ void PE2Links ( char * infile )
 
 	free ( ( void * ) line );
 
-	if ( COMPATIBLE_MODE == 1 )
-	{
-		fclose ( fp1 );
-	}
-	else
-	{
-		gzclose ( fp2 );
-	}
+	gzclose ( fp2 );
 
 	fclose ( linkF );
 	fprintf ( stderr, "All paired-end reads information loaded.\n" );
@@ -5116,48 +5082,16 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 	unsigned int counter = 0, onScafCounter = 0;
 	unsigned int maskCounter = 0;
 	CONNECT * cnt, *bal_cnt;
-
-	if ( strlen ( line ) )
-	{
-		sscanf ( line, "%d %d %d %d %d", &ctg, &toCtg, &gap, &wt, &ins );
-
-		if ( ins != insertS )
-			{ return counter; }
-
-		if ( 1 )
-		{
-			bal_ctg = getTwinCtg ( ctg );
-			bal_toCtg = getTwinCtg ( toCtg );
-			cnt = add1Connect ( ctg, toCtg, gap, wt, 0 );
-			bal_cnt = add1Connect ( bal_toCtg, bal_ctg, gap, wt, 0 );
-
-			if ( cnt && insertS > 1000 )
-			{
-				cnt->newIns = bal_cnt->newIns = 1;
-			}
-
-			counter++;
-
-			if ( contig_array[ctg].mask || contig_array[toCtg].mask )
-				{ maskCounter++; }
-
-			if ( insertS > 1000 &&
-			        contig_array[ctg].from_vt == contig_array[toCtg].from_vt && // on the same scaff
-			        contig_array[ctg].indexInScaf < contig_array[toCtg].indexInScaf )
-			{
-				add1LongPEcov ( ctg, toCtg, wt );
-				onScafCounter++;
-			}
-		}
-	}
-
+	uint64_t linecounter=0;
+	uint64_t size_linecounter=0;
+	fseek(fp,0,SEEK_SET);
 	while ( fgets ( line, lineLen, fp ) != NULL )
 	{
+		linecounter++;
 		sscanf ( line, "%d %d %d %d %d", &ctg, &toCtg, &gap, &wt, &ins );
 
-		if ( ins > insertS )
-			{ break; }
-
+		if ( ins != insertS ) continue;
+		size_linecounter++;
 		if ( insertS > 1000 &&
 		        contig_array[ctg].from_vt == contig_array[toCtg].from_vt && // on the same scaff
 		        contig_array[ctg].indexInScaf < contig_array[toCtg].indexInScaf )
@@ -5182,7 +5116,8 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 			{ maskCounter++; }
 	}
 
-	fprintf ( stderr, "***************************\nFor insert size: %d\n", insertS );
+	fprintf ( stderr, "***************************\nPairs processed for size %d\n", insertS );
+	fprintf ( stderr, " Links analysed                %d / %d\n", size_linecounter,linecounter );
 	fprintf ( stderr, " Total PE links                %d\n", counter );
 	fprintf ( stderr, " PE links to masked contigs    %d\n", maskCounter );
 	fprintf ( stderr, " On same scaffold PE links     %d\n", onScafCounter );
@@ -5240,8 +5175,11 @@ void Links2Scaf ( char * infile )
 
 	weakPE = 3;
 	int lib_n = 0, cutoff_sum = 0;
+	uint64_t previous_lib_end=0;
 	for ( i = 0; i < gradsCounter; i++ )
 	{
+		fprintf ( stderr, "Processing library #%d (rank %d): %d read pairs with insert size %d\n",
+				  i, pes[i].rank, (pes[i].PE_bound-previous_lib_end/2), pes[i].insertS );
 		if ( MinWeakCut > pes[i].pair_num_cut ) MinWeakCut = pes[i].pair_num_cut;
 		if ( pes[i].insertS < 1000 ) { //if there is small-pe distances, use the library's connection cutoff
 			isPrevSmall = 1;
@@ -5252,7 +5190,6 @@ void Links2Scaf ( char * infile )
 		}
 
 		Insert_size = pes[i].insertS;
-		discardCntCounter = 0;
 		flag2 = inputLinks ( fp, pes[i].insertS, line ); //links in library
 
 		if ( flag2 ) //if there's any links in the library
@@ -5271,10 +5208,12 @@ void Links2Scaf ( char * infile )
 		}
 
 		if ( i == gradsCounter - 1 || pes[i + 1].rank != pes[i].rank ) { //if this is the last library in the rank (i.e. do the damn scaffolding!)
-			flag = nonLinear = downS = 0;
+			flag = nonLinear = 0;
+
+
 
 			//always asks for at least 5 links from a LMP library (TODO: enable override)
-			if ( pes[i].insertS > 1000 ) weakPE = 5;
+			//if ( pes[i].insertS > 1000 ) weakPE = 5;
 			//at least mean links for all libraries in the range (if there is a higly over-represented library, this will make the others unusable)
 			if ( lib_n > 0 )
 			{
@@ -5291,13 +5230,13 @@ void Links2Scaf ( char * infile )
 			if ( pes[i].insertS < 1000 ) { //scaffolding with PE
 				bySmall=1;
 				//TODO: replace this hardcoded insert size variation, which makes little sense!
-				ins_size_var=30;
+				ins_size_var=50; //was 30!
 				downS=0;
 			}
 			else{ //scaffolding with LMP
 				bySmall=0;
 				//TODO: replace this hardcoded insert size variation, which makes little sense!
-				ins_size_var = 50;
+				ins_size_var = pes[i].insertS / 10; //was 50!
 				downS=1;
 				detectBreakScaff();
 			}

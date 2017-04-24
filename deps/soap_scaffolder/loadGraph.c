@@ -291,7 +291,7 @@ void loadUpdatedEdges ( char * graphfile )
 		}
 	}
 
-	cut_len = COMPATIBLE_MODE == 0 ? overlaplen : 0;
+	cut_len = overlaplen;
 
 	if ( ctg_short == 0 )
 	{
