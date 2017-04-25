@@ -30,11 +30,10 @@
 
 #define CNBLOCKSIZE 10000
 static STACK * isStack;
-static int ignorePE1, ignorePE2, ignorePE3, static_flag;
+static int ignorePE1, ignorePE2, ignorePE3;
 static int onsameCtgPE;
 static unsigned long long peSUM;
 
-static boolean staticF;
 
 static int existCounter;
 
@@ -293,15 +292,9 @@ int attach1PE ( unsigned int e1, int pre_pos, unsigned int bal_e2, int pos, int 
 	gap = insert_size - overlaplen + pre_pos + pos - contig_array[e1].length - contig_array[e2].length;
 
 	//TODO:this is really important!!
-	if ( gap < - ( insert_size / 10 ) )
+	if ( gap < - 500 )
 	{
 		ignorePE2++;
-		return 0;
-	}
-
-	if ( gap > insert_size )
-	{
-		ignorePE3++;
 		return 0;
 	}
 
@@ -334,10 +327,10 @@ int connectByPE_grad_gz ( char * infile, int peGrad, char * line )
 	gzgets ( fp, line, lineLen );
 
 	long long pre_readno, readno, minno, maxno;
-	int pre_pos, pos, flag, PE, count = 0, Total_PE = 0;
+	int pre_pos, pos, flag, PE, count = 0, Total_Pairs, Total_SE=0, Total_PE = 0;
 	unsigned int pre_contigno, contigno, newIndex;
 
-	if ( peGrad < 0 || peGrad > gradsCounter )
+	if ( peGrad < 0 || peGrad > gradsCounter)
 	{
 		printf ( "Specified pe grad is out of bound.\n" );
 		return 0;
@@ -353,60 +346,63 @@ int connectByPE_grad_gz ( char * infile, int peGrad, char * line )
 	{
 		minno = pes[peGrad - 1].PE_bound;
 	}
-
+    Total_Pairs=(maxno-minno)/2;
 	onsameCtgPE = peSUM = 0;
 	PE = pes[peGrad].insertS;
+    if ( !PE )
+    {
+        printf ( "Specified pe grad not a PE library!\n" );
+        return 0;
+    }
+
 
 	pre_readno = -1;
-
+	long long partial_se=0;
 	ignorePE1 = ignorePE2 = ignorePE3 = 0;
-	static_flag = 1;
 	isStack = ( STACK * ) createStack ( CNBLOCKSIZE, sizeof ( int ) );
 	while ( gzgets ( fp, line, lineLen ) != NULL )
 	{
 		sscanf ( line, "%lld %d %d", &readno, &contigno, &pos );
 
-		if ( readno > maxno )
-		{
-			break;
-		}
-
-		if ( readno <= minno )
-		{
-			continue;
-		}
+		if ( readno > maxno ) break;
+		if ( readno <= minno ) continue;
 
 		newIndex = index_array[contigno];
 
-		if ( isSameAsTwin ( newIndex ) )
-		{
-			continue;
-		}
+		if ( isSameAsTwin ( newIndex ) ) continue; //Skips reads on palindromes! -> counting as unmapped
 
-		if ( PE && ( readno % 2 == 0 ) && ( pre_readno == readno - 1 ) ) // they are a pair of reads
+		if ( ( readno % 2 == 0 ) && ( pre_readno == readno - 1 ) ) // they are a pair of reads
 		{
 			Total_PE++;
+			Total_SE+=partial_se-1;
+			partial_se=0;
 			flag = attach1PE ( pre_contigno, pre_pos, newIndex, pos, PE );
 
 			if ( flag == 1 )
 			{
 				count++;
 			}
+		} else {
+			partial_se++;
 		}
 
 		pre_readno = readno;
 		pre_contigno = newIndex;
 		pre_pos = pos;
 	}
+	Total_SE+=partial_se;
 
 	printf ( "For insert size: %d\n", PE );
-	printf ( " Total PE links                      %d\n", Total_PE );
-	printf ( " Normal PE links on same contig      %d\n", onsameCtgPE );
-	printf ( " Incorrect oriented PE links         %d\n", ignorePE1 );
-	printf ( " PE links of too small insert size   %d\n", ignorePE2 );
-	printf ( " PE links of too large insert size   %d\n", ignorePE3 );
-	printf ( " Correct PE links                    %d\n", count );
+	printf ( " Total Pairs                         %d\n", Total_Pairs );
+	printf ( " Unmapped                            %d (%.2f%%)\n", Total_Pairs - Total_SE - Total_PE, ((float) Total_Pairs - Total_SE - Total_PE) * 100.0 / Total_Pairs );
+	printf ( " Single-end mapped                   %d (%.2f%%)\n", Total_SE, ((float) Total_SE) * 100.0 / Total_Pairs );
+	printf ( " Both ends mapped                    %d (%.2f%%)\n", Total_PE, ((float) Total_PE) * 100.0 / Total_Pairs );
+	printf ( "   On contig: OK                                %d (%.2f%%)\n", onsameCtgPE, ((float) onsameCtgPE) * 100.0 / Total_Pairs );
+	printf ( "   On contig: bad orientation                   %d (%.2f%%)\n", ignorePE1, ((float) ignorePE1) * 100.0 / Total_Pairs );
+	printf ( "   Across contigs: link ok                      %d (%.2f%%)\n", count, ((float) count) * 100.0 / Total_Pairs);
+	printf ( "   Across contigs: gap too small                %d (%.2f%%)\n", ignorePE2, ((float) ignorePE2) * 100.0 / Total_Pairs);
 	printf ( " Accumulated connections             %d\n", newCntCounter );
+	printf ( " Mean link count per connection      %.2f\n", ((float)count)/newCntCounter );
 	printf ( "Use contigs longer than %d to estimate insert size: \n", PE );
 	printf ( " PE links               %d\n", isStack->item_c );
 	calcuIS ( isStack );
