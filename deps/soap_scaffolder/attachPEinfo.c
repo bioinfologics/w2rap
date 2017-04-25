@@ -34,9 +34,6 @@ static int ignorePE1, ignorePE2, ignorePE3;
 static int onsameCtgPE;
 static unsigned long long peSUM;
 
-
-static int existCounter;
-
 static int calcuIS ( STACK * intStack );
 
 static int cmp_pe ( const void * a, const void * b )
@@ -139,67 +136,41 @@ Return:
 *************************************************/
 CONNECT * add1Connect ( unsigned int e1, unsigned int e2, int gap, int weight, boolean inherit )
 {
-	if ( e1 == e2 || e1 == getTwinCtg ( e2 ) )
-	{
-		return NULL;
-	}
+	if ( e1 == e2 || e1 == getTwinCtg ( e2 ) ) return NULL;
 
-	CONNECT * connect = NULL, *bal_connect = NULL;
+	CONNECT * connect = getCntBetween ( e1, e2 );
+
 	long long sum;
 
-	if ( weight > 255 )
-	{
-		weight = 255;
-	}
+	if ( weight > 255 ) weight = 255;
 
-	connect = getCntBetween ( e1, e2 );
-	bal_connect = getCntBetween ( e2, e1 );
 
 	if ( connect )
 	{
-		if ( !weight )
-		{
-			return connect;
-		}
-
-		existCounter++;
+		if ( !weight ) return connect;
 
 		if ( !inherit )
 		{
 			sum = connect->weightNotInherit * connect->gapLen + gap * weight;
 			connect->gapLen = sum / ( connect->weightNotInherit + weight );
 
-			if ( connect->weightNotInherit + weight <= 255 )
-			{
-				connect->weightNotInherit += weight;
-			}
-			else if ( connect->weightNotInherit < 255 )
-			{
-				connect->weightNotInherit = 255;
-			}
+			if ( connect->weightNotInherit + weight <= 255 ) connect->weightNotInherit += weight;
+			else connect->weightNotInherit = 255;
+
 		}
 		else
 		{
 			sum = connect->weight * connect->gapLen + gap * weight;
 			connect->gapLen = sum / ( connect->weight + weight );
 
-			if ( !connect->inherit )
-			{
-				connect->maxSingleWeight = connect->weightNotInherit;
-			}
+			if ( !connect->inherit ) connect->maxSingleWeight = connect->weightNotInherit;
 
 			connect->inherit = 1;
 			connect->maxSingleWeight = connect->maxSingleWeight > weight ? connect->maxSingleWeight : weight;
 		}
 
-		if ( connect->weight + weight <= 255 )
-		{
-			connect->weight += weight;
-		}
-		else if ( connect->weight < 255 )
-		{
-			connect->weight = 255;
-		}
+		if ( connect->weight + weight <= 255 ) connect->weight += weight;
+		else connect->weight = 255;
 	}
 	else
 	{
