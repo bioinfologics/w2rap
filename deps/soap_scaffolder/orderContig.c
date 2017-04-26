@@ -84,7 +84,6 @@ static void general_linearization ( boolean strict );
 static void smallScaf();
 static void clearNewInsFlag();
 static void detectBreakScaff();
-static void detectBreakScaf();
 static boolean checkSimple ( DARRAY * ctgArray, int count );
 static void checkCircle();
 
@@ -2101,6 +2100,64 @@ static int Countlink()
 	return conflict_count;
 }
 
+
+void print_connection_status(){
+	uint64_t conns[num_ctg][2];
+	for ( uint64_t i = 1; i <= num_ctg; i++ ) conns[i][0]=conns[i][1]=0;
+	for ( uint64_t i = 1; i <= num_ctg; i++ ) {
+		CONNECT * c=contig_array[i].downwardConnect;
+		while (c) {
+			if (!c->mask && !c->deleted && !c->weak) {
+				conns[i][1]++;
+				conns[c->contigID][0]++;
+			}
+			c=c->next;
+		}
+	}
+	uint64_t c00=0,c10=0,c11=0,c20=0,c21=0,c22=0,cn0=0,cn1=0,cn2=0,cnn=0,cm=0;
+	uint64_t c00b=0,c10b=0,c11b=0,c20b=0,c21b=0,c22b=0,cn0b=0,cn1b=0,cn2b=0,cnnb=0,cmb=0,total_bp=0;
+	for ( uint64_t i = 1; i <= num_ctg; i++ ) {
+		total_bp+=contig_array[i].length;
+		if (contig_array[i].mask) {
+			++cm;
+			cmb+=contig_array[i].length;
+			continue;
+		}
+		uint64_t a,b;
+		if(conns[i][0]>conns[i][1]){
+			a=conns[i][0];
+			b=conns[i][1];
+		}
+		else{
+			a=conns[i][1];
+			b=conns[i][2];
+		}
+		if (0==a && 0==b) {++c00;c00b+=contig_array[i].length;}
+		else if (1==a && 0==b) {++c10;c10b+=contig_array[i].length;}
+		else if (1==a && 1==b) {++c11;c11b+=contig_array[i].length;}
+		else if (2==a && 0==b) {++c20;c20b+=contig_array[i].length;}
+		else if (2==a && 1==b) {++c21;c21b+=contig_array[i].length;}
+		else if (2==a && 2==b) {++c22;c22b+=contig_array[i].length;}
+		else if (0==b) {++cn0;cn0b+=contig_array[i].length;}
+		else if (1==b) {++cn1;cn1b+=contig_array[i].length;}
+		else if (2==b) {++cn2;cn2b+=contig_array[i].length;}
+		else {++cnn;cnnb+=contig_array[i].length;}
+	}
+	printf (" MASKED contigs:       %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cm, cm*100.0/num_ctg, cmb, cmb*100.0/total_bp);
+	printf (" Connection class 0-0: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", c00, c00*100.0/num_ctg, c00b, c00b*100.0/total_bp);
+	printf (" Connection class 1-0: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", c10, c10*100.0/num_ctg, c10b, c10b*100.0/total_bp);
+	printf (" Connection class 1-1: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", c11, c11*100.0/num_ctg, c11b, c11b*100.0/total_bp);
+	printf (" Connection class 2-0: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", c20, c20*100.0/num_ctg, c20b, c20b*100.0/total_bp);
+	printf (" Connection class 2-1: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", c21, c21*100.0/num_ctg, c21b, c21b*100.0/total_bp);
+	printf (" Connection class 2-2: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", c22, c22*100.0/num_ctg, c22b, c22b*100.0/total_bp);
+	printf (" Connection class N-0: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cn0, cn0*100.0/num_ctg, cn0b, cn0b*100.0/total_bp);
+	printf (" Connection class N-1: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cn1, cn1*100.0/num_ctg, cn1b, cn1b*100.0/total_bp);
+	printf (" Connection class N-2: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cn2, cn2*100.0/num_ctg, cn2b, cn2b*100.0/total_bp);
+	printf (" Connection class N-N: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cnn, cnn*100.0/num_ctg, cnnb, cnnb*100.0/total_bp);
+	printf ("\n");
+
+}
+
 /*************************************************
 Function:
     ordering
@@ -2120,12 +2177,22 @@ Return:
 static void ordering ( boolean deWeak, boolean downS, boolean nonlinear)
 {
 
+	printf ("\n\n***********************************\nNew scaffolding round starting\n\n");
+	print_connection_status();
+
 	if ( downS ) downSlide();
 	if ( deWeak ) deleteWeakCnt ( weakPE );
 
 	simplifyCnt();
+	printf ("\nAfter Transition removal:\n\n");
+	print_connection_status();
+
+
 	maskRepeat();
 	simplifyCnt();
+
+	printf ("\nAfter repeat disconnection:\n\n");
+	print_connection_status();
 
 	if ( nonlinear )
 	{
@@ -3910,216 +3977,6 @@ int get_ctg_score2 ( int pos, int tempCounter )
 			{ return 0; }
 
 		return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 );
-	}
-
-	return 0;
-}
-
-/*************************************************
-Function:
-    get_ctg_score2
-Description:
-    Calculates a score to indicate the strengh of connections
-    between a contig and other contigs in scaffold.
-Input:
-    1. pos:             contig index
-    2. tempCounter:     maximum contig number in scaffold
-Output:
-    None.
-Return:
-    Calculated score.
-*************************************************/
-int get_ctg_score ( int pos, int num3, int num5, int flag )
-{
-	int i = 0, in = 0, out = 0, innum = 0, outnum = 0, threeid;
-	CONNECT * dh_cnt;
-	int id;
-
-	if ( flag == 0 )
-	{
-		id = * ( unsigned int * ) darrayGet ( scaf3, pos );
-		int end = pos > 100 ? pos - 100 : 0;
-		int start = pos + 100 < num3 ? pos + 100 : num3;
-		in = 0, out = 0;
-
-		for ( i = start; i >= end; i-- )
-		{
-			threeid = * ( unsigned int * ) darrayGet ( scaf3, i );
-
-			if ( threeid == id )
-			{
-				pos = i;
-				continue;
-			}
-
-			dh_cnt = getCnt ( id, threeid );
-
-			if ( dh_cnt && dh_cnt->weight > 0 )
-			{
-				out++;
-			}
-
-			dh_cnt = getCnt ( threeid, id );
-
-			if ( dh_cnt && dh_cnt->weight > 0 )
-				{ in++; }
-		}
-
-		outnum = allConnect ( id, NULL );
-		innum = allConnect ( getTwinCtg ( id ), NULL );
-		int num5_check = 0;
-
-		if ( pos - end < outnum )
-		{
-			for ( i = 0; i < num5; i++ )
-			{
-				num5_check++;
-				threeid = * ( unsigned int * ) darrayGet ( scaf5, i );
-				dh_cnt = getCnt ( id, threeid );
-
-				if ( dh_cnt && dh_cnt->weight > 0 )
-					{ out++; }
-
-				if ( num5_check == outnum )
-					{ break; }
-			}
-		}
-
-		if ( pos - end + num5_check < outnum )
-			{ outnum = pos - end + num5_check; }
-
-		if ( start - pos < innum )
-			{ innum = start - pos; }
-
-		if ( innum > 0 && outnum > 0 )
-		{
-			if ( pos != num3 && pos > 0 )
-			{
-				if ( outnum < 5 && out == 0 )
-				{
-					if ( innum > 0 )
-						{ return ( int ) ( ( ( double ) ( in ) / ( double ) ( innum ) ) * 100 ); }
-				}
-
-				if ( innum < 5 && in == 0 )
-				{
-					if ( outnum > 0 )
-						{ return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 ); }
-				}
-
-				if ( in == 0 || out == 0 )
-					{ return 0; }
-
-				return ( int ) ( ( ( double ) ( in * out ) / ( double ) ( innum * outnum ) ) * 100 );
-			}
-
-			if ( pos == num3 )
-				{ return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 ); }
-
-			if ( pos == 0 )
-				{ return ( int ) ( ( ( double ) ( in ) / ( double ) ( innum ) ) * 100 ); }
-		}
-		else if ( innum > 0 )
-		{
-			return ( int ) ( ( ( double ) ( in ) / ( double ) ( innum ) ) * 100 );
-		}
-		else if ( outnum > 0 )
-		{
-			if ( pos == num3 && out == 1 && outnum > 5 )
-				{ return 0; }
-
-			return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 );
-		}
-
-		return 0;
-	}
-	else
-	{
-		id = * ( unsigned int * ) darrayGet ( scaf5, pos );
-		int start = pos > 100 ? pos - 100 : 0;
-		int end = pos + 100 < num5 ? pos + 100 : num5;
-		in = 0, out = 0;
-
-		for ( i = start; i < end; i++ )
-		{
-			threeid = * ( unsigned int * ) darrayGet ( scaf5, i );
-
-			if ( threeid == id )
-			{
-				pos = i;
-				continue;
-			}
-
-			dh_cnt = getCnt ( id, threeid );
-
-			if ( dh_cnt && dh_cnt->weight > 0 )
-				{ out++; }
-
-			dh_cnt = getCnt ( threeid, id );
-
-			if ( dh_cnt && dh_cnt->weight > 0 )
-				{ in++; }
-		}
-
-		outnum = allConnect ( id, NULL );
-		innum = allConnect ( getTwinCtg ( id ), NULL );
-		int num3_check = 0;
-
-		if ( pos - start < innum )
-		{
-			for ( i = 0; i < num3; i++ )
-			{
-				num3_check++;
-				threeid = * ( unsigned int * ) darrayGet ( scaf3, i );
-				dh_cnt = getCnt ( threeid, id );
-
-				if ( dh_cnt && dh_cnt->weight > 0 )
-					{ in++; }
-
-				if ( num3_check == innum )
-					{ break; }
-			}
-		}
-
-		if ( pos - start + num3_check < innum )
-			{ innum = pos - start + num3_check; }
-
-		if ( end - pos - 1 < outnum )
-			{ outnum = end - pos - 1; }
-
-		if ( innum > 0 && outnum > 0 )
-		{
-			if ( pos != num5 - 1 && pos > 0 )
-			{
-				if ( outnum < 5 && out == 0 && innum > 0 )
-					{ return ( int ) ( ( ( double ) ( in ) / ( double ) ( innum ) ) * 100 ); }
-
-				if ( innum < 5 && in == 0 && outnum > 0 )
-					{ return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 ); }
-
-				if ( in == 0 || out == 0 )
-					{ return 0; }
-
-				return ( int ) ( ( ( double ) ( in * out ) / ( double ) ( innum * outnum ) ) * 100 );
-			}
-
-			if ( pos == 0 )
-				{ return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 ); }
-
-			if ( pos == num5 - 1 )
-				{ return ( int ) ( ( ( double ) ( in ) / ( double ) ( innum ) ) * 100 ); }
-		}
-		else if ( innum > 0 )
-		{
-			if ( pos == num5 - 1 && in == 1 && innum > 5 )
-				{ return 0; }
-
-			return ( int ) ( ( ( double ) ( in ) / ( double ) ( innum ) ) * 100 );
-		}
-		else if ( outnum > 0 )
-			{ return ( int ) ( ( ( double ) ( out ) / ( double ) ( outnum ) ) * 100 ); }
-
-		return 0;
 	}
 
 	return 0;
