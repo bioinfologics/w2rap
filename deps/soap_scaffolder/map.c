@@ -128,10 +128,10 @@ int main ( int argc, char ** argv )
 	time ( &time_aft );
 	printf ( "Time spent on graph construction: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 	//map long read (asm_flags=4) to edge one by one
-	time ( &time_bef );
-	prlLongRead2Ctg ( shortrdsfile, graphfile );
-	time ( &time_aft );
-	printf ( "Time spent on aligning long reads: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
+	//time ( &time_bef );
+	//prlLongRead2Ctg ( shortrdsfile, graphfile );
+	//time ( &time_aft );
+	//printf ( "Time spent on aligning long reads: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 	//map read to edge one by one
 	time ( &time_bef );
 	prlRead2Ctg ( shortrdsfile, graphfile );

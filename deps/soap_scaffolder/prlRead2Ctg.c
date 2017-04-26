@@ -266,9 +266,8 @@ static void parse1read ( int t )
 	kmer_t * node;
 	boolean isSmaller;
 	int flag, maxOcc = 0;
-	kmer_t * maxNode = NULL;
 	int alldgnLen = lenBuffer[t] > ALIGNLEN ? ALIGNLEN : lenBuffer[t];
-	int multi = alldgnLen - overlaplen + 1 < 2 ? 2 : alldgnLen - overlaplen + 1;
+	int multi = alldgnLen - overlaplen + 1 < 2 ? 2 : alldgnLen - overlaplen + 1; //how many kmers for placement?
 	unsigned int start, finish;
 	footprint[t] = 0;
 	start = indexArray[t];
@@ -279,55 +278,51 @@ static void parse1read ( int t )
 		ctgIdArray[t] = 0;
 		return;
 	}
-
+	//from begin to end of the kmers in the read
 	for ( j = start; j < finish; j++ )
 	{
 		node = nodeBuffer[j];
 
-		if ( !node ) //same as previous
+		if ( !node ) //unplaced or already processed
 		{
 			continue;
 		}
 
-		flag = 1;
+		flag = 1; //alignement starts with 1 kmer
 
 		for ( s = j + 1; s < finish; s++ )
 		{
-			if ( !nodeBuffer[s] )
+			if ( !nodeBuffer[s] )//unplaced or already used
 			{
 				continue;
 			}
 
-			if ( nodeBuffer[s]->l_links == node->l_links )
+			if ( nodeBuffer[s]->l_links == node->l_links ) //placed and matches, increase count and delete placement
 			{
 				flag++;
 				nodeBuffer[s] = NULL;
 			}
 		}
 
-		if ( ( overlaplen < 32 && flag >= 2 ) || overlaplen > 32 )
+		if ( ( overlaplen < 32 && flag >= 2 ) || overlaplen > 32 ) //not very sure what counter2 is
 		{
 			counter2++;
 		}
 
-		if ( flag >= multi )
+		if ( flag >= multi ) //if the match is long enough to be valid
 		{
-			counter++;
-		}
-		else
-		{
-			continue;
+			counter++; //increase the valid matches count
+			if ( flag > maxOcc ) //is this the largest match yet?
+			{
+				pos = j;
+				maxOcc = flag;
+			}
 		}
 
-		if ( flag > maxOcc )
-		{
-			pos = j;
-			maxOcc = flag;
-			maxNode = node;
-		}
 	}
 
-	if ( !counter )
+	//XXX: bj mod was --> if ( !counter )
+	if ( counter!=1 )
 	{
 		ctgIdArray[t] = 0;
 		return;
@@ -618,6 +613,11 @@ static void recordLongRead ( FILE * outfp1, FILE * outfp2 )
 	}
 }
 
+/**
+ * This outputs the reads as mapped into the different files
+ * outfp is the important file (i.e. readsOnContig.gz)
+ **/
+
 static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1, gzFile * outfp2, gzFile * outfp4 )
 {
 	int t, ctgId;
@@ -873,6 +873,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 	kmer_c = n_solexa = read_c = i = libNo = readNumBack = gradsCounter = 0;
 	prevLibNo = -1;
 	int type = 0;       //decide whether the PE reads is good or bad
+	printf ("Read mapping starting with overlaplen=%d\n",overlaplen);
 
 	while ( ( flag = read1seqInLib ( seqBuffer[read_c], read_name[read_c], & ( lenBuffer[read_c] ), &libNo, pairs, 0, &type ) ) != 0 )
 	{
@@ -910,10 +911,11 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 
 		insSizeArray[read_c] = insSize;
 
+		/*XXX: bj mod (DELETED)
 		if ( insSize > 1000 )
 		{
 			ALIGNLEN = ALIGNLEN < ( lenBuffer[read_c] / 2 + 1 ) ? ( lenBuffer[read_c] / 2 + 1 ) : ALIGNLEN;
-		}
+		}*/
 
 		if ( ( ++i ) % 100000000 == 0 )
 		{
@@ -1047,234 +1049,4 @@ static void thread_wait ( pthread_t * threads )
 		{
 			pthread_join ( threads[i], NULL );
 		}
-}
-
-
-/*************************************************
-Function:
-    prlLongRead2Ctg
-Description:
-    Aligns long reads to contigs.
-Input:
-    1. libfile:     the reads contig file
-    2. outfile:     the output file prefix
-Output:
-    None.
-Return:
-    None.
-*************************************************/
-void prlLongRead2Ctg ( char * libfile, char * outfile )
-{
-	long long i;
-	char * src_name, *next_name, name[256];
-	FILE * outfp1, *outfp2, *outfp3;
-	int maxReadNum, libNo, prevLibNo;
-	boolean flag, pairs = 0;
-	pthread_t threads[thrd_num];
-	unsigned char thrdSignal[thrd_num + 1];
-	PARAMETER paras[thrd_num];
-	maxReadLen = 0;
-	maxNameLen = 256;
-	scan_libInfo ( libfile );
-
-	if ( !maxReadLen )
-	{
-		maxReadLen = 100;
-	}
-
-	int longReadLen = getMaxLongReadLen ( num_libs );
-
-	if ( longReadLen < 1 )  // no long reads
-	{
-		return;
-	}
-
-	maxReadLen4all = maxReadLen < longReadLen ? longReadLen : maxReadLen;
-	printf ( "In file: %s, long read len %d, max name len %d.\n", libfile, longReadLen, maxNameLen );
-	maxReadLen = longReadLen;
-	src_name = ( char * ) ckalloc ( ( maxNameLen + 1 ) * sizeof ( char ) );
-	next_name = ( char * ) ckalloc ( ( maxNameLen + 1 ) * sizeof ( char ) );
-	kmerBuffer = ( Kmer * ) ckalloc ( buffer_size * sizeof ( Kmer ) );
-	hashBanBuffer = ( ubyte8 * ) ckalloc ( buffer_size * sizeof ( ubyte8 ) );
-	nodeBuffer = ( kmer_t ** ) ckalloc ( buffer_size * sizeof ( kmer_t * ) );
-	smallerBuffer = ( boolean * ) ckalloc ( buffer_size * sizeof ( boolean ) );
-	maxReadNum = buffer_size / ( maxReadLen - overlaplen + 1 );
-	maxReadNum = maxReadNum % 2 == 0 ? maxReadNum : maxReadNum - 1; //make sure paired reads are processed at the same batch
-	seqBuffer = ( char ** ) ckalloc ( maxReadNum * sizeof ( char * ) );
-	read_name = ( char ** ) ckalloc ( maxReadNum * sizeof ( char * ) );
-
-	for ( i = 0; i < maxReadNum; i++ )
-	{
-		read_name[i] = ( char * ) ckalloc ( ( maxNameLen + 1 ) * sizeof ( char ) );
-	}
-
-	lenBuffer = ( int * ) ckalloc ( maxReadNum * sizeof ( int ) );
-	indexArray = ( unsigned int * ) ckalloc ( ( maxReadNum + 1 ) * sizeof ( unsigned int ) );
-	ctgIdArray = ( unsigned int * ) ckalloc ( ( maxReadNum + 1 ) * sizeof ( unsigned int ) );
-	posArray = ( int * ) ckalloc ( ( maxReadNum + 1 ) * sizeof ( int ) );
-	orienArray = ( char * ) ckalloc ( ( maxReadNum + 1 ) * sizeof ( char ) );
-	footprint = ( char * ) ckalloc ( ( maxReadNum + 1 ) * sizeof ( char ) );
-	insSizeArray = ( int * ) ckalloc ( ( maxReadNum + 1 ) * sizeof ( int ) );
-
-	if ( gLineLen < maxReadLen )
-	{
-		gStr = ( char * ) ckalloc ( ( maxReadLen + 1 ) * sizeof ( char ) );
-	}
-
-	for ( i = 0; i < maxReadNum; i++ )
-	{
-		seqBuffer[i] = ( char * ) ckalloc ( maxReadLen * sizeof ( char ) );
-	}
-
-	rcSeq = ( char ** ) ckalloc ( ( thrd_num + 1 ) * sizeof ( char * ) );
-	deletion = ( int * ) ckalloc ( ( thrd_num + 1 ) * sizeof ( int ) );
-	thrdSignal[0] = 0;
-	deletion[0] = 0;
-
-	if ( 1 )
-	{
-		for ( i = 0; i < thrd_num; i++ )
-		{
-			rcSeq[i + 1] = ( char * ) ckalloc ( maxReadLen * sizeof ( char ) );
-			deletion[i + 1] = 0;
-			thrdSignal[i + 1] = 0;
-			paras[i].threadID = i;
-			paras[i].mainSignal = &thrdSignal[0];
-			paras[i].selfSignal = &thrdSignal[i + 1];
-		}
-
-		creatThrds ( threads, paras );
-	}
-
-	if ( !contig_array )
-	{
-		basicContigInfo ( outfile );
-	}
-
-	sprintf ( name, "%s.longReadInGap", outfile );
-	outfp1 = ckopen ( name, "wb" );
-
-	if ( fill )
-	{
-		sprintf ( name, "%s.RlongReadInGap", outfile );
-		outfp2 = ckopen ( name, "w" );
-	}
-
-	readCounter = 0;
-	kmer_c = n_solexa = read_c = i = libNo = 0;
-	prevLibNo = -1;
-	int type = 0;       //decide whether the PE reads is good or bad
-
-	while ( ( flag = read1seqInLib ( seqBuffer[read_c], read_name[read_c], & ( lenBuffer[read_c] ), &libNo, pairs, 4, &type ) ) != 0 )
-	{
-		if ( type == -1 ) //if the reads is bad, go back.
-		{
-			i--;
-
-			if ( lenBuffer[read_c - 1] >= overlaplen + 1 )
-			{
-				kmer_c -= lenBuffer[read_c - 1] - overlaplen + 1;
-			}
-
-			read_c--;
-			n_solexa -= 2;
-			continue;
-		}
-
-		if ( libNo != prevLibNo )
-		{
-			prevLibNo = libNo;
-			ALIGNLEN = lib_array[libNo].map_len;
-			ALIGNLEN = ALIGNLEN < 35 ? 35 : ALIGNLEN;
-			printf ( "Map_len %d.\n", ALIGNLEN );
-		}
-
-		insSizeArray[read_c] = 18;
-
-		if ( ( ++i ) % 100000000 == 0 )
-		{
-			printf ( "--- %lldth reads.\n", i );
-		}
-
-		indexArray[read_c] = kmer_c;
-
-		if ( lenBuffer[read_c] >= overlaplen + 1 )
-		{
-			kmer_c += lenBuffer[read_c] - overlaplen + 1;
-		}
-
-		read_c++;
-
-		if ( read_c == maxReadNum )
-		{
-			indexArray[read_c] = kmer_c;
-			sendWorkSignal ( 2, thrdSignal ); //chopKmer4read
-			sendWorkSignal ( 1, thrdSignal ); //searchKmer
-			sendWorkSignal ( 3, thrdSignal ); //parse1read
-			recordLongRead ( outfp1, outfp2 );
-			kmer_c = 0;
-			read_c = 0;
-		}
-	}
-
-	if ( read_c )
-	{
-		indexArray[read_c] = kmer_c;
-		sendWorkSignal ( 2, thrdSignal ); //chopKmer4read
-		sendWorkSignal ( 1, thrdSignal ); //searchKmer
-		sendWorkSignal ( 3, thrdSignal ); //parse1read
-		recordLongRead ( outfp1, outfp2 );
-		printf ( "Output %lld out of %lld (%.1f)%% reads in gaps.\n", readsInGap, readCounter, ( float ) readsInGap / readCounter * 100 );
-	}
-
-	sendWorkSignal ( 5, thrdSignal ); //stop
-	thread_wait ( threads );
-	fclose ( outfp1 );
-
-	if ( fill )
-		{ fclose ( outfp2 ); }
-
-	free_libs ();
-
-	if ( 1 )        // multi-threads
-	{
-		for ( i = 0; i < thrd_num; i++ )
-		{
-			deletion[0] += deletion[i + 1];
-			free ( ( void * ) rcSeq[i + 1] );
-		}
-	}
-
-	printf ( "%d reads deleted.\n", deletion[0] );
-	free ( ( void * ) rcSeq );
-	free ( ( void * ) deletion );
-
-	for ( i = 0; i < maxReadNum; i++ )
-	{
-		free ( ( void * ) seqBuffer[i] );
-	}
-
-	for ( i = 0; i < maxReadNum; i++ )
-		{ free ( ( void * ) read_name[i] ); }
-
-	free ( ( void * ) seqBuffer );
-	free ( ( void * ) lenBuffer );
-	free ( ( void * ) indexArray );
-	free ( ( void * ) kmerBuffer );
-	free ( ( void * ) smallerBuffer );
-	free ( ( void * ) hashBanBuffer );
-	free ( ( void * ) nodeBuffer );
-	free ( ( void * ) ctgIdArray );
-	free ( ( void * ) posArray );
-	free ( ( void * ) orienArray );
-	free ( ( void * ) footprint );
-	free ( ( void * ) insSizeArray );
-	free ( ( void * ) src_name );
-	free ( ( void * ) next_name );
-
-	if ( gLineLen < maxReadLen )
-	{
-		free ( ( void * ) gStr );
-		gStr = NULL;
-	}
 }
