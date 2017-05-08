@@ -193,10 +193,8 @@ Description:
     according to toplogy sturcture supported by large insert size
     paired-end reads.
 Input:
-    1. sourceStart: contig that has connection relations to other two
-                        contigs
-    2. originCnt:       direct connection supported by large insert size
-                            paired-end reads
+    1. sourceStart: contig that has connection relations to other two contigs
+    2. originCnt:       direct connection supported by large insert size paired-end reads
     3. gap:         calculated distance between two non-connected contigs
     4. targetStart:     left contig of those two non-connected contigs
     5. targetStop:      right contig of those two non-connected contigs
@@ -380,11 +378,12 @@ static void downSlide()
 
 	for ( i = 1; i <= num_ctg; i++ )
 	{
+
 		if ( contig_array[i].mask || !contig_array[i].downwardConnect )
 			{ continue; }
 
 		bindCnt = getBindCnt ( i );
-
+		//basically, continuing if there is not just a single connection
 		if ( !bindCnt )
 			{ continue; }
 
@@ -392,7 +391,7 @@ static void downSlide()
 		len = slideLen = 0;
 		bottomCtg = i;
 
-		//find the last unmasked contig in this binding
+		//find the last unmasked contig in this binding (i.e go forward as much as possible. there is no BW travel).
 		while ( bindCnt->nextInScaf )
 		{
 			len += bindCnt->gapLen + contig_array[bindCnt->contigID].length;
@@ -1638,6 +1637,7 @@ static void removeTransitive()
 
 		for ( i = 1; i <= num_ctg; i++ )
 		{
+			//this just skips and counts masked contigs (on the first iteration through the loop only.
 			if ( contig_array[i].mask )
 			{
 				if ( cycle_num == 1 )
@@ -1648,6 +1648,7 @@ static void removeTransitive()
 
 			out_num = validConnect ( i, NULL );
 
+			//if not 2 connections, ignore it.
 			if ( out_num != 2 )
 			{
 				if ( out_num == 1 && cycle_num == 1 )
@@ -1663,6 +1664,7 @@ static void removeTransitive()
 			}
 
 			two_out++;
+			//if 2 valid and active connections, put them in cn1, cn2.
 			cn_temp = contig_array[i].downwardConnect;
 			count = 0;
 
@@ -1688,44 +1690,45 @@ static void removeTransitive()
 				cn_temp = cn_temp->next;
 			}
 
-			if ( count > 2 )
+			if ( count > 2 ) //This should never be true, right?
 			{
 				printf ( "%d valid connections from ctg %d\n", count, i );
 				continue;
 			}
 
-			if ( cn1->gapLen > cn2->gapLen )
+			if ( cn1->gapLen > cn2->gapLen ) //make cn1 the closer connection
 			{
 				cn_temp = cn1;
 				cn1 = cn2;
 				cn2 = cn_temp;
-			}  //make sure cn1 is closer to contig i than cn2
+			}
 
+			//If both connected contigs are already placed in a scaff, do not mess with them. (is this a good idea?)
 			if ( cn1->prevInScaf && cn2->prevInScaf )
 				{ continue; }
 
+			//makes sure the only connections are C'->B', C'->A', B'->A'
 			bal_ctg = getTwinCtg ( cn2->contigID );
 			in_num = validConnect ( bal_ctg, NULL );
 
-			if ( in_num > 2 )
-				{ continue; }
+			if ( in_num > 2 ) { continue; }
 
 			int bal_c1 = getTwinCtg ( cn1->contigID );
 			in_num = validConnect ( bal_c1, NULL );
 
-			if ( in_num > 1 )
-				{ continue; }
+			if ( in_num > 1 ) { continue; }
 
+			//computes creates a "range" of connection by just placing the link size +/- var
 			min = cn2->gapLen - cn1->gapLen - contig_array[cn1->contigID].length - ins_size_var / 2;
 			max = cn2->gapLen - cn1->gapLen - contig_array[cn1->contigID].length + ins_size_var / 2;
 
-			if ( max < 0 )
-				{ continue; }
+			//this is bad! means this is never done for overlapping contigs unless ins_size_var is very small
+			if ( max < 0 ) { continue; }
 
+			//try to linearize (if transitive it will succeed).
 			may_transitive++;
 			//temprarily delete cn2
 			setConnectDelete ( i, cn2->contigID, 1, 0 );
-			int oldc2 = cn2->contigID;
 			linear = linearC2C ( i, cn1, cn2->contigID, min, max );
 
 			if ( linear != 1 )
@@ -1736,6 +1739,7 @@ static void removeTransitive()
 			}
 			else
 			{
+				//OK, all tests passed, do it.
 				downstreamCTG[0] = i;
 				catUsDsContig();
 
@@ -1936,7 +1940,7 @@ Output:
 Return:
     1 if contig was unique.
 
-    XXX:stupidly fucking complicated, no need for the fancy heap, clearly a student's assignement to use a heap
+    XXX: FibHeap code stolen from velvet! Probably overkill here.
 *************************************************/
 static boolean checkUnique ( unsigned int node, double tolerance )
 {
@@ -2102,6 +2106,7 @@ static int Countlink()
 
 
 void print_connection_status(){
+	uint64_t same_scaff=0,diff_scaff=0;
 	uint64_t conns[num_ctg][2];
 	for ( uint64_t i = 1; i <= num_ctg; i++ ) conns[i][0]=conns[i][1]=0;
 	for ( uint64_t i = 1; i <= num_ctg; i++ ) {
@@ -2110,6 +2115,8 @@ void print_connection_status(){
 			if (!c->mask && !c->deleted && !c->weak) {
 				conns[i][1]++;
 				conns[c->contigID][0]++;
+				if (contig_array[i].from_vt>0 && contig_array[i].from_vt == contig_array[c->contigID].from_vt) same_scaff++;
+				else diff_scaff++;
 			}
 			c=c->next;
 		}
@@ -2154,6 +2161,8 @@ void print_connection_status(){
 	printf (" Connection class N-1: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cn1, cn1*100.0/num_ctg, cn1b, cn1b*100.0/total_bp);
 	printf (" Connection class N-2: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cn2, cn2*100.0/num_ctg, cn2b, cn2b*100.0/total_bp);
 	printf (" Connection class N-N: %d \t %.2f%%\t ( %d bp\t %.2f%% )\n", cnn, cnn*100.0/num_ctg, cnnb, cnnb*100.0/total_bp);
+	printf (" Connections IN scaffolds: %d (%.2f%%)   BETWEEN scaffolds: %d (%.2f%%)\n",
+			same_scaff, same_scaff*100.0/(same_scaff+diff_scaff), diff_scaff, diff_scaff*100.0/(same_scaff+diff_scaff));
 	printf ("\n");
 
 }
@@ -2202,6 +2211,7 @@ static void ordering ( boolean deWeak, boolean downS, boolean nonlinear)
 
 	maskPuzzle ( 2, 0 );//XXX:this masks anything with more than 2 connections going forward! // should this be = to library number
 	freezing();
+	print_connection_status();
 
 }
 
@@ -5275,28 +5285,6 @@ static boolean dispatch1node ( int dis, unsigned int tempNode, int maxNodes,
 	return 0;
 }
 
-/*************************************************
-Function:
-    canDheapWait
-Description:
-    Checks whether current contig is the furthest contig to base
-    contig in 'dheap'.
-Input:
-    1. currNode:        current contig
-    2. dis:         current contig's distance to base contig
-    3. DmaxDis:     maximum distance of downstream contig to base contig
-Output:
-    None.
-Return:
-    0 if current contig was not the furthest contig.
-*************************************************/
-static boolean canDheapWait ( unsigned int currNode, int dis, int DmaxDis )
-{
-	if ( dis < DmaxDis )
-		{ return 0; }
-	else
-		{ return 1; }
-}
 
 /*************************************************
 Function:
@@ -5381,7 +5369,7 @@ static boolean workOnDheap ( FibHeap * dheap, FibHeap * uheap, boolean * Dwait, 
 
 		if ( nodeCounter > 1 && isEmpty )
 		{
-			*Dwait = canDheapWait ( currNode, dis0, *DmaxDis );
+			*Dwait = !( dis0 < *DmaxDis );
 
 			if ( *Dwait )
 			{
@@ -5421,31 +5409,6 @@ static boolean workOnDheap ( FibHeap * dheap, FibHeap * uheap, boolean * Dwait, 
 
 	*Dwait = 1;
 	return 1;
-}
-
-/*************************************************
-Function:
-    canUheapWait
-Description:
-    Checks whether current contig is the furthest contig to base
-    contig in "uheap".
-Input:
-    1. currNode:        current contig
-    2. dis:         current contig's distance to base contig
-    3. DmaxDis:     maximum distance of downstream contig to base contig
-Output:
-    None.
-Return:
-    0 if current contig was not the furthest contig.
-*************************************************/
-static boolean canUheapWait ( unsigned int currNode, int dis, int UmaxDis )
-{
-	int temp_len = contig_array[currNode].length;
-
-	if ( -dis + temp_len < UmaxDis )
-		{ return 0; }
-	else
-		{ return 1; }
 }
 
 /*************************************************
@@ -5520,7 +5483,7 @@ static boolean workOnUheap ( FibHeap * dheap, FibHeap * uheap, boolean * Dwait, 
 
 		if ( nodeCounter > 1 && isEmpty )
 		{
-			*Uwait = canUheapWait ( currNode, dis0, *UmaxDis );
+			*Uwait =  ! ( -dis0 + contig_array[currNode].length < *UmaxDis );
 
 			if ( *Uwait )
 			{
@@ -7202,8 +7165,6 @@ static void general_linearization ( boolean strict )
 {
 	unsigned int i;
 	int subCounter = 0;
-	int out_num;
-	boolean flag;
 	int conflCounter = 0, overlapCounter = 0, eligibleCounter = 0;
 	int SNPCtgCounter = 0;
 	double overlapTolerance, conflTolerance;
@@ -7212,20 +7173,14 @@ static void general_linearization ( boolean strict )
 
 	for ( i = num_ctg; i > 0; i-- )
 	{
-		if ( contig_array[i].mask )
-			{ continue; }
+		//skip masked
+		if ( contig_array[i].mask ) continue;
+		//skip non-conflictive connections
+		if ( validConnect ( i, NULL ) < 2 ) continue;
 
-		out_num = validConnect ( i, NULL );
 
-		if ( out_num < 2 )
-			{ continue; }
-
-		flag = pickUpGeneralSubgraph ( i, MaxNodeInSub );
-
-		if ( !flag )
-		{
-			continue;
-		}
+		//get the general subgraph, skip if empty, order the nodes
+		if ( ! pickUpGeneralSubgraph ( i, MaxNodeInSub ) ) continue;
 
 		subCounter++;
 		qsort ( &ctg4heapArray[1], nodeCounter, sizeof ( CTGinHEAP ), cmp_ctg );
@@ -7235,9 +7190,7 @@ static void general_linearization ( boolean strict )
 			SNPCtgCounter += removeBubbleCtg();
 		}
 
-		flag = checkEligible();
-
-		if ( !flag )
+		if ( !checkEligible() )
 		{
 			eligibleCounter++;
 			setInGraph ( 0 );
@@ -7255,18 +7208,14 @@ static void general_linearization ( boolean strict )
 			conflTolerance = 2 * ConflPercent;
 		}
 
-		flag = checkOverlapInBetween_general ( overlapTolerance );
-
-		if ( !flag )
+		if ( !checkOverlapInBetween_general ( overlapTolerance ) )
 		{
 			overlapCounter++;
 			setInGraph ( 0 );
 			continue;
 		}
 
-		flag = checkConflictCnt_general ( conflTolerance );
-
-		if ( flag )
+		if ( checkConflictCnt_general ( conflTolerance ) )
 		{
 			conflCounter++;
 			setInGraph ( 0 );

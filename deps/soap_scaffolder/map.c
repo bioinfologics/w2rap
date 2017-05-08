@@ -162,7 +162,6 @@ void initenv ( int argc, char ** argv )
 
 	while ( ( copt = getopt ( argc, argv, "s:g:K:p:k:f" ) ) != EOF )
 	{
-		//printf("get option\n");
 		switch ( copt )
 		{
 			case 's':

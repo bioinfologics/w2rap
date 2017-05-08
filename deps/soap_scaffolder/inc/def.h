@@ -54,16 +54,6 @@ typedef struct kmer
 } Kmer;
 #endif
 
-typedef struct preedge
-{
-	Kmer from_node;
-	Kmer to_node;
-	char  *  seq;
-	int length;
-	unsigned short cvg: 14;
-	unsigned bal_edge: 2; //indicate whether it's bal_edge is the previous edge, next edge or itself
-} preEDGE;
-
 typedef struct readinterval     //record two paths of bubble
 {
 	int readid;
@@ -93,13 +83,6 @@ typedef struct edge
 	long long * markers;    //reads id
 } EDGE;
 
-typedef struct edge_sub
-{
-	unsigned int from_vt;   //from kmer id
-	unsigned int to_vt; //to kmer id
-	int length;         //edge length
-	char  *  seq;   //edge content
-} EDGE_SUB;
 
 typedef struct edge_pt
 {
@@ -111,33 +94,7 @@ typedef struct vertex
 {
 	Kmer kmer;
 } VERTEX;
-/*
-typedef struct connection
-{
-    unsigned int contigID;
-    int gapLen;
 
-    short maxGap;
-    unsigned char minGap;
-    unsigned char bySmall:1;
-    unsigned char weakPoint:1;
-
-    unsigned char weightNotInherit;
-    unsigned char weight;
-    unsigned char maxSingleWeight;
-    unsigned char mask : 1;
-    unsigned char used : 1;
-    unsigned char weak : 1;
-    unsigned char deleted : 1;
-    unsigned char prevInScaf : 1;
-    unsigned char inherit : 1;
-    unsigned char checking : 1;
-    unsigned char singleInScaf : 1;
-    struct connection *nextInScaf;
-    struct connection *next;
-    struct connection *nextInLookupTable;
-}CONNECT;
-*/
 typedef struct connection
 {
 	unsigned int contigID;
@@ -172,43 +129,24 @@ typedef struct prearc
 	unsigned int multiplicity;
 	struct prearc * next;
 } preARC;
-/*
+
 typedef struct contig
 {
-    unsigned int from_vt;
-    unsigned int to_vt;
-    unsigned int length;
-    int to_right;
-    unsigned short indexInScaf;
-    unsigned char cvg;
-    unsigned char bal_edge:2; // 0, 1 or 2
-    unsigned char mask : 1;
-    unsigned char flag : 1;
-    unsigned char multi: 1;
-    unsigned char inSubGraph: 1;
-    char *seq;
-    CONNECT *downwardConnect;
-    preARC *arcs;
-    STACK *closeReads;
-}CONTIG;
-*/
-typedef struct contig
-{
-	unsigned int from_vt;       // the first kmer of the contig
-	unsigned int to_vt;     // the last kmer of the contig
-	unsigned int length;
+	unsigned int from_vt;           // first kmer (vertex?)
+	unsigned int to_vt;             // last kmer (vertex?)
+	unsigned int length;            // what it says on the tin
 	unsigned short indexInScaf;     // the index in the scaffold
-	unsigned char cvg;
-	unsigned char bal_edge: 2; // 0, 1 or 2
-	unsigned char mask : 1;
-	unsigned char flag : 1;
-	unsigned char multi: 1;
-	unsigned char inSubGraph: 1;
-	unsigned char bubbleInScaff: 1;
-	char * seq;
-	CONNECT * downwardConnect;      // record the links to other contigs
-	preARC * arcs;
-	STACK * closeReads;
+	unsigned char cvg;              // coverage
+	unsigned char bal_edge: 2;      // 0->FW, 1->REV or 2->PALINDROME
+	unsigned char mask : 1;         // ??
+	unsigned char flag : 1;         // ??
+	unsigned char multi: 1;         // ??
+	unsigned char inSubGraph: 1;    // ??
+	unsigned char bubbleInScaff: 1; // ??
+	char * seq;                     // what it says on the tin
+	CONNECT * downwardConnect;      // links to other contigs (linked list)
+	preARC * arcs;					// ??
+	STACK * closeReads;             // ??
 } CONTIG;
 
 typedef struct read_nearby

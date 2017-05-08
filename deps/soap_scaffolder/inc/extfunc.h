@@ -19,7 +19,7 @@
  * along with SOAPdenovo.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
+#include "stdinc.h"
 #include "check.h"
 #include "extfunc2.h"
 #include "zlib.h"
@@ -47,7 +47,6 @@ extern char getCharInTightString ( char * tightSeq, int pos );
 extern void writeChar2tightSting ( char nt, char * tightSeq, int pos );
 extern void short_reads_sum();
 extern void read_one_sequence ( FILE * fp, long long * T, char ** X );
-extern void output_edges ( preEDGE * ed_array, int ed_num, char * outfile );
 extern void loadVertex ( char * graphfile );
 extern void loadEdge ( char * graphfile );
 extern boolean loadPath ( char * graphfile );
@@ -82,7 +81,6 @@ extern int getInsertS ( long long readid, int * readlen );
 extern int connectByPE_grad_gz ( char * infile, int peGrad, char * line );
 extern void PEgradsScaf ( char * infile );
 extern void reorderAnnotation ( char * infile, char * outfile );
-extern void output_1edge ( preEDGE * edge, gzFile * fp );
 extern void prlRead2edge ( char * libfile, char * outfile );
 extern void annotFileTrans ( char * infile, char * outfile );
 extern void prlLoadPath ( char * graphfile );

@@ -30,48 +30,7 @@
 
 static unsigned int loadArcs ( char * graphfile );
 static void loadContig ( char * graphfile );
-static int maskRepeatByArc ( unsigned avg_weight );
 
-/*
-void loadUpdatedVertex (char *graphfile)
-{
-    char name[256], line[256];
-    FILE *fp;
-    Kmer word, bal_word;
-    int num_kmer, i;
-    char ch;
-
-    sprintf (name, "%s.updated.vertex", graphfile);
-    fp = ckopen (name, "r");
-
-    while (fgets (line, sizeof (line), fp) != NULL)
-    {
-        if (line[0] == 'V')
-        {
-            sscanf (line + 6, "%d %c %d", &num_kmer, &ch, &overlaplen);
-            printf ("there're %d kmers in vertex file\n", num_kmer);
-            break;
-        }
-    }
-
-    vt_array = (VERTEX *) ckalloc ((2 * num_kmer) * sizeof (VERTEX));
-
-    for (i = 0; i < num_kmer; i++)
-    {
-        fscanf (fp, "%llx ", &word);
-        vt_array[i].kmer = word;
-    }
-
-    fclose (fp);
-
-    for (i = 0; i < num_kmer; i++)
-    {
-        bal_word = reverseComplement (vt_array[i].kmer, overlaplen);
-        vt_array[i + num_kmer].kmer = bal_word;
-    }
-
-    num_vt = num_kmer;
-}*/
 
 int uniqueLenSearch ( unsigned int * len_array, unsigned int * flag_array, int num, unsigned int target )
 {
@@ -104,64 +63,6 @@ int uniqueLenSearch ( unsigned int * len_array, unsigned int * flag_array, int n
 
 	//locate the first same length unflaged
 	return flag_array[mid]++;
-}
-
-int lengthSearch ( unsigned int * len_array, unsigned int * flag_array, int num, unsigned int target )
-{
-	int mid, low, high, i;
-	low = 1;
-	high = num;
-
-	while ( low <= high )
-	{
-		mid = ( low + high ) / 2;
-
-		if ( len_array[mid] == target )
-		{
-			break;
-		}
-		else if ( target > len_array[mid] )
-		{
-			low = mid + 1;
-		}
-		else
-		{
-			high = mid - 1;
-		}
-	}
-
-	if ( low > high )
-	{
-		return -1;
-	}
-
-	//locate the first same length unflaged
-	if ( !flag_array[mid] )
-	{
-		for ( i = mid - 1; i > 0; i-- )
-		{
-			if ( len_array[i] != len_array[mid] || flag_array[i] )
-			{
-				break;
-			}
-		}
-
-		flag_array[i + 1] = 1;
-		return i + 1;
-	}
-	else
-	{
-		for ( i = mid + 1; i <= num; i++ )
-		{
-			if ( !flag_array[i] )
-			{
-				break;
-			}
-		}
-
-		flag_array[i] = 1;
-		return i;
-	}
 }
 
 void quick_sort_int ( unsigned int * length_array, int low, int high )
@@ -202,50 +103,6 @@ void quick_sort_int ( unsigned int * length_array, int low, int high )
 		quick_sort_int ( length_array, low, i - 1 );
 		quick_sort_int ( length_array, i + 1, high );
 	}
-}
-
-static int maskRepeatByArc ( unsigned avg_weight )
-{
-	unsigned int i, bal_i;
-	int counter = 0;
-	int arc_num;
-	unsigned int arc_weight1, arc_weight2;
-	preARC * arc;
-
-	for ( i = 1; i <= num_ctg; ++i )
-	{
-		if ( contig_array[i].mask == 1 )
-		{
-			if ( isSmallerThanTwin ( i ) )
-			{
-				++i;
-			}
-
-			continue;
-		}
-
-		bal_i = getTwinCtg ( i );
-		arc = contig_array[bal_i].arcs;
-		arc_weight1 = maxArcWeight ( arc );
-		arc = contig_array[i].arcs;
-		arc_weight2 = maxArcWeight ( arc );
-
-		if ( arc_weight1 + arc_weight2 >= 4 * avg_weight )
-		{
-			contig_array[i].mask = 1;
-			contig_array[bal_i].mask = 1;
-
-			if ( i == bal_i ) { counter += 1; }
-			else { counter += 2; }
-		}
-
-		if ( isSmallerThanTwin ( i ) )
-		{
-			++i;
-		}
-	}
-
-	return counter;
 }
 
 /*************************************************
@@ -638,32 +495,3 @@ void freeContig_array ()
 	free ( ( void * ) contig_array );
 	contig_array = NULL;
 }
-
-/*
-void loadCvg(char *graphfile)
-{
-    char name[256],line[1024];
-    FILE *fp;
-    int cvg;
-    unsigned int newIndex,edgeno,bal_ctg;
-
-    sprintf(name,"%s.contigCVG",graphfile);
-    fp = fopen(name,"r");
-    if(!fp){
-        printf("contig coverage file %s is not found!\n",name);
-        return;
-    }
-
-    while(fgets(line,sizeof(line),fp)!=NULL){
-        if(line[0]=='>'){
-            sscanf(line+1,"%d %d",&edgeno,&cvg);
-            newIndex = index_array[edgeno];
-            cvg = cvg <= 255 ? cvg:255;
-            contig_array[newIndex].multi = cvg;
-            bal_ctg = getTwinCtg(newIndex);
-            contig_array[bal_ctg].multi= cvg;
-        }
-    }
-    fclose(fp);
-}
-*/
