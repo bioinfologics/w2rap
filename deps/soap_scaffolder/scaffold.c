@@ -29,7 +29,7 @@
 
 static void initenv ( int argc, char ** argv );
 static void display_scaff_usage ();
-
+void ScafStat ( int len_cut, char * graphfile );
 static boolean LINK, SCAFF;
 static char graphfile[256];
 

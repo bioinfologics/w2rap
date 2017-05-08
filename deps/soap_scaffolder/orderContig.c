@@ -9,19 +9,17 @@
 #include "zlib.h"
 
 #define CNBLOCKSIZE 10000
-#define MAXC 10000
 #define MAXCinBetween 200
 
 #define MaxNodeInSub 10000
 #define GapLowerBound -2000
-#define GapUpperBound 300000
 
 #define MaxCntNode 1000
 
 
 static int bySmall = 1;
 
-static boolean static_f = 0;
+
 static double OverlapPercent = 0.05;
 static double ConflPercent = 0.05;
 static int MinWeakCut = 3;
@@ -30,8 +28,6 @@ static int gapCounter;
 static int orienCounter;
 static int orienCounter2;
 static int throughCounter;
-
-static int breakPointAtRepeat = 0;
 static FILE * snp_fp = NULL;
 
 static DARRAY * solidArray;
@@ -6601,8 +6597,6 @@ boolean checkOverlapInBetween_general ( double tolerance )
 	return 1;
 }
 
-int canexchange = 0, exchange_num = 0, failexchange = 0;
-
 /*************************************************
 Function:
     checkConflictCnt_general
@@ -7168,7 +7162,6 @@ static void general_linearization ( boolean strict )
 	int conflCounter = 0, overlapCounter = 0, eligibleCounter = 0;
 	int SNPCtgCounter = 0;
 	double overlapTolerance, conflTolerance;
-	canexchange = 0, exchange_num = 0, failexchange = 0;
 	printf ( "Start to linearize sub-graph.\n" );
 
 	for ( i = num_ctg; i > 0; i-- )
@@ -7875,225 +7868,6 @@ static void changeScafBegin ( STACK * scafStack, unsigned int start )
 		contig_array[ctg].from_vt = start;
 		contig_array[getTwinCtg ( ctg )].to_vt = end;
 	}
-}
-
-/*************************************************
-Function:
-    detectBreakScaff
-Description:
-    Detects and breaks the weak connection between contigs
-    in scaffold according to the support of large insert size
-    paired-end reads.
-Input:
-    None.
-Output:
-    None.
-Return:
-    None.
-*************************************************/
-static void detectBreakScaf()
-{
-	unsigned int i, avgPE, scafLen, len, ctg, bal_ctg, prevCtg, thisCtg;
-	long long peCounter, linkCounter;
-	int num3, num5, weakPoint, tempCounter, j, t, counter = 0;
-	CONNECT * bindCnt, *cnt, *weakCnt;
-	STACK * scafStack1 = ( STACK * ) createStack ( 1000, sizeof ( unsigned int ) );
-	STACK * scafStack2 = ( STACK * ) createStack ( 1000, sizeof ( unsigned int ) );
-
-	for ( i = 1; i <= num_ctg; i++ )
-		{ contig_array[i].flag = 0; }
-
-	for ( i = 1; i <= num_ctg; i++ )
-	{
-		if ( contig_array[i].flag || contig_array[i].mask || !contig_array[i].downwardConnect )
-			{ continue; }
-
-		bindCnt = getBindCnt ( i );
-
-		if ( !bindCnt )
-			{ continue; }
-
-		//first scan to get the average coverage by longer pe
-		num5 = num3 = peCounter = linkCounter = 0;
-		scafLen = contig_array[i].length;
-		ctg = i;
-		* ( unsigned int * ) darrayPut ( scaf5, num5++ ) = i;
-		contig_array[i].flag = 1;
-		contig_array[getTwinCtg ( i )].flag = 1;
-
-		while ( bindCnt )
-		{
-			if ( !bindCnt->bySmall )
-				{ break; }
-
-			linkCounter++;
-			peCounter += bindCnt->maxGap;
-			ctg = bindCnt->contigID;
-			scafLen += contig_array[ctg].length;
-			* ( unsigned int * ) darrayPut ( scaf5, num5++ ) = ctg;
-			bal_ctg = getTwinCtg ( ctg );
-			contig_array[ctg].flag = 1;
-			contig_array[bal_ctg].flag = 1;
-			bindCnt = bindCnt->nextInScaf;
-		}
-
-		ctg = getTwinCtg ( i );
-		bindCnt = getBindCnt ( ctg );
-
-		while ( bindCnt )
-		{
-			if ( !bindCnt->bySmall )
-				{ break; }
-
-			linkCounter++;
-			peCounter += bindCnt->maxGap;
-			ctg = bindCnt->contigID;
-			scafLen += contig_array[ctg].length;
-			bal_ctg = getTwinCtg ( ctg );
-			contig_array[ctg].flag = 1;
-			contig_array[bal_ctg].flag = 1;
-			* ( unsigned int * ) darrayPut ( scaf3, num3++ ) = bal_ctg;
-			bindCnt = bindCnt->nextInScaf;
-		}
-
-		if ( linkCounter < 1 || scafLen < 5000 )
-			{ continue; }
-
-		avgPE = peCounter / linkCounter;
-
-		if ( avgPE < 10 )
-			{ continue; }
-
-		tempCounter = 0;
-
-		for ( j = num3 - 1; j >= 0; j-- )
-			* ( unsigned int * ) darrayPut ( tempArray, tempCounter++ ) =
-			    * ( unsigned int * ) darrayGet ( scaf3, j );
-
-		for ( j = 0; j < num5; j++ )
-			* ( unsigned int * ) darrayPut ( tempArray, tempCounter++ ) =
-			    * ( unsigned int * ) darrayGet ( scaf5, j );
-
-		prevCtg = * ( unsigned int * ) darrayGet ( tempArray, 0 );
-		weakCnt = NULL;
-		weakPoint = 0;
-		len = contig_array[prevCtg].length;
-
-		for ( t = 1; t < tempCounter; t++ )
-		{
-			thisCtg = * ( unsigned int * ) darrayGet ( tempArray, t );
-
-			if ( len < 2000 )
-			{
-				len += contig_array[thisCtg].length;
-				prevCtg = thisCtg;
-				continue;
-			}
-			else if ( len > scafLen - 2000 )
-				{ break; }
-
-			len += contig_array[thisCtg].length;
-
-			if ( contig_array[prevCtg].from_vt != contig_array[thisCtg].from_vt ||
-			        contig_array[prevCtg].indexInScaf > contig_array[thisCtg].indexInScaf )
-			{
-				prevCtg = thisCtg;
-				continue;
-			}
-
-			cnt = getCntBetween ( prevCtg, thisCtg );
-
-			if ( !weakCnt || weakCnt->maxGap > cnt->maxGap )
-			{
-				weakCnt = cnt;
-				weakPoint = t;
-			}
-
-			prevCtg = thisCtg;
-		}
-
-		if ( !weakCnt || ( weakCnt->maxGap > 2 && weakCnt->maxGap > avgPE / 5 ) )
-			{ continue; }
-
-		prevCtg = * ( unsigned int * ) darrayGet ( tempArray, weakPoint - 1 );
-		thisCtg = * ( unsigned int * ) darrayGet ( tempArray, weakPoint );
-
-		if ( contig_array[prevCtg].from_vt != contig_array[thisCtg].from_vt ||
-		        contig_array[prevCtg].indexInScaf > contig_array[thisCtg].indexInScaf )
-		{
-			printf ( "contig %d and %d not on the same scaff\n", prevCtg, thisCtg );
-			continue;
-		}
-
-		setConnectWP ( prevCtg, thisCtg, 1 );
-		int index1, index2;
-		setBreakPoints ( tempArray, tempCounter, weakPoint - 1, &index1, &index2 );
-		unsigned int start = * ( unsigned int * ) darrayGet ( tempArray, index1 );
-		unsigned int finish = * ( unsigned int * ) darrayGet ( tempArray, index2 );
-		int len1 = getScaffold ( getTwinCtg ( start ), scafStack1 );
-		int len2 = getScaffold ( finish, scafStack2 );
-
-		if ( len1 < 2000 || len2 < 2000 )
-			{ continue; }
-
-		switch2twin ( scafStack1 );
-		int flag1 = checkScafConsist ( scafStack1, len1, scafStack2, len2 );
-		switch2twin ( scafStack1 );
-		switch2twin ( scafStack2 );
-		int flag2 = checkScafConsist ( scafStack2, len2, scafStack1, len1 );
-
-		if ( !flag1 || !flag2 )
-		{
-			changeScafBegin ( scafStack1, getTwinCtg ( start ) );
-			changeScafEnd ( scafStack2, getTwinCtg ( finish ) );
-			//unbind links
-			unsigned int nextCtg = * ( unsigned int * ) darrayGet ( tempArray, index1 + 1 );
-			thisCtg = * ( unsigned int * ) darrayGet ( tempArray, index1 );
-			cnt = getCntBetween ( getTwinCtg ( nextCtg ), getTwinCtg ( thisCtg ) );
-
-			if ( cnt->nextInScaf )
-			{
-				prevCtg = getTwinCtg ( cnt->nextInScaf->contigID );
-				cnt->nextInScaf->prevInScaf = 0;
-				cnt = getCntBetween ( prevCtg, thisCtg );
-				cnt->nextInScaf = NULL;
-			}
-
-			prevCtg = * ( unsigned int * ) darrayGet ( tempArray, index2 - 1 );
-			thisCtg = * ( unsigned int * ) darrayGet ( tempArray, index2 );
-			cnt = getCntBetween ( prevCtg, thisCtg );
-
-			if ( cnt->nextInScaf )
-			{
-				nextCtg = cnt->nextInScaf->contigID;
-				cnt->nextInScaf->prevInScaf = 0;
-				cnt = getCntBetween ( getTwinCtg ( nextCtg ), getTwinCtg ( thisCtg ) );
-				cnt->nextInScaf = NULL;
-			}
-
-			prevCtg = * ( unsigned int * ) darrayGet ( tempArray, index1 );
-
-			for ( t = index1 + 1; t <= index2; t++ )
-			{
-				thisCtg = * ( unsigned int * ) darrayGet ( tempArray, t );
-				cnt = getCntBetween ( prevCtg, thisCtg );
-				cnt->mask = 1;
-				cnt->nextInScaf = NULL;
-				cnt->prevInScaf = 0;
-				cnt = getCntBetween ( getTwinCtg ( thisCtg ), getTwinCtg ( prevCtg ) );
-				cnt->mask = 1;
-				cnt->nextInScaf = NULL;
-				cnt->prevInScaf = 0;
-				prevCtg = thisCtg;
-			}
-
-			counter++;
-		}
-	}
-
-	freeStack ( scafStack1 );
-	freeStack ( scafStack2 );
-	printf ( "Report from checkScaf: %d scaffold segments broken.\n", counter );
 }
 
 

@@ -829,7 +829,7 @@ static void outputScafSeq ( FILE * fo, FILE * foc, FILE * foc2, FILE * fo3, int 
 		if ( prevCtg && actg->scaftig_start )
 		{
 			gapN = actg->start - prevCtg->start - contig_array[prevCtg->ctgID].length;
-			gapN = gapN > 0 ? gapN : 1;
+			gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
 			outputNs ( fo,  gapN, &column );
 			ctg_start_pos += gapN;
 			//outputGapInfo(prevCtg->ctgID,ctg);
@@ -902,7 +902,7 @@ static void outputScafSeq ( FILE * fo, FILE * foc, FILE * foc2, FILE * fo3, int 
 			if ( prevCtg && actg->scaftig_start )
 			{
 				gapN = actg->start - prevCtg->start - contig_array[prevCtg->ctgID].length;
-				gapN = gapN > 0 ? gapN : 1;
+				gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
 				outputNs2 ( scaffBuffer, gapN, &column );
 				ctg_start_pos += gapN;
 				//  Ncounter++;
