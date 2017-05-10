@@ -20,7 +20,6 @@
  *
  */
 
-//int visual = 0;         // 1 for output some files , which are useful for visual
 int * contig_index_array = NULL;
 int scaffNum = 0;
 int gapNum = 1;
@@ -53,7 +52,6 @@ CONTIG * contig_array = NULL;       // used to record all the info of contig
 int lineLen;
 int len_bar = 100;
 int weakPE = 3;     // the minimun weight requirement for the connection
-int fillGap = 0;        // 1 for fill the gap after scaffold asm
 boolean globalFlag;
 long long arcCounter;       // record the num of the arc
 MEM_MANAGER * prearc_mem_manager = NULL;

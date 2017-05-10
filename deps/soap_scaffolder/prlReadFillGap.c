@@ -39,7 +39,7 @@ static int * counters;
 static pthread_mutex_t mutex;
 static int scafBufSize = 100;
 static boolean * flagBuf;
-static unsigned char * thrdNoBuf;
+static unsigned char * thrdNoBuf;//TODO: remove this as there is no thread structure anymore
 static STACK ** ctgStackBuffer;
 static int scafCounter;
 static int scafInBuf;
@@ -1093,60 +1093,6 @@ static void threadRoutine ( void * para )
 	}
 }
 
-static void creatThrds ( pthread_t * threads, PARAMETER * paras )
-{
-	unsigned char i;
-	int temp;
-
-	for ( i = 0; i < thrd_num; i++ )
-	{
-		if ( ( temp = pthread_create ( &threads[i], NULL, ( void * ) threadRoutine, & ( paras[i] ) ) ) != 0 )
-		{
-			printf ( "Create threads failed.\n" );
-			exit ( 1 );
-		}
-	}
-
-	printf ( "%d thread(s) initialized.\n", thrd_num );
-}
-
-static void sendWorkSignal ( unsigned char SIG, unsigned char * thrdSignals )
-{
-	int t;
-
-	for ( t = 0; t < thrd_num; t++ )
-	{
-		thrdSignals[t + 1] = SIG;
-	}
-
-	while ( 1 )
-	{
-		usleep ( 10 );
-
-		for ( t = 0; t < thrd_num; t++ )
-			if ( thrdSignals[t + 1] )
-			{
-				break;
-			}
-
-		if ( t == thrd_num )
-		{
-			break;
-		}
-	}
-}
-
-static void thread_wait ( pthread_t * threads )
-{
-	int i;
-
-	for ( i = 0; i < thrd_num; i++ )
-		if ( threads[i] != 0 )
-		{
-			pthread_join ( threads[i], NULL );
-		}
-}
-
 static void outputSeqs ( FILE * fo, FILE * foc, FILE * fo2, int scafInBuf )
 {
 	int i, thrdID;
@@ -1205,19 +1151,6 @@ static void output_ctg ( unsigned int ctg, FILE * fo )
 
 void prlReadsCloseGap ( char * graphfile )
 {
-	//thrd_num=1;
-	if ( fillGap )
-	{
-		boolean flag;
-		printf ( "\nStart to load reads for gap filling. %d length discrepancy is allowed.\n", GLDiff );
-		printf ( "...\n" );
-		flag = loadReads4gap ( graphfile );
-
-		if ( !flag )
-		{
-			return;
-		}
-	}
 
 	if ( orig2new )
 	{
@@ -1278,10 +1211,7 @@ void prlReadsCloseGap ( char * graphfile )
 		paras[i].selfSignal = &thrdSignal[i + 1];
 	}
 
-	if ( fillGap )
-	{
-		creatThrds ( threads, paras );
-	}
+
 
 	Ncounter = scafCounter = scafInBuf = allGaps = 0;
 
@@ -1297,11 +1227,6 @@ void prlReadsCloseGap ( char * graphfile )
 
 				if ( scafInBuf == scafBufSize )
 				{
-					if ( fillGap )
-					{
-						sendWorkSignal ( 1, thrdSignal );
-					}
-
 					outputSeqs ( fo, foc, fo2, scafInBuf );
 					scafCounter += scafInBuf;
 					scafInBuf = 0;
@@ -1322,12 +1247,6 @@ void prlReadsCloseGap ( char * graphfile )
 
 		if ( line[0] == 'G' ) // gap appears
 		{
-			if ( fillGap )
-			{
-				gapLen = procGap ( line, ctgStack );
-				IsPrevGap = 1;
-			}
-
 			continue;
 		}
 
@@ -1401,18 +1320,8 @@ void prlReadsCloseGap ( char * graphfile )
 		flagBuf[scafInBuf++] = 0;
 		reverseStack ( aStack, ctgStack );
 
-		if ( fillGap )
-		{
-			sendWorkSignal ( 1, thrdSignal );
-		}
 
 		outputSeqs ( fo, foc, fo2, scafInBuf );
-	}
-
-	if ( fillGap )
-	{
-		sendWorkSignal ( 2, thrdSignal );
-		thread_wait ( threads );
 	}
 
 	for ( ctg = 1; ctg <= num_ctg; ctg++ )
@@ -1432,11 +1341,6 @@ void prlReadsCloseGap ( char * graphfile )
 	{
 		freeDarray ( darrayBuf[i] );
 		index += counters[i];
-	}
-
-	if ( fillGap )
-	{
-		printf ( "Threads processed %d scaffolds.\n", index );
 	}
 
 	free ( ( void * ) darrayBuf );

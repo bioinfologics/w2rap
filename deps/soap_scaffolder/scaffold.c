@@ -139,10 +139,6 @@ void initenv ( int argc, char ** argv )
 				sscanf ( optarg, "%s", temp );
 				known_genome_size = atoi ( temp );
 				break;
-			case 'F':
-				fillGap = 1;
-				printf ( "-F " );
-				break;
 			case 'u':
 				maskRep = 0;
 				printf ( "-u " );
@@ -199,7 +195,6 @@ static void display_scaff_usage ()
 {
 	printf ( "\ns_scaff -g inputGraph [-F -z -u -S -w] [-G gapLenDiff -L minContigLen -c minContigCvg -C maxContigCvg -b insertSizeUpperBound -B bubbleCoverage -N genomeSize -p n_cpu]\n" );
 	printf ( "  -g <string>        inputGraph: prefix of input graph file names\n" );
-	printf ( "  -F (optional)      fill gaps in scaffold, [No]\n" );
 	printf ( "  -u (optional)      un-mask contigs with high/low coverage before scaffolding, [mask]\n" );
 	printf ( "  -w (optional)      keep contigs weakly connected to other contigs in scaffold, [NO]\n" );
 	printf ( "  -L <int>           minContigLen: shortest contig for scaffolding, [K+2]\n" );
