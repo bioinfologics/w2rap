@@ -108,14 +108,12 @@ int main ( int argc, char ** argv )
 void initenv ( int argc, char ** argv )
 {
 	int copt;
-	int inpseq;
 	extern char * optarg;
 	char temp[256];
-	inpseq = 0;
 	optind = 1;
 	printf ( "Parameters: s_scaff " );
 
-	while ( ( copt = getopt ( argc, argv, "g:L:p:G:N:c:C:b:B:FuSVw" ) ) != EOF )
+	while ( ( copt = getopt ( argc, argv, "g:L:p:G:N:c:C:b:B:uw" ) ) != EOF )
 	{
 		switch ( copt )
 		{
@@ -193,10 +191,11 @@ void initenv ( int argc, char ** argv )
 
 static void display_scaff_usage ()
 {
-	printf ( "\ns_scaff -g inputGraph [-F -z -u -S -w] [-G gapLenDiff -L minContigLen -c minContigCvg -C maxContigCvg -b insertSizeUpperBound -B bubbleCoverage -N genomeSize -p n_cpu]\n" );
+	printf ( "\ns_scaff -g inputGraph [-u -w] [-G gapLenDiff -L minContigLen -c minContigCvg -C maxContigCvg -b insertSizeUpperBound -B bubbleCoverage -N genomeSize -p n_cpu]\n" );
 	printf ( "  -g <string>        inputGraph: prefix of input graph file names\n" );
 	printf ( "  -u (optional)      un-mask contigs with high/low coverage before scaffolding, [mask]\n" );
 	printf ( "  -w (optional)      keep contigs weakly connected to other contigs in scaffold, [NO]\n" );
+	printf ( "  -G <int>           gapLenDiff: allowed length difference between estimated and filled gap, [50]\n" );
 	printf ( "  -L <int>           minContigLen: shortest contig for scaffolding, [K+2]\n" );
 	printf ( "  -c <float>         minContigCvg: minimum contig coverage (c*avgCvg), contigs shorter than 100bp with coverage smaller than c*avgCvg will be masked before scaffolding unless -u is set, [0.1]\n" );
 	printf ( "  -C <float>         maxContigCvg: maximum contig coverage (C*avgCvg), contigs with coverage larger than C*avgCvg or contigs shorter than 100bp with coverage larger than 0.8*C*avgCvg will be masked before scaffolding unless -u is set, [2]\n" );
