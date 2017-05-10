@@ -20,7 +20,7 @@
  *
  */
 
-int visual = 0;         // 1 for output some files , which are useful for visual
+//int visual = 0;         // 1 for output some files , which are useful for visual
 int * contig_index_array = NULL;
 int scaffNum = 0;
 int gapNum = 1;

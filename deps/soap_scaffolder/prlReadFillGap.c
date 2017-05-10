@@ -387,55 +387,6 @@ static void cutRdArray ( READNEARBY * rdArray, int gapStart, int gapEnd, int * c
 	*count = num;
 }
 
-static void outputTightStr2Visual ( FILE * foc2, int ctg,  int * num, int start, int length, int outputlen, int revS )
-{
-	int i, end, column = 0, n = *num;
-	char * tightStr = contig_array[ctg].seq;
-
-	if ( n == 1 ) { fprintf ( foc2, ">%d\n", index_array[ctg] ); }
-	else { fprintf ( foc2, ">%d-%d\n", index_array[ctg], n - 1 ); }
-
-	if ( !revS )
-	{
-		end = start + outputlen <= length ? start + outputlen : length;
-
-		for ( i = start; i < end; i++ )
-		{
-			fprintf ( foc2, "%c", int2base ( ( int ) getCharInTightString ( tightStr, i ) ) );
-
-			if ( ( ++column ) % 100 == 0 )
-			{
-				//column = 0;
-				fprintf ( foc2, "\n" );
-			}
-		}
-
-		if ( column % 100 != 0 )
-		{
-			fprintf ( foc2, "\n" );
-		}
-	}
-	else
-	{
-		end = length - start - outputlen - 1 >= 0 ? length - start - outputlen : 0;
-
-		for ( i = end; i <= length - 1 - start; i++ )
-		{
-			fprintf ( foc2, "%c", int2base ( ( int ) getCharInTightString ( tightStr, i ) ) );
-
-			if ( ( ++column ) % 100 == 0 )
-			{
-				fprintf ( foc2, "\n" );
-				//column = 0;
-			}
-		}
-
-		if ( column % 100 != 0 )
-		{
-			fprintf ( foc2, "\n" );
-		}
-	}
-}
 
 void outputTightStr ( FILE * fp, char * tightStr, int start, int length, int outputlen, int revS, int * col )
 {
@@ -475,62 +426,6 @@ void outputTightStr ( FILE * fp, char * tightStr, int start, int length, int out
 	}
 
 	*col = column;
-}
-
-static void outputTightStr2 ( char * tightStr, char * scaff, int start, int length, int outputlen, int revS, int * col )
-{
-	int i;
-	int end;
-	int column = *col;
-	char a;
-
-	if ( !revS )
-	{
-		end = start + outputlen <= length ? start + outputlen : length;
-
-		for ( i = start; i < end; i++ )
-		{
-			a = int2base ( ( int ) getCharInTightString ( tightStr, i ) );
-			//  fprintf (fp, "%c", int2base ((int) getCharInTightString (tightStr, i)));
-			scaff[column++] = a;
-		}
-	}
-	else
-	{
-		end = length - start - outputlen - 1 >= 0 ? length - start - outputlen : 0;
-
-		for ( i = length - 1 - start; i >= end; i-- )
-		{
-			a = int2compbase ( ( int ) getCharInTightString ( tightStr, i ) );
-			//  fprintf (fp, "%c", int2compbase ((int) getCharInTightString (tightStr, i)));
-			scaff[column++] = a;
-		}
-	}
-
-	*col = column;
-}
-
-static void outputTightStrLowerCase2Visual ( FILE * foc2, int gapNum, char * tightStr, int start, int length, int outputlen )
-{
-	int i, end, column = 0;
-	end = start + outputlen <= length ? start + outputlen : length;
-	fprintf ( foc2, ">%d-0\n", gapNum );
-
-	for ( i = start; i < end; i++ )
-	{
-		fprintf ( foc2, "%c", "actg"[ ( int ) getCharInTightString ( tightStr, i )] );
-
-		if ( ( ++column ) % 100 == 0 )
-		{
-			//column = 0;
-			fprintf ( foc2, "\n" );
-		}
-	}
-
-	if ( column % 100 != 0 )
-	{
-		fprintf ( foc2, "\n" );
-	}
 }
 
 static void outputTightStrLowerCase ( FILE * fp, char * tightStr, int start, int length, int outputlen, int revS, int * col )
@@ -573,39 +468,6 @@ static void outputTightStrLowerCase ( FILE * fp, char * tightStr, int start, int
 	*col = column;
 }
 
-static void outputTightStrLowerCase2 ( char * tightStr, char * scaff, int start, int length, int outputlen, int revS, int * col )
-{
-	int i;
-	int end;
-	int column = *col;
-	char a;
-
-	if ( !revS )
-	{
-		end = start + outputlen <= length ? start + outputlen : length;
-
-		for ( i = start; i < end; i++ )
-		{
-			a = "actg"[ ( int ) getCharInTightString ( tightStr, i )];
-			//  fprintf (fp, "%c", "actg"[(int) getCharInTightString (tightStr, i)]);
-			scaff[column++] = a;
-		}
-	}
-	else
-	{
-		end = length - start - outputlen - 1 >= 0 ? length - start - outputlen : 0;
-
-		for ( i = length - 1 - start; i >= end; i-- )
-		{
-			a = "tgac"[ ( int ) getCharInTightString ( tightStr, i )];
-			//  fprintf (fp, "%c", "tgac"[(int) getCharInTightString (tightStr, i)]);
-			scaff[column++] = a;
-		}
-	}
-
-	*col = column;
-}
-
 static void outputNs ( FILE * fp, int gapN, int * col )
 {
 	int i, column = *col;
@@ -622,43 +484,6 @@ static void outputNs ( FILE * fp, int gapN, int * col )
 	}
 
 	*col = column;
-}
-
-static void outputNs2 ( char * scaff, int gapN, int * col )
-{
-	int i, column = *col;
-
-	for ( i = 0; i < gapN; i++ )
-	{
-		scaff[column] = 'N';
-		column++;
-	}
-
-	*col = column;
-}
-
-static void outputGapInfo ( unsigned int ctg1, unsigned int ctg2 )
-{
-	unsigned int bal_ctg1 = getTwinCtg ( ctg1 );
-	unsigned int bal_ctg2 = getTwinCtg ( ctg2 );
-
-	if ( isLargerThanTwin ( ctg1 ) )
-	{
-		printf ( "%d\t", index_array[bal_ctg1] );
-	}
-	else
-	{
-		printf ( "%d\t", index_array[ctg1] );
-	}
-
-	if ( isLargerThanTwin ( ctg2 ) )
-	{
-		printf ( "%d\n", index_array[bal_ctg2] );
-	}
-	else
-	{
-		printf ( "%d\n", index_array[ctg2] );
-	}
 }
 
 static void output1gap ( FILE * fo, int scafIndex, CTGinSCAF * prevCtg, CTGinSCAF * actg, DARRAY * gapSeqArray )
@@ -772,7 +597,7 @@ static void outputGapSeq ( FILE * fo, int index, STACK * ctgsStack, DARRAY * gap
 	}
 }
 
-static void outputScafSeq ( FILE * fo, FILE * foc, FILE * foc2, FILE * fo3, int index, STACK * ctgsStack, DARRAY * gapSeqArray )
+static void outputScafSeq ( FILE * fo, FILE * foc, int index, STACK * ctgsStack, DARRAY * gapSeqArray )
 {
 	CTGinSCAF * actg, *prevCtg = NULL;
 	unsigned int ctg, bal_ctg, ctg_out, length;
@@ -829,6 +654,7 @@ static void outputScafSeq ( FILE * fo, FILE * foc, FILE * foc2, FILE * fo3, int 
 		if ( prevCtg && actg->scaftig_start )
 		{
 			gapN = actg->start - prevCtg->start - contig_array[prevCtg->ctgID].length;
+			if (gapN<0) printf("WARNING: re-adjusting gap of %d bp to 1\n",gapN);
 			gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
 			outputNs ( fo,  gapN, &column );
 			ctg_start_pos += gapN;
@@ -882,167 +708,6 @@ static void outputScafSeq ( FILE * fo, FILE * foc, FILE * foc2, FILE * fo3, int 
 	if ( column % 100 != 0 )
 	{
 		fprintf ( fo, "\n" );
-	}
-
-	if ( visual )
-	{
-		scaffBuffer = ( char * ) ckalloc ( ( ctg_start_pos + 5 ) * sizeof ( char ) );
-		prevCtg = NULL;
-		column = 0;
-		ctg_start_pos = 0;
-		lenSum = 0;
-		stackRecover ( ctgsStack );
-
-		while ( ( actg = stackPop ( ctgsStack ) ) != NULL )
-		{
-			ctg = actg->ctgID;
-			bal_ctg = getTwinCtg ( ctg );
-			length = contig_array[ctg].length + overlaplen;
-
-			if ( prevCtg && actg->scaftig_start )
-			{
-				gapN = actg->start - prevCtg->start - contig_array[prevCtg->ctgID].length;
-				gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
-				outputNs2 ( scaffBuffer, gapN, &column );
-				ctg_start_pos += gapN;
-				//  Ncounter++;
-			}
-
-			if ( !prevCtg )
-			{
-				start = 0;
-			}
-			else
-			{
-				start = actg->cutHead;
-			}
-
-			outputlen = length - start - actg->cutTail;
-
-			if ( contig_array[ctg].seq )
-			{
-				t = ++contig_index_array[index_array[ctg]];
-				outputTightStr2 ( contig_array[ctg].seq, scaffBuffer, start, length, outputlen, 0, &column );
-				lu_end = start + outputlen > length ? length : start + outputlen;
-				lu_len = lu_end - start;
-				strand = '+';
-				//  fprintf (foc, "%d\t", index_array[ctg]);
-				lenSum++;
-
-				if ( ctg_start_pos - start >= 0 )
-				{
-					pos_start[lenSum] = ctg_start_pos - start;
-					pos_end[lenSum] = ctg_start_pos + length - start;
-					orien_array[lenSum] = '+';
-
-					if ( t == 1 )  { sprintf ( index_contig[lenSum], "%u", index_array[ctg] ); }
-					else  { sprintf ( index_contig[lenSum], "%u-%d", index_array[ctg], t - 1 ); }
-
-					fprintf ( fo3, "{AFG\nacc:%s\nclr:0,%d\n}\n", ( index_contig[lenSum] ), length );
-					outputTightStr2Visual ( foc2, ctg, & ( contig_index_array[index_array[ctg]] ), 0, length, length, 0 );
-				}
-				else
-				{
-					pos_start[lenSum] = 0;
-					pos_end[lenSum] = ctg_start_pos + length - start;
-					orien_array[lenSum] = '+';
-
-					if ( t == 1 )  { sprintf ( index_contig[lenSum], "%u", index_array[ctg] ); }
-					else  { sprintf ( index_contig[lenSum], "%u-%d", index_array[ctg], t - 1 ); }
-
-					fprintf ( fo3, "{AFG\nacc:%s\nclr:0,%d\n}\n", ( index_contig[lenSum] ), length );
-					outputTightStr2Visual ( foc2, ctg, & ( contig_index_array[index_array[ctg]] ), start - ctg_start_pos, length, length - start + ctg_start_pos, 0 );
-				}
-			}
-			else if ( contig_array[bal_ctg].seq )
-			{
-				t = ++contig_index_array[index_array[bal_ctg]];
-				outputTightStr2 ( contig_array[bal_ctg].seq, scaffBuffer, start, length, outputlen, 1, &column );
-				lu_end = length - start - outputlen - 1 >= 0 ? length - start - outputlen : 0;
-				lu_len = length - start - lu_end;
-				strand = '-';
-				//  fprintf (foc, "%d\t", index_array[bal_ctg]);
-				lenSum++;
-
-				if ( ctg_start_pos - start >= 0 )
-				{
-					pos_start[lenSum] = ctg_start_pos - start;
-					pos_end[lenSum] = ctg_start_pos + length - start;
-					orien_array[lenSum] = '-';
-
-					if ( t == 1 )  { sprintf ( index_contig[lenSum], "%u", index_array[bal_ctg] ); }
-					else  { sprintf ( index_contig[lenSum], "%u-%d", index_array[bal_ctg], t - 1 ); }
-
-					fprintf ( fo3, "{AFG\nacc:%s\nclr:0,%d\n}\n", ( index_contig[lenSum] ), length );
-					outputTightStr2Visual ( foc2, bal_ctg, & ( contig_index_array[index_array[bal_ctg]] ), 0, length, length, 1 );
-				}
-				else
-				{
-					pos_start[lenSum] = ctg_start_pos;
-					pos_end[lenSum] = ctg_start_pos + lu_len;
-					orien_array[lenSum] = '-';
-
-					if ( t == 1 )  { sprintf ( index_contig[lenSum], "%u", index_array[bal_ctg] ); }
-					else  { sprintf ( index_contig[lenSum], "%u-%d", index_array[bal_ctg], t - 1 ); }
-
-					fprintf ( fo3, "{AFG\nacc:%s\nclr:0,%d\n}\n", ( index_contig[lenSum] ), length );
-					outputTightStr2Visual ( foc2, bal_ctg, & ( contig_index_array[index_array[bal_ctg]] ), start, length, outputlen, 1 );
-				}
-			}
-
-			//  fprintf (foc, "%u\t%c\t%d\n", ctg_start_pos, strand, lu_len);
-			ctg_start_pos += lu_len;
-
-			if ( actg->gapSeqLen < 1 )
-			{
-				prevCtg = actg;
-				continue;
-			}
-
-			pt = ( char * ) darrayPut ( gapSeqArray, actg->gapSeqOffset );
-			outputTightStrLowerCase2 ( pt, scaffBuffer, 0, actg->gapSeqLen, actg->gapSeqLen, 0, &column );
-			outputTightStrLowerCase2Visual ( foc2, gapNum, pt, 0, actg->gapSeqLen, actg->gapSeqLen );
-			fprintf ( fo3, "{AFG\nacc:%d-0\nclr:0,%d\n}\n", gapNum, actg->gapSeqLen );
-			lenSum++;
-			pos_start[lenSum] = ctg_start_pos;
-			pos_end[lenSum] = ctg_start_pos + actg->gapSeqLen;
-			orien_array[lenSum] = '+';
-			sprintf ( index_contig[lenSum], "%d-0", gapNum );
-			gapNum++;
-			ctg_start_pos = ctg_start_pos + actg->gapSeqLen;
-			prevCtg = actg;
-		}
-
-		scaffNum++;
-		fprintf ( fo3, "{CCO\nacc:%d\npla:P\nlen:%u\ncns:\n", scaffNum, ctg_start_pos );
-
-		for ( i = 0; i < ctg_start_pos; i++ )
-		{
-			if ( i != 0 && i % 100 == 0 && i < ctg_start_pos - 1 )  { fprintf ( fo3, "\n" ); }
-
-			fprintf ( fo3, "%c", scaffBuffer[i] );
-		}
-
-		fprintf ( fo3, "\n.\nqlt:\n" );
-
-		for ( i = 0; i < ctg_start_pos; i++ )
-		{
-			if ( i != 0 && i % 100 == 0 && i < ctg_start_pos - 1 )  { fprintf ( fo3, "\n" ); }
-
-			fprintf ( fo3, "D" );
-		}
-
-		fprintf ( fo3, "\n.\nnpc:%d\n", lenSum );
-
-		for ( i = 1; i <= lenSum; i++ )
-		{
-			if ( orien_array[i] == '+' ) { fprintf ( fo3, "{MPS\ntyp:R\nmid:%s\nsrc:\n.\npos:%u,%u\ndln:0\ndel:\n}\n", ( index_contig[i] ), pos_start[i], pos_end[i] ); }
-
-			if ( orien_array[i] == '-' ) { fprintf ( fo3, "{MPS\ntyp:R\nmid:%s\nsrc:\n.\npos:%u,%u\ndln:0\ndel:\n}\n", ( index_contig[i] ), pos_end[i], pos_start[i] ); }
-		}
-
-		fprintf ( fo3, "}\n" );
-		free ( ( void * ) scaffBuffer );
 	}
 
 	free ( ( void * ) pos_start );
@@ -1376,65 +1041,7 @@ static Kmer maxKmer ()
 	return word;
 }
 #endif
-static int contigCatch ( unsigned int prev_ctg, unsigned int ctg )
-{
-	if ( contig_array[prev_ctg].length == 0 || contig_array[ctg].length == 0 )
-	{
-		return 0;
-	}
 
-	Kmer kmerAtEnd, kmerAtStart;
-	Kmer MaxKmer;
-	unsigned int bal_ctg1 = getTwinCtg ( prev_ctg );
-	unsigned int bal_ctg2 = getTwinCtg ( ctg );
-	int i, start;
-	int len1 = contig_array[prev_ctg].length + overlaplen;
-	int len2 = contig_array[ctg].length + overlaplen;
-	start = contig_array[prev_ctg].length;
-
-	if ( contig_array[prev_ctg].seq )
-	{
-		kmerAtEnd = tightStr2Kmer ( contig_array[prev_ctg].seq, start, len1, 0 );
-	}
-	else
-	{
-		kmerAtEnd = tightStr2Kmer ( contig_array[bal_ctg1].seq, start, len1, 1 );
-	}
-
-	start = 0;
-
-	if ( contig_array[ctg].seq )
-	{
-		kmerAtStart = tightStr2Kmer ( contig_array[ctg].seq, start, len2, 0 );
-	}
-	else
-	{
-		kmerAtStart = tightStr2Kmer ( contig_array[bal_ctg2].seq, start, len2, 1 );
-	}
-
-	MaxKmer = MAXKMER;
-
-	for ( i = 0; i < 10; i++ )
-	{
-		if ( KmerEqual ( kmerAtStart, kmerAtEnd ) )
-		{
-			break;
-		}
-
-		MaxKmer = KmerRightBitMoveBy2 ( MaxKmer );
-		kmerAtEnd = KmerAnd ( kmerAtEnd, MaxKmer );
-		kmerAtStart = KmerRightBitMoveBy2 ( kmerAtStart );
-	}
-
-	if ( i < 10 )
-	{
-		return overlaplen - i;
-	}
-	else
-	{
-		return 0;
-	}
-}
 
 static void initStackBuf ( STACK ** ctgStackBuffer, int scafBufSize )
 {
@@ -1540,14 +1147,14 @@ static void thread_wait ( pthread_t * threads )
 		}
 }
 
-static void outputSeqs ( FILE * fo, FILE * foc, FILE * foc2, FILE * fo2, FILE * fo3, int scafInBuf )
+static void outputSeqs ( FILE * fo, FILE * foc, FILE * fo2, int scafInBuf )
 {
 	int i, thrdID;
 
 	for ( i = 0; i < scafInBuf; i++ )
 	{
 		thrdID = thrdNoBuf[i];
-		outputScafSeq ( fo, foc, foc2, fo3, scafCounter + i + 1, ctgStackBuffer[i], darrayBuf[thrdID] );
+		outputScafSeq ( fo, foc, scafCounter + i + 1, ctgStackBuffer[i], darrayBuf[thrdID] );
 		outputGapSeq ( fo2, scafCounter + i + 1, ctgStackBuffer[i], darrayBuf[thrdID] );
 	}
 }
@@ -1644,14 +1251,6 @@ void prlReadsCloseGap ( char * graphfile )
 	sprintf ( line, "%s.contigPosInscaff", graphfile );
 	foc = ckopen ( line, "w" );
 
-	if ( visual )
-	{
-		sprintf ( line, "%s.contig4asm", graphfile );
-		foc2 = ckopen ( line, "w" );
-		sprintf ( line, "%s.asm", graphfile );
-		fo3 = ckopen ( line, "w" );
-	}
-
 	sprintf ( line, "%s.gapSeq", graphfile );
 	fo2 = ckopen ( line, "w" );
 	pthread_mutex_init ( &mutex, NULL );
@@ -1703,7 +1302,7 @@ void prlReadsCloseGap ( char * graphfile )
 						sendWorkSignal ( 1, thrdSignal );
 					}
 
-					outputSeqs ( fo, foc, foc2, fo2, fo3, scafInBuf );
+					outputSeqs ( fo, foc, fo2, scafInBuf );
 					scafCounter += scafInBuf;
 					scafInBuf = 0;
 				}
@@ -1807,17 +1406,7 @@ void prlReadsCloseGap ( char * graphfile )
 			sendWorkSignal ( 1, thrdSignal );
 		}
 
-		outputSeqs ( fo, foc, foc2, fo2, fo3, scafInBuf );
-	}
-
-	if ( visual )
-	{
-		scafnum = scaffNum;
-
-		for ( i = 1; i <= scafnum; i++ )
-		{
-			fprintf ( fo3, "{SCF\nacc:%d\nnoc:0\n{CTP\nct1:%d\nct2:%d\nmea:0\nstd:0\nori:N\n}\n}\n", ++scaffNum, i, i );
-		}
+		outputSeqs ( fo, foc, fo2, scafInBuf );
 	}
 
 	if ( fillGap )
@@ -1861,12 +1450,6 @@ void prlReadsCloseGap ( char * graphfile )
 	fclose ( fo );
 	fclose ( foc );
 	fclose ( fo2 );
-
-	if ( visual )
-	{
-		fclose ( foc2 );
-		fclose ( fo3 );
-	}
 
 	freeStack ( ctgStack );
 	freeStackBuf ( ctgStackBuffer, scafBufSize );

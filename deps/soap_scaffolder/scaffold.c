@@ -30,7 +30,6 @@
 static void initenv ( int argc, char ** argv );
 static void display_scaff_usage ();
 void ScafStat ( int len_cut, char * graphfile );
-static boolean LINK, SCAFF;
 static char graphfile[256];
 
 /*************************************************
@@ -73,19 +72,16 @@ int main ( int argc, char ** argv )
 	time ( &time_aft );
 	printf ( "Time spent on loading updated edges: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 
-	if ( !SCAFF )
-	{
-		time ( &time_bef );
-		PE2Links ( graphfile );
-		time ( &time_aft );
-		printf ( "Time spent on loading paired-end reads information: %ds.\n", ( int ) ( time_aft - time_bef ) );
-		time ( &time_bef );
-		printf ( "\n*****************************************************\nStart to construct scaffolds.\n" );
-		Links2Scaf ( graphfile );
-		time ( &time_aft );
-		printf ( "Time spent on constructing scaffolds: %ds.\n", ( int ) ( time_aft - time_bef ) );
-		scaffolding ( 100, graphfile );
-	}
+	time ( &time_bef );
+    PE2Links ( graphfile );
+    time ( &time_aft );
+    printf ( "Time spent on loading paired-end reads information: %ds.\n", ( int ) ( time_aft - time_bef ) );
+    time ( &time_bef );
+    printf ( "\n*****************************************************\nStart to construct scaffolds.\n" );
+    Links2Scaf ( graphfile );
+    time ( &time_aft );
+    printf ( "Time spent on constructing scaffolds: %ds.\n", ( int ) ( time_aft - time_bef ) );
+    scaffolding ( 100, graphfile );
 
 	prlReadsCloseGap ( graphfile );
 	ScafStat ( 100, graphfile );
@@ -116,8 +112,6 @@ void initenv ( int argc, char ** argv )
 	extern char * optarg;
 	char temp[256];
 	inpseq = 0;
-	LINK = 0;
-	SCAFF = 0;
 	optind = 1;
 	printf ( "Parameters: s_scaff " );
 
@@ -152,14 +146,6 @@ void initenv ( int argc, char ** argv )
 			case 'u':
 				maskRep = 0;
 				printf ( "-u " );
-				break;
-			case 'S':
-				SCAFF = 1;
-				printf ( "-S " );
-				break;
-			case 'V':
-				visual = 1;
-				printf ( "-V " );
 				break;
 			case 'w':
 				score_mask = 0;
@@ -215,10 +201,7 @@ static void display_scaff_usage ()
 	printf ( "  -g <string>        inputGraph: prefix of input graph file names\n" );
 	printf ( "  -F (optional)      fill gaps in scaffold, [No]\n" );
 	printf ( "  -u (optional)      un-mask contigs with high/low coverage before scaffolding, [mask]\n" );
-	printf ( "  -S (optional)      if scaffold structure exists, do gapfilling only(-F), [NO]\n" );
 	printf ( "  -w (optional)      keep contigs weakly connected to other contigs in scaffold, [NO]\n" );
-	printf ( "  -V (optional)      output information for Hawkeye to visualize the assembly, [NO]\n" );
-	printf ( "  -G <int>           gapLenDiff: allowed length difference between estimated and filled gap, [50]\n" );
 	printf ( "  -L <int>           minContigLen: shortest contig for scaffolding, [K+2]\n" );
 	printf ( "  -c <float>         minContigCvg: minimum contig coverage (c*avgCvg), contigs shorter than 100bp with coverage smaller than c*avgCvg will be masked before scaffolding unless -u is set, [0.1]\n" );
 	printf ( "  -C <float>         maxContigCvg: maximum contig coverage (C*avgCvg), contigs with coverage larger than C*avgCvg or contigs shorter than 100bp with coverage larger than 0.8*C*avgCvg will be masked before scaffolding unless -u is set, [2]\n" );
