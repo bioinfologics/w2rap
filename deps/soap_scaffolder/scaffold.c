@@ -26,6 +26,7 @@
 #include "extfunc.h"
 #include "extvab.h"
 #include "global.h"
+#include "gfawriter.h"
 
 static void initenv ( int argc, char ** argv );
 static void display_scaff_usage ();
@@ -74,15 +75,22 @@ int main ( int argc, char ** argv )
 
 	time ( &time_bef );
     PE2Links ( graphfile );
+	char gfaname[255];
+	sprintf(gfaname,"%s_pelinks.gfa",graphfile);
+	dump_gfa(gfaname);
     time ( &time_aft );
     printf ( "Time spent on loading paired-end reads information: %ds.\n", ( int ) ( time_aft - time_bef ) );
     time ( &time_bef );
     printf ( "\n*****************************************************\nStart to construct scaffolds.\n" );
     Links2Scaf ( graphfile );
+
+	sprintf(gfaname,"%s_scaflinks.gfa",graphfile);
+	dump_gfa(gfaname);
     time ( &time_aft );
     printf ( "Time spent on constructing scaffolds: %ds.\n", ( int ) ( time_aft - time_bef ) );
     scaffolding ( 100, graphfile );
-
+	sprintf(gfaname,"%s_scaffolds.gfa",graphfile);
+	dump_gfa(gfaname);
 	prlReadsCloseGap ( graphfile );
 	ScafStat ( 100, graphfile );
 	free_pe_mem ();

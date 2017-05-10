@@ -137,7 +137,7 @@ typedef struct contig
 	unsigned int length;            // what it says on the tin
 	unsigned short indexInScaf;     // the index in the scaffold
 	unsigned char cvg;              // coverage
-	unsigned char bal_edge: 2;      // 0->FW, 1->REV or 2->PALINDROME
+	unsigned char bal_edge: 2;      // 0->FW, 2->REV or 1->PALINDROME
 	unsigned char mask : 1;         // ??
 	unsigned char flag : 1;         // ??
 	unsigned char multi: 1;         // ??

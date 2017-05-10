@@ -58,7 +58,7 @@ add_library(map_lib OBJECT
         mem_manager.c
         stack.c
         readseq1by1.c
-        )
+        gfawriter.c)
 
 add_library(scaff_lib OBJECT
         orderContig.c
@@ -81,7 +81,7 @@ add_library(scaff_lib OBJECT
         localAsm.c
         newhash.c
         searchPath.c
-)
+        gfawriter.c)
 ## add executables and respective sources
 add_executable(s_prepare prepare.c $<TARGET_OBJECTS:prepare_lib>)
 
