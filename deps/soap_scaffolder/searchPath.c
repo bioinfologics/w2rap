@@ -127,10 +127,6 @@ void traceAlongConnect ( unsigned int destE, CONNECT * currCNT, int max_steps, i
 		return;
 	}           // this is the only situation we stop
 
-	/*
-	   if(globalFlag)
-	   printf("B: step %d, ctg %d, length %d\n",index,currCNT->contigID,length);
-	 */
 	if ( currE == destE && index == 1 )
 	{
 		printf ( "The traceAlongConnect: start and destination are the same.\n" );

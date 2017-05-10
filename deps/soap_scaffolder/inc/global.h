@@ -52,7 +52,6 @@ CONTIG * contig_array = NULL;       // used to record all the info of contig
 int lineLen;
 int len_bar = 100;
 int weakPE = 3;     // the minimun weight requirement for the connection
-boolean globalFlag;
 long long arcCounter;       // record the num of the arc
 MEM_MANAGER * prearc_mem_manager = NULL;
 MEM_MANAGER ** preArc_mem_managers = NULL;
@@ -102,13 +101,10 @@ MEM_MANAGER * edgeid_mem_manager = NULL;
 unsigned int num_vtnew = 0; //new vertex num
 unsigned int kmer_cnew = 0; //new kmer num
 const int step = 1;     //step for multi kmer
-//int nowstep = 1;
-int nowstep2 = 1;
 
 unsigned int * edge_id = NULL;  //edge id array
 VERTEX * vt_arraynew = NULL;    //vertex array for k+1mer
 
-KmerSet2 * KmerSetsNew = NULL; //kmer set for k+1mer
 char libfilename[256];
 boolean parse = 0;
 unsigned int num_ed_temp = 0;   //  record the count of the edge
