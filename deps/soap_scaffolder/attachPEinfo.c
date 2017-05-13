@@ -382,6 +382,7 @@ int connectByPE_grad_gz ( char * infile, int peGrad, char * line )
 	return count;
 }
 
+
 /*************************************************
  Function:
     calcuIS

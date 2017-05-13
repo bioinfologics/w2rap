@@ -83,6 +83,32 @@ static void detectBreakScaff();
 static boolean checkSimple ( DARRAY * ctgArray, int count );
 static void checkCircle();
 
+typedef struct {
+	uint32_t source;
+	uint32_t source_pos;
+	uint32_t dest;
+	uint32_t dest_pos;
+	//unsigned char source_dir:1;
+	//unsigned char dest_dir:1;
+	//unsigned char peGrad:5;
+	unsigned char peGrad;
+} PAIR_LINK;
+
+static inline int compare_pl (const void * a, const void * b)
+{
+	if ( ((PAIR_LINK*)a)->source <  ((PAIR_LINK*)b)->source ) return -1;
+	if ( ((PAIR_LINK*)a)->source >  ((PAIR_LINK*)b)->source ) return 1;
+	if ( ((PAIR_LINK*)a)->source_pos <  ((PAIR_LINK*)b)->source_pos ) return -1;
+	if ( ((PAIR_LINK*)a)->source_pos >  ((PAIR_LINK*)b)->source_pos ) return 1;
+	if ( ((PAIR_LINK*)a)->dest <  ((PAIR_LINK*)b)->dest ) return -1;
+	if ( ((PAIR_LINK*)a)->dest >  ((PAIR_LINK*)b)->dest ) return 1;
+	if ( ((PAIR_LINK*)a)->dest_pos <  ((PAIR_LINK*)b)->dest_pos ) return -1;
+	if ( ((PAIR_LINK*)a)->dest_pos >  ((PAIR_LINK*)b)->dest_pos ) return 1;
+	return 0;
+
+}
+
+
 /*************************************************
 Function:
     checkFiles4Scaff
@@ -4839,6 +4865,205 @@ static void outputLinks ( FILE * fp, int insertS )
 			cnts = cnts->next;
 		}
 	}
+}
+
+
+/*************************************************
+ Function:
+    PE2LinksEXP
+ Description:
+    Updates connections between contigs based on alignment
+    information of paired-end reads.
+    EXPERIMENTAL: weights linkage through detection of unique destinations
+    for pairs from a window within the read.
+ Input:
+    1. infile:      alignment information file of paired-end reads
+ Output:
+    None.
+ Return:
+    None.
+ *************************************************/
+void PE2LinksEXP ( char * infile )
+{
+	lineLen = 1024;
+	char name[256], line[lineLen];
+	PAIR_LINK * pair_links;
+	size_t pair_links_capacity=100000;
+	size_t pair_links_size=0;
+	const float pair_link_growth_rate=2;
+	pair_links=calloc(pair_links_capacity,sizeof(PAIR_LINK));
+	FILE * fp1;
+	FILE * linkF;
+	gzFile * fp2;
+	int flag = 0;
+	unsigned int j;
+	printf ( "*****************************************************\nEXPERIMENTAL PE2Links starting.\n\n" );
+
+	sprintf ( name, "%s.links", infile );
+	linkF = ckopen ( name, "w" );
+
+	if ( !pes ) { loadPEgrads ( infile ); }
+
+	printf( "Loading all across-contigs pairs\n");
+
+	gzFile * fp;
+	sprintf ( name, "%s.readOnContig.gz", infile );
+	fp = gzopen ( name, "r" );
+
+	int current_grad=0;
+	long long upper_bound=pes[0].PE_bound;
+	long long readno,pre_readno=0;
+	unsigned int contigno,pre_contigno;
+	int pos,pre_pos;
+	unsigned char dir, pre_dir;
+	long long sizedist[100001]={0};//up to 50K seems a good range of size (this goes + and - as in ABySS);
+	long long wrong_direction=0;
+	long long same=0;
+	long long different=0;
+	long long pre_bound=0;
+	//TODO (in progress): load all reads, computing the size distribution as it goes
+	char * r=gzgets ( fp, line, lineLen ); //discard first line
+	while ( r!=NULL ){
+		r = gzgets ( fp, line, lineLen );
+		sscanf ( line, "%lld %d %d %c", &readno, &contigno, &pos, &dir );
+		if (r==NULL || readno>upper_bound){
+			//TODO print stats and compute distribution (save distribution to file)
+			sprintf ( name, "%s.peGrad%d.hist", infile,current_grad );
+			FILE * fhist=fopen(name,"w");
+			for (long i=1;i<100000;i++){
+				if (sizedist[i]>10) fprintf(fhist,"%ld, %ld\n",i-50000,sizedist[i]);
+			}
+			fclose(fhist);
+
+			printf("PE Grad %d: %lld pairs, %lld on same contig (%lld correctly orientated), %lld on different contig\n",
+				   current_grad, (upper_bound-pre_bound)/2, same, same-wrong_direction, different);
+			same=wrong_direction=different=0;
+			pre_bound=upper_bound;
+			for (long i=1;i<100000;i++) sizedist[i]=0;
+			if (r==NULL) break;
+		}
+		while (readno>upper_bound){ //current_grad completely read, go to next
+			++current_grad;
+			upper_bound=pes[current_grad].PE_bound;
+		}
+		if (contig_array[contigno].bal_edge==1) continue; //skips things on palindrome contigs
+
+		if ( readno % 2 == 1 ){
+			pre_readno=readno;
+			pre_contigno=contigno;
+			pre_pos=pos;
+			pre_dir=dir;
+
+		}
+		else if ( pre_readno == readno - 1 ){
+			//some consistency here: everything must map + on the first, - on the second (so all conections are forward)
+			//This is not needed as the mapper takes cares of inverting, so all reads do point forward
+			/*if (pre_dir=='-') {
+				pre_contigno=getTwinCtg(pre_contigno);
+				pre_pos=contig_array[pre_contigno].length-pre_pos;
+				pre_dir='+';
+			}
+			if (dir=='+') {
+				contigno=getTwinCtg(contigno);
+				pos=contig_array[pre_contigno].length-pos;
+				dir='-';
+			}*/
+			if (contigno==pre_contigno) {
+				same++;
+				wrong_direction++;
+			}
+			//same contig? contig is long enough? include in size distribution
+			else if (contigno==getTwinCtg(pre_contigno)){
+				same++;
+				long long s=contig_array[pre_contigno].length-pos-pre_pos+50000;
+				s=(s>0? s:0);
+				s=(s<100000? s: 100000);
+				++sizedist[s];
+			}
+			//different contig, insert on pair_links (twice, once per contig), use canonical contigs and adjust orientations
+			else {
+				different++;
+				//insertion with block-based growth
+				if (pair_links_size+2>=pair_links_capacity){
+					printf("increasing pairs_links_capacity from %lld to",pair_links_capacity);
+					pair_links_capacity*=pair_link_growth_rate;
+					printf(" %lld\n",pair_links_capacity);
+					pair_links=realloc(pair_links,pair_links_capacity*sizeof(PAIR_LINK));
+				}
+				pair_links[pair_links_size].source=contigno;
+				pair_links[pair_links_size].source_pos=pos;
+				pair_links[pair_links_size].dest=pre_contigno;
+				pair_links[pair_links_size].dest_pos=pre_pos;
+				pair_links[pair_links_size].peGrad=current_grad;
+				++pair_links_size;
+				pair_links[pair_links_size].source=getTwinCtg(pre_contigno);
+				pair_links[pair_links_size].source_pos=contig_array[pre_contigno].length-pre_pos;
+				pair_links[pair_links_size].dest=getTwinCtg(contigno);
+				pair_links[pair_links_size].dest_pos=contig_array[contigno].length-pos;
+				pair_links[pair_links_size].peGrad=current_grad;
+				++pair_links_size;
+			}
+		}
+
+	}
+
+	printf( "%lld different-contig links for analysis, %lld bytes of memory used on link array\n", pair_links_size, pair_links_capacity*
+																									   sizeof(PAIR_LINK));
+
+
+
+	//TODO: print reads stats on each
+
+	printf( "Sorting all across-contigs pairs\n");
+
+	qsort(pair_links,pair_links_size, sizeof(PAIR_LINK),compare_pl);
+
+	printf( "Identifying possible links contig by contig\n");
+	for (size_t i=0; i<pair_links_size;) {
+		if (contig_array[pair_links[i].source].length>1000)
+			printf ("\n\n--- Reads coming out from contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
+		size_t j=i;
+		while (pair_links[j].source==pair_links[i].source) {
+			if (contig_array[pair_links[i].source].length>1000 && contig_array[pair_links[j].dest].length>1000)
+				printf ("%lld -> %lld (%lld bp) - grad %d\n", pair_links[j].source_pos, pair_links[j].dest,
+						contig_array[pair_links[j].dest].length, pair_links[j].peGrad);
+			j++;
+		}
+		i=j;
+	}
+
+
+	gzclose ( fp2 );
+	fclose ( linkF );
+	free (pair_links);
+	printf( "Sorry, exiting now as this is not finished!\n");
+
+	exit(0);
+
+	return;
+	for (int i = 0; i < gradsCounter; i++ )
+	{
+		createCntMemManager();
+		createCntLookupTable();
+		newCntCounter = 0;
+
+		flag = connectByPE_grad_gz ( infile, i, line );
+
+		printf ( "%lld new connections.\n\n", newCntCounter / 2 );
+
+		if (flag > 0) outputLinks(linkF, pes[i].insertS);
+		flag = 0;
+		destroyConnectMem();
+		deleteCntLookupTable();
+		for (j = 1; j <= num_ctg; j++) { contig_array[j].downwardConnect = NULL; }
+	}
+
+	free ( ( void * ) line );
+
+	gzclose ( fp2 );
+
+	fclose ( linkF );
+	printf ( "All paired-end reads information loaded.\n" );
 }
 
 /*************************************************

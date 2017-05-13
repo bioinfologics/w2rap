@@ -74,9 +74,10 @@ int main ( int argc, char ** argv )
 	printf ( "Time spent on loading updated edges: %ds.\n\n", ( int ) ( time_aft - time_bef ) );
 
 	time ( &time_bef );
-    PE2Links ( graphfile );
+    if (experimental) PE2LinksEXP ( graphfile );
+	else PE2Links ( graphfile );
 	char gfaname[255];
-	sprintf(gfaname,"%s_pelinks.gfa",graphfile);
+	sprintf(gfaname,"%s_pelinks",graphfile);
 	dump_gfa(gfaname);
     time ( &time_aft );
     printf ( "Time spent on loading paired-end reads information: %ds.\n", ( int ) ( time_aft - time_bef ) );
@@ -84,12 +85,12 @@ int main ( int argc, char ** argv )
     printf ( "\n*****************************************************\nStart to construct scaffolds.\n" );
     Links2Scaf ( graphfile );
 
-	sprintf(gfaname,"%s_scaflinks.gfa",graphfile);
+	sprintf(gfaname,"%s_scaflinks",graphfile);
 	dump_gfa(gfaname);
     time ( &time_aft );
     printf ( "Time spent on constructing scaffolds: %ds.\n", ( int ) ( time_aft - time_bef ) );
     scaffolding ( 100, graphfile );
-	sprintf(gfaname,"%s_scaffolds.gfa",graphfile);
+	sprintf(gfaname,"%s_scaffolds",graphfile);
 	dump_gfa(gfaname);
 	prlReadsCloseGap ( graphfile );
 	ScafStat ( 100, graphfile );
@@ -121,7 +122,7 @@ void initenv ( int argc, char ** argv )
 	optind = 1;
 	printf ( "Parameters: s_scaff " );
 
-	while ( ( copt = getopt ( argc, argv, "g:L:p:G:N:c:C:b:B:uw" ) ) != EOF )
+	while ( ( copt = getopt ( argc, argv, "g:L:p:G:N:c:C:b:B:uwx" ) ) != EOF )
 	{
 		switch ( copt )
 		{
@@ -152,6 +153,10 @@ void initenv ( int argc, char ** argv )
 			case 'w':
 				score_mask = 0;
 				printf ( "-w " );
+				break;
+			case 'x':
+				experimental = 1;
+				printf ( "-x " );
 				break;
 			case 'p':
 				printf ( "-p %s ", optarg );
@@ -199,10 +204,11 @@ void initenv ( int argc, char ** argv )
 
 static void display_scaff_usage ()
 {
-	printf ( "\ns_scaff -g inputGraph [-u -w] [-G gapLenDiff -L minContigLen -c minContigCvg -C maxContigCvg -b insertSizeUpperBound -B bubbleCoverage -N genomeSize -p n_cpu]\n" );
+	printf ( "\ns_scaff -g inputGraph [-u -w -x] [-G gapLenDiff -L minContigLen -c minContigCvg -C maxContigCvg -b insertSizeUpperBound -B bubbleCoverage -N genomeSize -p n_cpu]\n" );
 	printf ( "  -g <string>        inputGraph: prefix of input graph file names\n" );
 	printf ( "  -u (optional)      un-mask contigs with high/low coverage before scaffolding, [mask]\n" );
 	printf ( "  -w (optional)      keep contigs weakly connected to other contigs in scaffold, [NO]\n" );
+	printf ( "  -x (optional)      use experimental heuristics: unique-dest per region linking [NO]\n" );
 	printf ( "  -G <int>           gapLenDiff: allowed length difference between estimated and filled gap, [50]\n" );
 	printf ( "  -L <int>           minContigLen: shortest contig for scaffolding, [K+2]\n" );
 	printf ( "  -c <float>         minContigCvg: minimum contig coverage (c*avgCvg), contigs shorter than 100bp with coverage smaller than c*avgCvg will be masked before scaffolding unless -u is set, [0.1]\n" );
@@ -211,4 +217,5 @@ static void display_scaff_usage ()
 	printf ( "  -B <float>         bubbleCoverage: remove contig with lower cvoerage in bubble structure if both contigs' coverage are smaller than bubbleCoverage*avgCvg, [0.6]\n" );
 	printf ( "  -N <int>           genomeSize: genome size for statistics, [0]\n" );
 	printf ( "  -p <int>           n_cpu: number of cpu for use, [8]\n" );
+
 }

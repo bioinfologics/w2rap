@@ -82,6 +82,7 @@ DARRAY ** darrayBuf;
 boolean orig2new;   // 1 for re-arrange the contig index using the length
 int maxSteps;
 boolean maskRep = 1;        // 1 for masking repeat for scaffold asm , 0 for un-masking repeat.
+boolean experimental = 0;        // 0 for default behaviour, 1 for experimental.
 int GLDiff = 50;
 int initKmerSetSize = 0;   // init_size = (ubyte8) ((double) initKmerSetSize * 1024.0f * 1024.0f * 1024.0f / (double) thrd_num / 24);
 long known_genome_size = 0;
