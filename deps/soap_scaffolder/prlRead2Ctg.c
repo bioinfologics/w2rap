@@ -141,15 +141,6 @@ static void threadRoutine ( void * para )
 	}
 }
 
-/*
-static void chopReads()
-{
-    int i;
-    for(i=0;i<read_c;i++){
-        chopKmer4read(i,0);
-    }
-}
-*/
 static void chopKmer4read ( int t, int threadID )
 {
 	int len_seq = lenBuffer[t];
@@ -332,7 +323,7 @@ static void parse1read ( int t )
 	{
 		footprint[t] = 1;
 	}
-
+	//pos at this point has the END of the match
 	j = pos;
 	i = pos - start + 1;
 	node = nodeBuffer[j];
@@ -419,7 +410,7 @@ static void locate1read ( int t )
 	}
 }
 
-static void output1read_gz ( int t, gzFile * outfp, char orien, int dhflag )
+static void output1read_gz ( int t, gzFile * outfp)
 {
 	int len = lenBuffer[t];
 	int index;
@@ -436,170 +427,29 @@ static void output1read_gz ( int t, gzFile * outfp, char orien, int dhflag )
 	gzwrite ( outfp, rcSeq[1], ( unsigned ) ( len / 4 + 1 ) );
 }
 
-static void output1read ( int t, FILE * outfp1, FILE * outfp2, char orien, int dhflag )
-{
-	int len = lenBuffer[t];
-	int index;
-	readsInGap++;
 
-	/*
-	   if(ctgIdArray[t]==735||ctgIdArray[t]==getTwinCtg(735)){
-	   printf("%d\t%d\t%d\t",t+1,ctgIdArray[t],posArray[t]);
-	   int j;
-	   for(j=0;j<len;j++)
-	   printf("%c",int2base((int)seqBuffer[t][j]));
-	   printf("\n");
-	   }
-	 */
-	for ( index = 0; index < len; index++ )
-	{
-		writeChar2tightString ( seqBuffer[t][index], rcSeq[1], index );
-	}
-
-	fwrite ( &len, sizeof ( int ), 1, outfp1 );
-	fwrite ( &ctgIdArray[t], sizeof ( int ), 1, outfp1 );
-	fwrite ( &posArray[t], sizeof ( int ), 1, outfp1 );
-	fwrite ( rcSeq[1], sizeof ( char ), len / 4 + 1, outfp1 );
-
-	if ( fill && insSizeArray[t] < 2000 && len > 0 )
-	{
-		fprintf ( outfp2, ">%d\t%d\t%d\t%c\t%d\t%d\n", len, ctgIdArray[t], posArray[t], orien, insSizeArray[t], dhflag );
-
-		for ( index = 0; index < len; index++ )
-			{ fprintf ( outfp2, "%c", int2base ( ( int ) seqBuffer[t][index] ) ); }
-
-		fprintf ( outfp2, "\n" );
-	}
-}
-
-static void output1Nread ( int t, FILE * outfp )
-{
-	int len = lenBuffer[t];
-	int index;
-	fprintf ( outfp, "%d\t%d\t%d\n", lenBuffer[t], ctgIdArray[t], posArray[t] );
-	fprintf ( outfp, ">%s\n", read_name[t] );
-
-	for ( index = 0; index < len; index++ )
-		{ fprintf ( outfp, "%c", int2base ( ( int ) seqBuffer[t][index] ) ); }
-
-	fprintf ( outfp, "\n" );
-}
-
-static void getPEreadOnContig ( int t, gzFile * outfp )
-{
-	int len1, len2, index;
-	char orien1, orien2;
-	len1 = lenBuffer[t - 1];
-	len2 = lenBuffer[t];
-	orien1 = orienArray[t - 1];
-	orien2 = orienArray[t];
-
-	if ( insSizeArray[t] < 2000 && insSizeArray[t] == insSizeArray[t - 1] )
-	{
-		gzwrite ( outfp, &len1, sizeof ( int ) );
-		gzwrite ( outfp, &ctgIdArray[t - 1], sizeof ( int ) );
-		gzwrite ( outfp, &posArray[t - 1], sizeof ( int ) );
-		gzwrite ( outfp, &orien1, sizeof ( char ) );
-		gzwrite ( outfp, &insSizeArray[t - 1], sizeof ( int ) );
-
-		for ( index = 0; index < len1; index++ )
-		{
-			writeChar2tightString ( seqBuffer[t - 1][index], rcSeq[1], index );
-		}
-
-		gzwrite ( outfp, rcSeq[1], ( unsigned ) ( len1 / 4 + 1 ) );
-		gzwrite ( outfp, &len2, sizeof ( int ) );
-		gzwrite ( outfp, &ctgIdArray[t], sizeof ( int ) );
-		gzwrite ( outfp, &posArray[t], sizeof ( int ) );
-		gzwrite ( outfp, &orien2, sizeof ( char ) );
-		gzwrite ( outfp, &insSizeArray[t], sizeof ( int ) );
-
-		for ( index = 0; index < len2; index++ )
-		{
-			writeChar2tightString ( seqBuffer[t][index], rcSeq[1], index );
-		}
-
-		gzwrite ( outfp, rcSeq[1], ( unsigned ) ( len2 / 4 + 1 ) );
-	}
-}
-
-/*
-static void getPEreadOnContig(int t,FILE* outfp)
-{
-    int len1,len2,index;
-    char orien1,orien2;
-    len1 = lenBuffer[t-1];
-    len2 = lenBuffer[t];
-    orien1 = orienArray[t-1];
-    orien2 = orienArray[t];
-    if(insSizeArray[t]<2000&&insSizeArray[t]==insSizeArray[t-1]){
-        fprintf(outfp,">%d\t%d\t%d\t%c\t%d\n",len1,ctgIdArray[t-1],posArray[t-1],orien1,insSizeArray[t-1]);
-        for(index=0;index<len1;index++)
-            fprintf(outfp,"%c",int2base((int)seqBuffer[t-1][index]));
-        fprintf(outfp,"\n");
-
-        fprintf(outfp,">%d\t%d\t%d\t%c\t%d\n",len2,ctgIdArray[t],posArray[t],orien2,insSizeArray[t]);
-                for(index=0;index<len2;index++)
-                        fprintf(outfp,"%c",int2base((int)seqBuffer[t][index]));
-                fprintf(outfp,"\n");
-        }
-}*/
 
 static void getReadIngap ( int t, int insSize, gzFile * outfp1, boolean readOne )
 {
 	int read1, read2;
-	char orientation;
 
 	if ( readOne )
 	{
 		read1 = t;
 		read2 = t + 1;
 
-		if ( orienArray[read2] == '+' )
-		{
-			orientation = '-';
-		}
-		else
-		{
-			orientation = '+';
-		}
-
 		ctgIdArray[read1] = ctgIdArray[read2];
 		posArray[read1] = posArray[read2] + insSize - lenBuffer[read1];
-		output1read_gz ( read1, outfp1, orientation, 1 );
+		output1read_gz ( read1, outfp1);
 	}
 	else
 	{
 		read2 = t;
 		read1 = t - 1;
 
-		if ( orienArray[read1] == '+' )
-		{
-			orientation = '-';
-		}
-		else
-		{
-			orientation = '+';
-		}
-
 		ctgIdArray[read2] = ctgIdArray[read1];
 		posArray[read2] = posArray[read1] + insSize - lenBuffer[read2]; // --> R1     <-- R2
-		output1read_gz ( read2, outfp1, orientation, 2 );
-	}
-}
-
-static void recordLongRead ( FILE * outfp1, FILE * outfp2 )
-{
-	int t;
-
-	for ( t = 0; t < read_c; t++ )
-	{
-		readCounter++;
-
-		if ( footprint[t] )
-		{
-			output1read ( t, outfp1, outfp2, orienArray[t], 0 );
-		}
+		output1read_gz ( read2, outfp1);
 	}
 }
 
@@ -641,7 +491,7 @@ static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1 )
 		}
 
 		mapCounter++;
-		gzprintf ( outfp, "%lld\t%u\t%d\t%c\n", readCounter, ctgIdArray[t], posArray[t], orienArray[t] );
+		gzprintf ( outfp, "%lld\t%u\t%d\n", readCounter, ctgIdArray[t], posArray[t] );
 
 		if ( t % 2 == 0 )
 		{
@@ -656,16 +506,7 @@ static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1 )
 				locate1read ( t - 1 );
 			}
 
-			if ( orienArray[t] == '+' )
-			{
-				orientation = '-';
-			}
-			else
-			{
-				orientation = '+';
-			}
-
-			output1read_gz ( t - 1, outfp1, orientation, 1 ); //read1 in gap.
+			output1read_gz ( t - 1, outfp1 ); //read1 in gap.
 		}
 
 		if ( outfp1 && footprint[t] && !rd2gap )
@@ -675,16 +516,7 @@ static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1 )
 				locate1read ( t );
 			}
 
-			if ( orienArray[t - 1] == '+' )
-			{
-				orientation = '-';
-			}
-			else
-			{
-				orientation = '+';
-			}
-
-			output1read_gz ( t, outfp1, orientation, 2 ); //read2 in gap.
+			output1read_gz ( t, outfp1 ); //read2 in gap.
 		}
 	}
 }
