@@ -160,7 +160,7 @@ void initenv ( int argc, char ** argv )
 	inpseq = outseq = 0;
 	printf ( "Parameters: s_map " );
 
-	while ( ( copt = getopt ( argc, argv, "s:g:K:p:k:f" ) ) != EOF )
+	while ( ( copt = getopt ( argc, argv, "s:g:K:p:k:" ) ) != EOF )
 	{
 		switch ( copt )
 		{
@@ -189,10 +189,6 @@ void initenv ( int argc, char ** argv )
 				sscanf ( optarg, "%s", temp );
 				smallKmer = atoi ( temp );
 				break;
-			case 'f':
-				fill = 1;
-				printf ( "-f " );
-				break;
 			default:
 
 				if ( inpseq == 0 || outseq == 0 )
@@ -217,7 +213,6 @@ static void display_map_usage ()
 	printf ( "\ns_map -s configFile -g inputGraph [-f] [-p n_cpu -k kmer_R2C]\n" );
 	printf ( "  -s <string>        configFile: the config file of solexa reads\n" );
 	printf ( "  -g <string>        inputGraph: prefix of input graph file names\n" );
-	printf ( "  -f (optional)      output gap related reads in map step for using SRkgf to fill gap, [NO]\n" );
 	printf ( "  -p <int>           n_cpu: number of cpu for use, [8]\n" );
 #ifdef MER127
 	printf ( "  -k <int>           kmer_R2C(min 13, max 127): kmer size used for mapping read to contig, [K]\n" );

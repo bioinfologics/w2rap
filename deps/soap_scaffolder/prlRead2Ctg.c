@@ -419,7 +419,7 @@ static void locate1read ( int t )
 	}
 }
 
-static void output1read_gz ( int t, gzFile * outfp, gzFile * outfp2, char orien, int dhflag )
+static void output1read_gz ( int t, gzFile * outfp, char orien, int dhflag )
 {
 	int len = lenBuffer[t];
 	int index;
@@ -434,16 +434,6 @@ static void output1read_gz ( int t, gzFile * outfp, gzFile * outfp2, char orien,
 	gzwrite ( outfp, &ctgIdArray[t], sizeof ( int ) );
 	gzwrite ( outfp, &posArray[t], sizeof ( int ) );
 	gzwrite ( outfp, rcSeq[1], ( unsigned ) ( len / 4 + 1 ) );
-
-	if ( fill && insSizeArray[t] < 2000 && len > 0 )
-	{
-		gzprintf ( outfp2, ">%d\t%d\t%d\t%c\t%d\t%d\n", len, ctgIdArray[t], posArray[t], orien, insSizeArray[t], dhflag );
-
-		for ( index = 0; index < len; index++ )
-			{ gzprintf ( outfp2, "%c", int2base ( ( int ) seqBuffer[t][index] ) ); }
-
-		gzprintf ( outfp2, "\n" );
-	}
 }
 
 static void output1read ( int t, FILE * outfp1, FILE * outfp2, char orien, int dhflag )
@@ -555,7 +545,7 @@ static void getPEreadOnContig(int t,FILE* outfp)
         }
 }*/
 
-static void getReadIngap ( int t, int insSize, gzFile * outfp1, gzFile * outfp2, boolean readOne )
+static void getReadIngap ( int t, int insSize, gzFile * outfp1, boolean readOne )
 {
 	int read1, read2;
 	char orientation;
@@ -576,7 +566,7 @@ static void getReadIngap ( int t, int insSize, gzFile * outfp1, gzFile * outfp2,
 
 		ctgIdArray[read1] = ctgIdArray[read2];
 		posArray[read1] = posArray[read2] + insSize - lenBuffer[read1];
-		output1read_gz ( read1, outfp1, outfp2, orientation, 1 );
+		output1read_gz ( read1, outfp1, orientation, 1 );
 	}
 	else
 	{
@@ -594,7 +584,7 @@ static void getReadIngap ( int t, int insSize, gzFile * outfp1, gzFile * outfp2,
 
 		ctgIdArray[read2] = ctgIdArray[read1];
 		posArray[read2] = posArray[read1] + insSize - lenBuffer[read2]; // --> R1     <-- R2
-		output1read_gz ( read2, outfp1, outfp2, orientation, 2 );
+		output1read_gz ( read2, outfp1, orientation, 2 );
 	}
 }
 
@@ -618,7 +608,7 @@ static void recordLongRead ( FILE * outfp1, FILE * outfp2 )
  * outfp is the important file (i.e. readsOnContig.gz)
  **/
 
-static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1, gzFile * outfp2, gzFile * outfp4 )
+static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1 )
 {
 	int t, ctgId;
 	boolean rd1gap, rd2gap;
@@ -634,19 +624,15 @@ static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1, gz
 		{
 			if ( ctgIdArray[t] < 1 && ctgIdArray[t - 1] > 0 )
 			{
-				getReadIngap ( t, insSizeArr[t], outfp1, outfp2, 0 );
+				getReadIngap ( t, insSizeArr[t], outfp1, 0 );
 				rd2gap = 1;
 			}
 			else if ( ctgIdArray[t] > 0 && ctgIdArray[t - 1] < 1 )
 			{
-				getReadIngap ( t - 1, insSizeArr[t - 1], outfp1, outfp2, 1 );
+				getReadIngap ( t - 1, insSizeArr[t - 1], outfp1, 1 );
 				rd1gap = 1;
 			}
-			else if ( ctgIdArray[t] > 0 && ctgIdArray[t - 1] > 0 ) //PE read on contig
-			{
-				if ( fill )
-					{ getPEreadOnContig ( t, outfp4 ); }
-			}
+
 		}
 
 		if ( ctgId < 1 )
@@ -679,7 +665,7 @@ static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1, gz
 				orientation = '+';
 			}
 
-			output1read_gz ( t - 1, outfp1, outfp2, orientation, 1 ); //read1 in gap.
+			output1read_gz ( t - 1, outfp1, orientation, 1 ); //read1 in gap.
 		}
 
 		if ( outfp1 && footprint[t] && !rd2gap )
@@ -698,7 +684,7 @@ static void recordAlldgn ( gzFile * outfp, int * insSizeArr, gzFile * outfp1, gz
 				orientation = '+';
 			}
 
-			output1read_gz ( t, outfp1, outfp2, orientation, 2 ); //read2 in gap.
+			output1read_gz ( t, outfp1, orientation, 2 ); //read2 in gap.
 		}
 	}
 }
@@ -773,7 +759,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 	long long i;
 	char * src_name, *next_name, name[256];
 	FILE * fo2;
-	gzFile * fo, *outfp1 = NULL, *outfp2 = NULL, *outfp3 = NULL, *outfp4 = NULL;
+	gzFile * fo, *outfp1 = NULL;
 	int maxReadNum, libNo, prevLibNo, insSize = 0;
 	boolean flag, pairs = 1;
 	pthread_t threads[thrd_num];
@@ -853,20 +839,9 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 	sprintf ( name, "%s.readInGap.gz", outfile );
 	outfp1 = gzopen ( name, "wb" );
 
-	if ( fill )
-	{
-		sprintf ( name, "%s.shortreadInGap.gz", outfile );
-		outfp2 = gzopen ( name, "w" );
-	}
-
 	sprintf ( name, "%s.readOnContig.gz", outfile );
 	fo = gzopen ( name, "w" );
 
-	if ( fill )
-	{
-		sprintf ( name, "%s.PEreadOnContig.gz", outfile );
-		outfp4 = gzopen ( name, "wb" );
-	}
 
 	gzprintf ( fo, "read\tcontig\tpos\n" );
 	readCounter = mapCounter = readsInGap = 0;
@@ -937,7 +912,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 			sendWorkSignal ( 2, thrdSignal ); //chopKmer4read
 			sendWorkSignal ( 1, thrdSignal ); //searchKmer
 			sendWorkSignal ( 3, thrdSignal ); //parse1read
-			recordAlldgn ( fo, insSizeArray, outfp1, outfp2, outfp4 );
+			recordAlldgn ( fo, insSizeArray, outfp1 );
 			kmer_c = 0;
 			read_c = 0;
 		}
@@ -949,7 +924,7 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 		sendWorkSignal ( 2, thrdSignal ); //chopKmer4read
 		sendWorkSignal ( 1, thrdSignal ); //searchKmer
 		sendWorkSignal ( 3, thrdSignal ); //parse1read
-		recordAlldgn ( fo, insSizeArray, outfp1, outfp2, outfp4 );
+		recordAlldgn ( fo, insSizeArray, outfp1 );
 		printf ( "\nTotal reads         %lld\n", readCounter );
 		printf ( "Reads in gaps       %lld\n", readsInGap );
 		printf ( "Ratio               %.1f%%\n", ( float ) readsInGap / readCounter * 100 );
@@ -983,11 +958,6 @@ void prlRead2Ctg ( char * libfile, char * outfile )
 
 	gzclose ( outfp1 );
 
-	if ( fill )
-	{
-		gzclose ( outfp2 );
-		gzclose ( outfp4 );
-	}
 
 	free_pe_mem ();
 	free_libs ();

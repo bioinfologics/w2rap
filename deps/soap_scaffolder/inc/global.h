@@ -23,7 +23,6 @@
 int * contig_index_array = NULL;
 int scaffNum = 0;
 int gapNum = 1;
-boolean fill = 0; // 1 for output some files ,which are useful for the software "kgf"
 int overlaplen = 23;//k-mer Size
 int inGraph;        //for checking whether -g  is set, (graph prefix)
 long long n_ban;    //not used
