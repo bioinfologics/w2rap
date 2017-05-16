@@ -1,10 +1,10 @@
 # W2rap: the WGS (Wheat) Robust Assembly Pipeline 
-This is a short tutorial on how to use w2rap to get from raw data to scaffolds. We have provided a test *Saccharomyces cerevisiae* dataset (downloadable [here](http://opendata.earlham.ac.uk/w2rap/)) consisting of one paired-end (PE) library and one long mate-pair (LMP) library.
+This is a short tutorial on how to use w2rap to get from raw data to scaffolds. We have provided a test *Saccharomyces cerevisiae* [dataset](http://opendata.earlham.ac.uk/w2rap/tutorial_files.tar.gz) consisting of one paired-end (PE) library and one long mate-pair (LMP) library.
 
  * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
  * LIB6471\_R1.fastq, LIB6471\_R2.fastq - LMP read files
 
-We also provide the *Saccharomyces cerevisiae* reference sequence for QC purposes. This can also be downloaded from the [Saccharomyces Genome Database](http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
+The downloadable dataset also includes the *Saccharomyces cerevisiae* reference sequence for QC purposes. This was downloaded from the [Saccharomyces Genome Database](http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
 ## Software required
 To run the pipeline you will need to install the following;  
