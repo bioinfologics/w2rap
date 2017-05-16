@@ -81,7 +81,7 @@ add_library(scaff_lib OBJECT
         localAsm.c
         newhash.c
         searchPath.c
-        gfawriter.c mappedReads2links.c)
+        gfawriter.c)
 ## add executables and respective sources
 add_executable(s_prepare prepare.c $<TARGET_OBJECTS:prepare_lib>)
 

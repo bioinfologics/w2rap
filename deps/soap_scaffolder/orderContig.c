@@ -88,8 +88,8 @@ typedef struct {
 	uint32_t source_pos;
 	uint32_t dest;
 	uint32_t dest_pos;
-	//unsigned char source_dir:1;
-	//unsigned char dest_dir:1;
+	unsigned char source_rv:1;
+	unsigned char dest_rv:1;
 	//unsigned char peGrad:5;
 	unsigned char peGrad;
 } PAIR_LINK;
@@ -4915,7 +4915,7 @@ void PE2LinksEXP ( char * infile )
 	long long readno,pre_readno=0;
 	unsigned int contigno,pre_contigno;
 	int pos,pre_pos;
-	unsigned char dir, pre_dir;
+	//unsigned char dir, pre_dir;
 	long long sizedist[100001]={0};//up to 50K seems a good range of size (this goes + and - as in ABySS);
 	long long wrong_direction=0;
 	long long same=0;
@@ -4925,7 +4925,7 @@ void PE2LinksEXP ( char * infile )
 	char * r=gzgets ( fp, line, lineLen ); //discard first line
 	while ( r!=NULL ){
 		r = gzgets ( fp, line, lineLen );
-		sscanf ( line, "%lld %d %d %c", &readno, &contigno, &pos, &dir );
+		sscanf ( line, "%lld %d %d", &readno, &contigno, &pos );
 		if (r==NULL || readno>upper_bound){
 			//TODO print stats and compute distribution (save distribution to file)
 			sprintf ( name, "%s.peGrad%d.hist", infile,current_grad );
@@ -4952,7 +4952,7 @@ void PE2LinksEXP ( char * infile )
 			pre_readno=readno;
 			pre_contigno=contigno;
 			pre_pos=pos;
-			pre_dir=dir;
+			//pre_dir=dir;
 
 		}
 		else if ( pre_readno == readno - 1 ){
@@ -4992,14 +4992,18 @@ void PE2LinksEXP ( char * infile )
 				}
 				pair_links[pair_links_size].source=contigno;
 				pair_links[pair_links_size].source_pos=pos;
+				pair_links[pair_links_size].source_rv=0;
 				pair_links[pair_links_size].dest=pre_contigno;
 				pair_links[pair_links_size].dest_pos=pre_pos;
+				pair_links[pair_links_size].dest_rv=0;
 				pair_links[pair_links_size].peGrad=current_grad;
 				++pair_links_size;
 				pair_links[pair_links_size].source=getTwinCtg(pre_contigno);
 				pair_links[pair_links_size].source_pos=contig_array[pre_contigno].length-pre_pos;
+				pair_links[pair_links_size].source_rv=1;
 				pair_links[pair_links_size].dest=getTwinCtg(contigno);
 				pair_links[pair_links_size].dest_pos=contig_array[contigno].length-pos;
+				pair_links[pair_links_size].dest_rv=1;
 				pair_links[pair_links_size].peGrad=current_grad;
 				++pair_links_size;
 			}
@@ -5021,10 +5025,19 @@ void PE2LinksEXP ( char * infile )
 	printf( "Identifying possible links contig by contig\n");
 	for (size_t i=0; i<pair_links_size;) {
 		if (contig_array[pair_links[i].source].length>1000)
-			printf ("\n\n--- Reads coming out from contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
+			printf ("\n\n--- Reads coming in to contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
 		size_t j=i;
 		while (pair_links[j].source==pair_links[i].source) {
-			if (contig_array[pair_links[i].source].length>1000 && contig_array[pair_links[j].dest].length>1000)
+			if (pair_links[j].source_rv && contig_array[pair_links[i].source].length>1000 && contig_array[pair_links[j].dest].length>1000)
+				printf ("%lld -> %lld (%lld bp) - grad %d\n", pair_links[j].source_pos, pair_links[j].dest,
+						contig_array[pair_links[j].dest].length, pair_links[j].peGrad);
+			j++;
+		}
+		if (contig_array[pair_links[i].source].length>1000)
+			printf ("\n\n--- Reads coming out from contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
+		j=i;
+		while (pair_links[j].source==pair_links[i].source) {
+			if (!pair_links[j].source_rv && contig_array[pair_links[i].source].length>1000 && contig_array[pair_links[j].dest].length>1000)
 				printf ("%lld -> %lld (%lld bp) - grad %d\n", pair_links[j].source_pos, pair_links[j].dest,
 						contig_array[pair_links[j].dest].length, pair_links[j].peGrad);
 			j++;
