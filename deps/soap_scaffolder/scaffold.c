@@ -76,15 +76,12 @@ int main ( int argc, char ** argv )
 	time ( &time_bef );
     if (experimental) PE2LinksEXP ( graphfile );
 	else PE2Links ( graphfile );
-	char gfaname[255];
-	sprintf(gfaname,"%s_pelinks",graphfile);
-	dump_gfa(gfaname);
-    time ( &time_aft );
+	time ( &time_aft );
     printf ( "Time spent on loading paired-end reads information: %ds.\n", ( int ) ( time_aft - time_bef ) );
     time ( &time_bef );
     printf ( "\n*****************************************************\nStart to construct scaffolds.\n" );
     Links2Scaf ( graphfile );
-
+	char gfaname[255];
 	sprintf(gfaname,"%s_scaflinks",graphfile);
 	dump_gfa(gfaname);
     time ( &time_aft );
