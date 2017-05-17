@@ -4984,27 +4984,28 @@ void PE2LinksEXP ( char * infile )
 			else {
 				different++;
 				//insertion with block-based growth
+                //TODO: this should actually be 4 instances (fw and reverse, and both combinations of src and dest)
 				if (pair_links_size+2>=pair_links_capacity){
 					printf("increasing pairs_links_capacity from %lld to",pair_links_capacity);
 					pair_links_capacity*=pair_link_growth_rate;
 					printf(" %lld\n",pair_links_capacity);
 					pair_links=realloc(pair_links,pair_links_capacity*sizeof(PAIR_LINK));
 				}
-				pair_links[pair_links_size].source=contigno;
-				pair_links[pair_links_size].source_pos=pos;
+				pair_links[pair_links_size].source=pre_contigno;
+				pair_links[pair_links_size].source_pos=pre_pos;
 				pair_links[pair_links_size].source_rv=0;
-				pair_links[pair_links_size].dest=pre_contigno;
-				pair_links[pair_links_size].dest_pos=pre_pos;
-				pair_links[pair_links_size].dest_rv=0;
-				pair_links[pair_links_size].peGrad=current_grad;
+                pair_links[pair_links_size].dest=getTwinCtg(contigno);
+                pair_links[pair_links_size].dest_pos=contig_array[contigno].length-pos;
+                pair_links[pair_links_size].dest_rv=1;
+                pair_links[pair_links_size].peGrad=current_grad;
 				++pair_links_size;
-				pair_links[pair_links_size].source=getTwinCtg(pre_contigno);
-				pair_links[pair_links_size].source_pos=contig_array[pre_contigno].length-pre_pos;
+				pair_links[pair_links_size].source=getTwinCtg(contigno);
+				pair_links[pair_links_size].source_pos=contig_array[contigno].length-pos;
 				pair_links[pair_links_size].source_rv=1;
-				pair_links[pair_links_size].dest=getTwinCtg(contigno);
-				pair_links[pair_links_size].dest_pos=contig_array[contigno].length-pos;
-				pair_links[pair_links_size].dest_rv=1;
-				pair_links[pair_links_size].peGrad=current_grad;
+                pair_links[pair_links_size].dest=pre_contigno;
+                pair_links[pair_links_size].dest_pos=pre_pos;
+                pair_links[pair_links_size].dest_rv=0;
+                pair_links[pair_links_size].peGrad=current_grad;
 				++pair_links_size;
 			}
 		}
