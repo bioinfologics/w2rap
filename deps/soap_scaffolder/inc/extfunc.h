@@ -163,6 +163,7 @@ extern void kmer2edges ( char * outfile );
 extern void output_vertex ( char * outfile );
 extern boolean prlRead2HashTable ( char * libfile, char * outfile );
 extern void Links2Scaf ( char * infile );
+extern void Links2ScafEXP ( char * infile );
 extern void PE2Links ( char * infile );
 extern void PE2LinksEXP ( char * infile );
 extern unsigned int getTwinCtg ( unsigned int ctg );

@@ -80,7 +80,8 @@ int main ( int argc, char ** argv )
     printf ( "Time spent on loading paired-end reads information: %ds.\n", ( int ) ( time_aft - time_bef ) );
     time ( &time_bef );
     printf ( "\n*****************************************************\nStart to construct scaffolds.\n" );
-    Links2Scaf ( graphfile );
+	if (experimental) Links2ScafEXP ( graphfile );
+	else Links2Scaf ( graphfile );
 	char gfaname[255];
 	sprintf(gfaname,"%s_scaflinks",graphfile);
 	dump_gfa(gfaname);

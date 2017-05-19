@@ -108,6 +108,9 @@ static inline int compare_pl (const void * a, const void * b)
 
 }
 
+PAIR_LINK * pair_links;
+size_t pair_links_capacity=100000;
+size_t pair_links_size=0;
 
 /*************************************************
 Function:
@@ -4887,9 +4890,7 @@ void PE2LinksEXP ( char * infile )
 {
 	lineLen = 1024;
 	char name[256], line[lineLen];
-	PAIR_LINK * pair_links;
-	size_t pair_links_capacity=100000;
-	size_t pair_links_size=0;
+
 	const float pair_link_growth_rate=2;
 	pair_links=calloc(pair_links_capacity,sizeof(PAIR_LINK));
 	FILE * fp1;
@@ -4930,13 +4931,18 @@ void PE2LinksEXP ( char * infile )
 			//TODO print stats and compute distribution (save distribution to file)
 			sprintf ( name, "%s.peGrad%d.hist", infile,current_grad );
 			FILE * fhist=fopen(name,"w");
+			size_t maxc=0;
 			for (long i=1;i<100000;i++){
 				if (sizedist[i]>10) fprintf(fhist,"%ld, %ld\n",i-50000,sizedist[i]);
+				if (sizedist[i]>maxc){
+					pes[current_grad].insertS=i-50000;
+					maxc=sizedist[i];
+				}
 			}
 			fclose(fhist);
 
-			printf("PE Grad %d: %lld pairs, %lld on same contig (%lld correctly orientated), %lld on different contig\n",
-				   current_grad, (upper_bound-pre_bound)/2, same, same-wrong_direction, different);
+			printf("PE Grad %d: %lld pairs, %lld on same contig (%lld correctly orientated), %lld on different contig, insertS=%d\n",
+				   current_grad, (upper_bound-pre_bound)/2, same, same-wrong_direction, different,pes[current_grad].insertS);
 			same=wrong_direction=different=0;
 			pre_bound=upper_bound;
 			for (long i=1;i<100000;i++) sizedist[i]=0;
@@ -4993,18 +4999,18 @@ void PE2LinksEXP ( char * infile )
 				}
 				pair_links[pair_links_size].source=pre_contigno;
 				pair_links[pair_links_size].source_pos=pre_pos;
-				pair_links[pair_links_size].source_rv=0;
+				pair_links[pair_links_size].source_rv=1;
                 pair_links[pair_links_size].dest=getTwinCtg(contigno);
                 pair_links[pair_links_size].dest_pos=contig_array[contigno].length-pos;
-                pair_links[pair_links_size].dest_rv=1;
+                pair_links[pair_links_size].dest_rv=0;
                 pair_links[pair_links_size].peGrad=current_grad;
 				++pair_links_size;
-				pair_links[pair_links_size].source=getTwinCtg(contigno);
-				pair_links[pair_links_size].source_pos=contig_array[contigno].length-pos;
-				pair_links[pair_links_size].source_rv=1;
-                pair_links[pair_links_size].dest=pre_contigno;
-                pair_links[pair_links_size].dest_pos=pre_pos;
-                pair_links[pair_links_size].dest_rv=0;
+				pair_links[pair_links_size].source=contigno;
+				pair_links[pair_links_size].source_pos=pos;
+				pair_links[pair_links_size].source_rv=0;
+                pair_links[pair_links_size].dest=getTwinCtg(pre_contigno);
+                pair_links[pair_links_size].dest_pos=contig_array[pre_contigno].length-pre_pos;
+                pair_links[pair_links_size].dest_rv=1;
                 pair_links[pair_links_size].peGrad=current_grad;
 				++pair_links_size;
 			}
@@ -5023,7 +5029,37 @@ void PE2LinksEXP ( char * infile )
 
 	qsort(pair_links,pair_links_size, sizeof(PAIR_LINK),compare_pl);
 
-	printf( "Identifying possible links contig by contig\n");
+    printf( "Deduplicating all\n");
+    size_t total_links[gradsCounter], unique_links[gradsCounter];
+    for (char i=0; i<gradsCounter; ++i) total_links[i]=unique_links[i]=0;
+    size_t next_w=1;
+    ++total_links[pair_links[0].peGrad];
+    ++unique_links[pair_links[0].peGrad];
+
+	for (size_t i=1; i<pair_links_size; ++i){
+        ++total_links[pair_links[i].peGrad];
+        if (compare_pl(&pair_links[i],&pair_links[i-1])!=0 ){
+            ++unique_links[pair_links[i].peGrad];
+            pair_links[next_w++]=pair_links[i];
+
+        }
+    }
+    pair_links_size=next_w;
+
+	char linkdetail_name[255];
+	sprintf ( linkdetail_name, "%s.linkdetail", infile);
+	FILE * ldet=fopen(linkdetail_name,"w");
+	for (size_t i=0;i<next_w;++i)
+		fprintf (ldet, "%d:%d(%d) -> %d:%d(%d) - %d\n",
+				 pair_links[i].source,pair_links[i].source_pos,pair_links[i].source_rv,
+				 pair_links[i].dest,pair_links[i].dest_pos,pair_links[i].dest_rv, pair_links[i].peGrad);
+	fclose(ldet);
+
+    for (char i=0;i<gradsCounter;++i){
+        printf ("Grad %d, %ld / %ld (%.2f%%) unique links\n",i,unique_links[i],total_links[i],unique_links[i]*100.0/total_links[i]);
+    }
+
+/*	printf( "Identifying possible links contig by contig\n");
 	for (size_t i=0; i<pair_links_size;) {
 		if (contig_array[pair_links[i].source].length>1000)
 			printf ("\n\n--- Reads coming in to contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
@@ -5045,39 +5081,13 @@ void PE2LinksEXP ( char * infile )
 		}
 		i=j;
 	}
-
+*/
 
 	gzclose ( fp2 );
 	fclose ( linkF );
-	free (pair_links);
-	printf( "Sorry, exiting now as this is not finished!\n");
-
-	exit(0);
+	//free (pair_links);
 
 	return;
-	for (int i = 0; i < gradsCounter; i++ )
-	{
-		createCntMemManager();
-		createCntLookupTable();
-		newCntCounter = 0;
-
-		flag = connectByPE_grad_gz ( infile, i, line );
-
-		printf ( "%lld new connections.\n\n", newCntCounter / 2 );
-
-		if (flag > 0) outputLinks(linkF, pes[i].insertS);
-		flag = 0;
-		destroyConnectMem();
-		deleteCntLookupTable();
-		for (j = 1; j <= num_ctg; j++) { contig_array[j].downwardConnect = NULL; }
-	}
-
-	free ( ( void * ) line );
-
-	gzclose ( fp2 );
-
-	fclose ( linkF );
-	printf ( "All paired-end reads information loaded.\n" );
 }
 
 /*************************************************
@@ -5209,6 +5219,198 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 	printf ( "***************************\n\n" );
 	return counter;
 }
+
+/*************************************************
+Function:
+    Links2ScafEXP
+Description:
+    Constructs scaffolds based on links, experimental version
+Input:
+    1. infile:      prefix of graph
+Output:
+    None.
+Return:
+    None.
+*************************************************/
+void Links2ScafEXP ( char * infile )
+{
+/*    char name[256], *line;
+    FILE * fp;
+
+    int flag = 0, flag2;
+    boolean downS, nonLinear = 0, isPrevSmall = 0;
+*/
+
+    createCntMemManager();
+    createCntLookupTable();
+    solidArray = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
+    tempArray = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
+    scaf3 = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
+    scaf5 = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
+    gap3 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
+    gap5 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
+    printf ( "\n" );
+
+    printf( "Creating connections between contigs using window-based approach\n");
+	size_t connections_count=0;
+    //TODO
+    size_t run_start=0,current_ctg=pair_links[0].source,current_ctg_start=0;
+    size_t fw_dests[100];
+    size_t fw_count=0;
+    const size_t CONN_THRESHOLD=7;
+    //XXX: TODO: bug in the last element?
+	printf ( "Analising %d links\n",pair_links_size);
+    for (size_t i=0; i<pair_links_size;++i){
+        if (pair_links[i].source!=pair_links[run_start].source || pair_links[i].dest!=pair_links[run_start].dest) {
+            if (i-run_start>=CONN_THRESHOLD && fw_count<100) {
+                size_t j;
+                for (j=0;j<fw_count && fw_dests[j]!=pair_links[i-1].dest;++j);
+                if (j==fw_count){
+                    fw_dests[fw_count++]=pair_links[i-1].dest;
+					//printf (" run from %d to %d dest %d added for fw_connections\n",run_start,i-1,pair_links[i-1].dest);
+                }
+            }
+			//printf ("starting new run at %d\n",i);
+			run_start=i;
+        }
+        if (pair_links[i].source!=current_ctg){
+			//printf ("Evaluating connections for contig %d...", current_ctg);
+            for (size_t j=0;j<fw_count;++j){ //for each link
+                long long count=0,total_dist=0; //for the mean distancecomputing
+                for (size_t ii=current_ctg_start;ii<i;++ii) {
+                    if (pair_links[ii].dest == fw_dests[j]){
+                        ++count;
+						//printf ( "%lld - (%lld - %lld ) - %lld\n", (long long)pes[pair_links[ii].peGrad].insertS,
+						//		 (long long)contig_array[pair_links[ii].source].length,
+						//		 (long long)pair_links[ii].source_pos,
+						//		 (long long)pair_links[ii].dest_pos);
+                        total_dist+= (long long)pes[pair_links[ii].peGrad].insertS -
+								((long long)contig_array[pair_links[ii].source].length-(long long)pair_links[ii].source_pos) -
+								(long long)pair_links[ii].dest_pos;//TODO compute distance, for which we need a mode on the size DIST at least.
+						//printf (" computing dist: count=%ld, total=%ld, mean=%ld\n",count,total_dist,total_dist/count);
+                    }
+                }
+				if (total_dist/count>-5000 && total_dist/count<5000 ) {
+					//add link in both directions only if new
+					printf("Connecting %ld and %ld at distance %ld from %ld links\n", current_ctg, fw_dests[j],
+						   total_dist / count, count);
+					add1Connect(current_ctg, fw_dests[j], total_dist / count, count, 0);
+					add1Connect(getTwinCtg(fw_dests[j]), getTwinCtg(current_ctg), total_dist / count, count, 0);
+					++connections_count;
+				} else {
+					printf("NOT Connecting %ld and %ld at distance %ld from %ld links\n", current_ctg, fw_dests[j],
+						   total_dist / count, count);
+
+				}
+            }
+            current_ctg=pair_links[i].source;
+            current_ctg_start=i;
+			//printf (" %d valid connections, next contig is %d starting at pos %d\n",fw_count,current_ctg,current_ctg_start);
+			fw_count=0;
+        }
+    }
+	printf( "%d connections created\n", connections_count);
+	//exit(0);
+    printf( "Ordering and simplifying\n");
+	ordering ( 1, 0, 0);
+    /*
+    weakPE = 3;
+    int lib_n = 0, cutoff_sum = 0;
+    uint64_t previous_lib_end=0;
+    for ( i = 0; i < gradsCounter; i++ )
+    {
+        printf ( "Processing library #%d (rank %d): %d read pairs with insert size %d\n",
+                 i, pes[i].rank, (pes[i].PE_bound-previous_lib_end/2), pes[i].insertS );
+        if ( MinWeakCut > pes[i].pair_num_cut ) MinWeakCut = pes[i].pair_num_cut;
+        if ( pes[i].insertS < 1000 ) { //if there is small-pe distances, use the library's connection cutoff
+            isPrevSmall = 1;
+        }
+        else if ( pes[i].insertS >= 1000 && isPrevSmall ) { //if this is the first LMP library, run smallScaf()
+            smallScaf();
+            isPrevSmall = 0;
+        }
+
+        Insert_size = pes[i].insertS;
+        flag2 = inputLinks ( fp, pes[i].insertS, line ); //links in library
+
+        if ( flag2 ) //if there's any links in the library
+        {
+            lib_n++; //count of libraries in rank
+            cutoff_sum += pes[i].pair_num_cut; //total of cutoff to compute mean later
+        }
+        else printf ( "WARNING: library not adding any links\n" );
+
+        flag += flag2;
+
+        if ( !flag ) //if there is no links so far in the rank, continue
+        {
+            printf ( "WARNING: rank is empty after library processing\n" );
+            continue;
+        }
+
+        if ( i == gradsCounter - 1 || pes[i + 1].rank != pes[i].rank ) { //if this is the last library in the rank (i.e. do the damn scaffolding!)
+            flag = nonLinear = 0;
+
+
+
+            //always asks for at least 5 links from a LMP library (TODO: enable override)
+            //if ( pes[i].insertS > 1000 ) weakPE = 5;
+            //at least mean links for all libraries in the range (if there is a higly over-represented library, this will make the others unusable)
+            if ( lib_n > 0 )
+            {
+                weakPE = weakPE < cutoff_sum / lib_n ? cutoff_sum / lib_n : weakPE;
+                lib_n = cutoff_sum = 0;
+            }
+
+            printf ( "Cutoff of PE links to make a reliable connection: %d\n", weakPE );
+
+            //OverlapPercent is really hard-coded here.
+            OverlapPercent = 0.05;
+
+
+            if ( pes[i].insertS < 1000 ) { //scaffolding with PE
+                bySmall=1;
+                //TODO: replace this hardcoded insert size variation, which makes little sense!
+                ins_size_var=50; //was 30!
+                downS=0;
+            }
+            else{ //scaffolding with LMP
+                bySmall=0;
+                //TODO: replace this hardcoded insert size variation, which makes little sense!
+                ins_size_var = pes[i].insertS / 10; //was 50!
+                downS=1;
+                detectBreakScaff();
+            }
+
+            if ( i == gradsCounter - 1 )
+            { nonLinear = 1; }
+
+
+
+            ordering ( 1, downS, nonLinear );
+
+            //print stats
+            scaffold_count ( j, 100 );
+            j++;
+            printf ( "\n" );
+
+        }
+    }
+
+    recoverMask();
+    clearNewInsFlag();
+*/
+    freeDarray ( tempArray );
+    freeDarray ( solidArray );
+    freeDarray ( scaf3 );
+    freeDarray ( scaf5 );
+    freeDarray ( gap3 );
+    freeDarray ( gap5 );
+    printf ( "\nScaffold links constructed.\n" );
+
+	//printf( "Sorry, exiting now as this is not finished!\n");
+}
+
 
 /*************************************************
 Function:
