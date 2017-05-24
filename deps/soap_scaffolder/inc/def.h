@@ -147,6 +147,7 @@ typedef struct contig
 	CONNECT * downwardConnect;      // links to other contigs (linked list)
 	preARC * arcs;					// ??
 	STACK * closeReads;             // ??
+	size_t first_link_out;
 } CONTIG;
 
 typedef struct read_nearby

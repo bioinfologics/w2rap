@@ -5220,6 +5220,89 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 	return counter;
 }
 
+
+/*************************************************
+Function:
+    connection_prob
+Description:
+    Analyses the probability of a connection between 2 contigs
+Input:
+    1. Source contig #
+    2. Dest contig #
+Output:
+    3. Distance, if <0 and return >0, this is a valid overlap
+Return:
+    Score (probability) of a connection, form 0 (not connected) to 1000 (completely supported)
+*************************************************/
+//TODO: have a version of this that goes upstream to add info if needed from previous contigs
+int connection_prob(size_t source, size_t dest, long * dist){
+	size_t window_size=250;//TODO: what is a good number for this?
+	long total_distance=0;
+	long confirmed_links=0;
+	int max_conf=0;
+	for (int g=0;g<gradsCounter;++g) {
+		//size_t link_dest[1000];//position of the links
+		size_t link_pos[1000];
+		size_t confirming_neighbours[1000];
+		size_t contradicting_neighbours[1000];
+		size_t link_destpos[1000];
+		size_t lc = 0;
+		for (size_t ci = contig_array[source].first_link_out; pair_links[ci].source == source; ++ci) {
+			if (pair_links[ci].dest==dest && pair_links[ci].peGrad==g) {
+				//add link
+				link_pos[lc] = pair_links[ci].source_pos;
+				link_destpos[lc] = pair_links[ci].dest_pos;
+				confirming_neighbours[lc] = 0;
+				contradicting_neighbours[lc] = 0;
+				//go back up to window_size, counting contradicting and confirming neighbours
+				for (long n = ci - 1; n >= 0 && pair_links[n].source == source &&
+									  pair_links[n].source_pos >= link_pos[lc] - window_size; --n) {
+					if (pair_links[n].peGrad == g) {
+						if (pair_links[n].dest == dest) ++confirming_neighbours[lc];
+						else ++contradicting_neighbours[lc];
+					}
+				}
+				//go forward up to window_size, counting contradicting and confirming neighbours
+				for (long n = ci + 1; n >= pair_links_size && pair_links[n].source == source &&
+									  pair_links[n].source_pos <= link_pos[lc] + window_size; ++n) {
+					if (pair_links[n].peGrad == g) {
+						if (pair_links[n].dest == dest) ++confirming_neighbours[lc];
+						else ++contradicting_neighbours[lc];
+					}
+				}
+				int conf;
+				//TODO: this is a stupid way to count, but as of now if window value >40%, go for it
+				if (confirming_neighbours[lc] > 0) {
+					conf = confirming_neighbours[lc] * 100 /
+						   (confirming_neighbours[lc] + contradicting_neighbours[lc]);
+
+					if (lc < 1000 && conf >= 25) {
+						++confirmed_links;
+						total_distance +=
+								pes[g].insertS - (contig_array[source].length - link_pos[lc]) - link_destpos[lc];
+						++lc;
+						if (conf > max_conf)max_conf = conf;
+					}
+				}
+			}
+		}
+		//TODO: as of now, 2 confirmed links call it a connection
+		if (confirmed_links>1 && -1000<total_distance/confirmed_links && 5000>total_distance/confirmed_links) {
+			*dist=total_distance/confirmed_links;
+			return max_conf;
+		}
+		//find out first and last connection between source and dest for each library
+
+		//compute proposed distance for library
+		//compute expected connection mapping locations for library
+		//do window-based linkage across the mapping location
+	}
+	//compose
+
+	//validate overlap
+	return 0;
+}
+
 /*************************************************
 Function:
     Links2ScafEXP
@@ -5253,11 +5336,52 @@ void Links2ScafEXP ( char * infile )
 
     printf( "Creating connections between contigs using window-based approach\n");
 	size_t connections_count=0;
-    //TODO
-    size_t run_start=0,current_ctg=pair_links[0].source,current_ctg_start=0;
+
+	//TODO fill in first-connection of a contig struct
+	contig_array[pair_links[0].source].first_link_out=0;
+	for (size_t i=1; i<pair_links_size;++i) {
+		if (pair_links[i].source!=pair_links[i-1].source) 	contig_array[pair_links[i].source].first_link_out=i;
+	}
+
+	//TODO for each contig, evaluate connections with each proposed linked contig in a 1-to-1 basis
+
+	uint8_t * dests = malloc(sizeof(uint8_t)*num_ctg);
+	for (size_t i=0; i<num_ctg;++i) {
+		//get all links destinations
+		bzero(dests,sizeof(uint8_t)*num_ctg);
+		for (size_t ci = contig_array[i].first_link_out; pair_links[ci].source == i; ++ci){
+			if (dests[pair_links[ci].dest]!=2) {
+				if (dests[pair_links[ci].dest] == 1) {
+					int d1,d2;
+					int p1=connection_prob(i,pair_links[ci].dest,&d1);
+					int p2=connection_prob(getTwinCtg(pair_links[ci].dest),getTwinCtg(i),&d2);
+					if (p1>0 && p2>0 || (p1>60 || p2>60) ){
+						add1Connect(i, pair_links[ci].dest, (d1+d2)/2, p1, 0);
+						add1Connect(getTwinCtg(pair_links[ci].dest), getTwinCtg(i), (d1+d2)/2, p2, 0);
+						++connections_count;
+					}
+					dests[pair_links[ci].dest] = 2;
+				} else dests[pair_links[ci].dest] = 1;
+			}
+		}
+
+		//sort all destinations
+
+		//if a destination appears twice, evaluate possible connection.
+
+
+	}
+	free(dests);
+	//TODO expand bridged short-repeats with trivial frontiers (i.e. those that would be masked and re-introduced)
+
+	//TODO, expand repetitions, migrating consistent links by exploring downstream jumps too
+
+
+	//TODO
+    /*size_t run_start=0,current_ctg=pair_links[0].source,current_ctg_start=0;
     size_t fw_dests[100];
     size_t fw_count=0;
-    const size_t CONN_THRESHOLD=7;
+    const size_t CONN_THRESHOLD=5;
     //XXX: TODO: bug in the last element?
 	printf ( "Analising %d links\n",pair_links_size);
     for (size_t i=0; i<pair_links_size;++i){
@@ -5290,7 +5414,7 @@ void Links2ScafEXP ( char * infile )
 						//printf (" computing dist: count=%ld, total=%ld, mean=%ld\n",count,total_dist,total_dist/count);
                     }
                 }
-				if (total_dist/count>-5000 && total_dist/count<5000 ) {
+				if (total_dist/count>-1000 && total_dist/count<5000 ) {
 					//add link in both directions only if new
 					printf("Connecting %ld and %ld at distance %ld from %ld links\n", current_ctg, fw_dests[j],
 						   total_dist / count, count);
@@ -5308,12 +5432,53 @@ void Links2ScafEXP ( char * infile )
 			//printf (" %d valid connections, next contig is %d starting at pos %d\n",fw_count,current_ctg,current_ctg_start);
 			fw_count=0;
         }
-    }
+    }*/
 	printf( "%d connections created\n", connections_count);
 	//exit(0);
     printf( "Ordering and simplifying\n");
-	ordering ( 1, 0, 0);
-    /*
+	//Insert_size=pes[gradsCounter].insertS;
+	//ordering ( 1, 0, 0);
+
+	printf ("\n\n***********************************\nEXPERIMENTAL scaffolding round starting\n\n");
+	//print_connection_status();
+
+	//if ( downS ) downSlide();
+	//if ( deWeak ) deleteWeakCnt ( weakPE );
+
+	simplifyCnt();
+	//printf ("\nAfter Transition removal:\n\n");
+	//print_connection_status();
+	downSlide();
+	simplifyCnt();
+
+
+	maskRepeat();
+	simplifyCnt();
+	general_linearization ( 0 );
+
+	downSlide();
+
+	simplifyCnt();
+	general_linearization ( 0 );
+
+	maskPuzzle ( 2, 0 );
+
+	freezing();
+	/*
+	printf ("\nAfter repeat disconnection:\n\n");
+	print_connection_status();
+
+	if ( nonlinear )
+	{
+		printf ( "Non-strict linearization.\n" );
+
+	}
+
+	maskPuzzle ( 2, 0 );//XXX:this masks anything with more than 2 connections going forward! // should this be = to library number
+	freezing();
+	print_connection_status();*/
+
+	/*
     weakPE = 3;
     int lib_n = 0, cutoff_sum = 0;
     uint64_t previous_lib_end=0;
@@ -7619,10 +7784,10 @@ static void general_linearization ( boolean strict )
 		subCounter++;
 		qsort ( &ctg4heapArray[1], nodeCounter, sizeof ( CTGinHEAP ), cmp_ctg );
 
-		if ( Insert_size < 1000 && cvg4SNP > 0.001 )
+		/*if ( Insert_size < 1000 && cvg4SNP > 0.001 )
 		{
 			SNPCtgCounter += removeBubbleCtg();
-		}
+		}*/
 
 		if ( !checkEligible() )
 		{
