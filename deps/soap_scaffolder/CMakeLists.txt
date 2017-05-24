@@ -17,7 +17,7 @@ ENDIF ()
 project (soap_scaffolder)
 
 ## Compiler flags
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fomit-frame-pointer -pthread -DMER127")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm -fomit-frame-pointer -pthread -DMER127")
 SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
 SET(CMAKE_C_FLAGS_RELEASE "-O3 -w")
 

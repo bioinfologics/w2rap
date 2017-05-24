@@ -7,6 +7,7 @@
 #include "fibHeap.h"
 #include "darray.h"
 #include "zlib.h"
+#include "stdint.h"
 
 #define CNBLOCKSIZE 10000
 #define MAXCinBetween 200
