@@ -215,3 +215,5 @@ extern unsigned int maxArcWeight ( preARC * arc );
 extern __uint128_t Kmer2int128 ( Kmer seq );
 extern void printSeq ( FILE * fo, char * seq, int len );
 
+extern int find_perfect_overlap(size_t source, size_t dest, int min, int max);
+

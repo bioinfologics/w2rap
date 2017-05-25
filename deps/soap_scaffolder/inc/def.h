@@ -143,11 +143,12 @@ typedef struct contig
 	unsigned char multi: 1;         // ??
 	unsigned char inSubGraph: 1;    // ??
 	unsigned char bubbleInScaff: 1; // ??
-	char * seq;                     // what it says on the tin
+	char * seq;                     // what it says on the tin (but uses tightString)
 	CONNECT * downwardConnect;      // links to other contigs (linked list)
 	preARC * arcs;					// ??
 	STACK * closeReads;             // ??
 	size_t first_link_out;
+	char * seqstr;					// seq in ascii (uppercase), for simplicity, lenght+1 allocated, with \0.
 } CONTIG;
 
 typedef struct read_nearby

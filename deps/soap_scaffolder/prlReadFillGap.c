@@ -343,14 +343,29 @@ static void outputScafSeq ( FILE * fo, FILE * foc, int index, STACK * ctgsStack,
 		ctg = actg->ctgID;
 		bal_ctg = getTwinCtg ( ctg );
 		length = contig_array[ctg].length + overlaplen;
-
+		int validated_ovl=0;
 		if ( prevCtg && actg->scaftig_start )
 		{
 			gapN = actg->start - prevCtg->start - contig_array[prevCtg->ctgID].length;
-			if (gapN<0) printf("WARNING: re-adjusting gap of %d bp to 1\n",gapN);
-			gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
-			outputNs ( fo,  gapN, &column );
-			ctg_start_pos += gapN;
+			if (gapN<-500) {
+				printf("WARNING: re-adjusting gap of %d bp to 1\n",gapN);
+				gapN=1;
+			}
+			if (gapN<0) {
+				validated_ovl=find_perfect_overlap(prevCtg->ctgID,actg->ctgID,10,500);
+				if (validated_ovl==0){
+					printf("WARNING: re-adjusting gap of %d bp to 1\n",gapN);
+					gapN=1;
+				} else {
+					printf("Gap of %d bp validated as %dbp\n",gapN,validated_ovl);
+					gapN=validated_ovl;
+				}
+			}
+			//gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
+			if (gapN>0) {
+				outputNs(fo, gapN, &column);
+				ctg_start_pos += gapN;
+			}
 			//outputGapInfo(prevCtg->ctgID,ctg);
 			Ncounter++;
 		}
@@ -362,6 +377,7 @@ static void outputScafSeq ( FILE * fo, FILE * foc, int index, STACK * ctgsStack,
 		else
 		{
 			start = actg->cutHead;
+			if (validated_ovl<0) start+=validated_ovl;
 		}
 
 		outputlen = length - start - actg->cutTail;

@@ -5221,6 +5221,16 @@ static int inputLinks ( FILE * fp, int insertS, char * line )
 	return counter;
 }
 
+int find_perfect_overlap(size_t source, size_t dest, int min, int max){
+
+	for (long ss=max;ss>=min;--ss){
+		if (ss>contig_array[source].length || ss>contig_array[dest].length || getTwinCtg(source)==source || getTwinCtg(dest)==dest) continue;
+		if (memcmp(contig_array[source].seqstr+contig_array[source].length-ss,contig_array[dest].seqstr,ss)==0){
+			return ss;
+		}
+	}
+	return 0;
+}
 
 /*************************************************
 Function:
@@ -5243,12 +5253,12 @@ int connection_prob(size_t source, size_t dest, long * dist){
 	int max_conf=0;
 	for (int g=0;g<gradsCounter;++g) {
 		//size_t link_dest[1000];//position of the links
-		size_t link_pos[1000];
-		size_t confirming_neighbours[1000];
-		size_t contradicting_neighbours[1000];
-		size_t link_destpos[1000];
+		size_t link_pos[10000];
+		size_t confirming_neighbours[10000];
+		size_t contradicting_neighbours[10000];
+		size_t link_destpos[10000];
 		size_t lc = 0;
-		for (size_t ci = contig_array[source].first_link_out; pair_links[ci].source == source; ++ci) {
+		for (size_t ci = contig_array[source].first_link_out; pair_links[ci].source == source && lc<10000; ++ci) {
 			if (pair_links[ci].dest==dest && pair_links[ci].peGrad==g) {
 				//add link
 				link_pos[lc] = pair_links[ci].source_pos;
@@ -5271,25 +5281,35 @@ int connection_prob(size_t source, size_t dest, long * dist){
 						else ++contradicting_neighbours[lc];
 					}
 				}
+
 				int conf;
 				//TODO: this is a stupid way to count, but as of now if window value >40%, go for it
 				if (confirming_neighbours[lc] > 0) {
 					conf = confirming_neighbours[lc] * 100 /
 						   (confirming_neighbours[lc] + contradicting_neighbours[lc]);
 
-					if (lc < 1000 && conf >= 25) {
+					if (conf >= 25) {
 						++confirmed_links;
 						total_distance +=
 								pes[g].insertS - (contig_array[source].length - link_pos[lc]) - link_destpos[lc];
 						++lc;
-						if (conf > max_conf)max_conf = conf;
+						if (conf > max_conf) max_conf = conf;
 					}
 				}
 			}
 		}
 		//TODO: as of now, 2 confirmed links call it a connection
-		if (confirmed_links>1 && -1000<total_distance/confirmed_links && 5000>total_distance/confirmed_links) {
+		if (confirmed_links>1 && confirmed_links<10000 && -1000<total_distance/confirmed_links && 10000>total_distance/confirmed_links) {
 			*dist=total_distance/confirmed_links;
+			if (*dist<500){
+				int ovl=find_perfect_overlap(source,dest,10,500);
+				if (ovl>0){
+					printf ("Perfect overlap validated between %ld and %ld, %dbp\n",source,dest,ovl);
+					*dist=-ovl;
+				} else if (*dist<-500){
+					return 0;
+				} else *dist=1;
+			}
 			return max_conf;
 		}
 		//find out first and last connection between source and dest for each library
@@ -5353,7 +5373,7 @@ void Links2ScafEXP ( char * infile )
 		for (size_t ci = contig_array[i].first_link_out; pair_links[ci].source == i; ++ci){
 			if (dests[pair_links[ci].dest]!=2) {
 				if (dests[pair_links[ci].dest] == 1) {
-					int d1,d2;
+					long d1,d2;
 					int p1=connection_prob(i,pair_links[ci].dest,&d1);
 					int p2=connection_prob(getTwinCtg(pair_links[ci].dest),getTwinCtg(i),&d2);
 					if (p1>0 && p2>0 || (p1>60 || p2>60) ){

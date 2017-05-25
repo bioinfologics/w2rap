@@ -232,6 +232,8 @@ void loadUpdatedEdges ( char * graphfile )
 			contig_array[newIndex].bubbleInScaff = 0;
 			contig_array[newIndex].cvg = cvg / 10;
 
+			contig_array[newIndex].first_link_out=0;
+
 			if ( cvg && length > 100 )
 			{
 				counter += length - cut_len;
@@ -418,12 +420,16 @@ static unsigned int loadArcs ( char * graphfile )
 void loadContig ( char * graphfile )
 {
 	char c, name[256], line[1024], *tightSeq = NULL;
+
 	FILE * fp;
 	int n = 0, length, index = -1, edgeno;
 	unsigned int i;
 	unsigned int newIndex;
 	sprintf ( name, "%s.contig", graphfile );
 	fp = ckopen ( name, "r" );
+	char * current_sequence;
+	size_t csc=10000000,css=0;
+	current_sequence=malloc(csc* sizeof(char));
 
 	while ( fgets ( line, sizeof ( line ), fp ) != NULL )
 	{
@@ -433,6 +439,35 @@ void loadContig ( char * graphfile )
 			{
 				newIndex = index_array[edgeno];
 				contig_array[newIndex].seq = tightSeq;
+				contig_array[newIndex].seqstr=malloc(css+1);
+				memcpy(contig_array[newIndex].seqstr,current_sequence,css);
+				contig_array[newIndex].seqstr[css]='\0';
+				//put the sequence on the reverse contig too:
+				size_t ti=getTwinCtg(newIndex);
+				if (ti!=newIndex) {
+					contig_array[ti].seqstr=malloc(css+1);
+					for (size_t i=css-1,j=0;j<css;--i,++j) {
+						switch (current_sequence[i]){
+							case 'A':
+								contig_array[ti].seqstr[j]='T';
+								break;
+							case 'C':
+								contig_array[ti].seqstr[j]='G';
+								break;
+							case 'G':
+								contig_array[ti].seqstr[j]='C';
+								break;
+							case 'T':
+								contig_array[ti].seqstr[j]='A';
+								break;
+							default:
+								contig_array[ti].seqstr[j]=current_sequence[i];
+						}
+					}
+					contig_array[ti].seqstr[css]='\0';
+
+				}
+				css=0;
 			}
 
 			n = 0;
@@ -449,11 +484,17 @@ void loadContig ( char * graphfile )
 				{
 					c = base2int ( line[i] - 'a' + 'A' );
 					writeChar2tightString ( c, tightSeq, n++ );
+					current_sequence[css++]=line[i] - 'a' + 'A';
 				}
 				else if ( line[i] >= 'A' && line[i] <= 'Z' )
 				{
 					c = base2int ( line[i] );
 					writeChar2tightString ( c, tightSeq, n++ );
+					current_sequence[css++]=line[i];
+				}
+				if (css>=csc-2) {
+					csc*=2;
+					current_sequence=realloc(current_sequence,csc* sizeof(char));
 				}
 			}
 		}
@@ -463,8 +504,36 @@ void loadContig ( char * graphfile )
 	{
 		newIndex = index_array[edgeno];
 		contig_array[newIndex].seq = tightSeq;
-	}
+		contig_array[newIndex].seqstr=malloc(css+1);
+		memcpy(contig_array[newIndex].seqstr,current_sequence,css);
+		contig_array[newIndex].seqstr[css]='\0';
+		//put the sequence on the reverse contig too:
+		size_t ti=getTwinCtg(newIndex);
+		if (ti!=newIndex) {
+			contig_array[ti].seqstr=malloc(css+1);
+			for (size_t i=css-1,j=0;j<css;--i,++j) {
+				switch (current_sequence[i]){
+					case 'A':
+						contig_array[ti].seqstr[j]='T';
+						break;
+					case 'C':
+						contig_array[ti].seqstr[j]='G';
+						break;
+					case 'G':
+						contig_array[ti].seqstr[j]='C';
+						break;
+					case 'T':
+						contig_array[ti].seqstr[j]='A';
+						break;
+					default:
+						contig_array[ti].seqstr[j]=current_sequence[i];
+				}
+			}
+			contig_array[ti].seqstr[css]='\0';
 
+		}
+	}
+	free(current_sequence);
 	printf ( "%d contig(s) loaded.\n", index + 1 );
 	fclose ( fp );
 	//printf("the %dth contig with index 107\n",index);
