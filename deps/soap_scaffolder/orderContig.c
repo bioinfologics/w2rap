@@ -4041,7 +4041,7 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 	int tempCounter;
 	short gap = 0;
 	long long sum = 0, N50, N90;
-	FILE * fp, *fo = NULL;
+	FILE *fo = NULL;
 	char name[256];
 	CONNECT * cnt, *prevCNT, *nextCnt, *dh_cnt;
 	boolean excep, weak;
@@ -4068,8 +4068,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 		{ index_array[i] = length_array[i]; }
 
 	orig2new = 0;
-	sprintf ( name, "%s.scaf", outfile );
-	fp = ckopen ( name, "w" );
 	sprintf ( name, "%s.scaf_gap", outfile );
 	fo = ckopen ( name, "w" );
 	scaf3 = ( DARRAY * ) createDarray ( 1000, sizeof ( unsigned int ) );
@@ -4281,7 +4279,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 			continue;
 		}
 
-		fprintf ( fp, ">scaffold%d %d %d %d\n", count, score_count, len, num3 + num5, mask_num );
 		fprintf ( fo, ">scaffold%d %d %d %d\n", count, score_count, len, num3 + num5, mask_num );
 		len = prev_ctg = 0;
 		tempCounter = 0, score_count = 0;
@@ -4344,23 +4341,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 				int tmpgap = contig_array[* ( unsigned int * ) darrayGet ( scaf3, j )].length + * ( int * ) darrayGet ( gap3, j );
 				gap += tmpgap > 0 ? tmpgap : 0;
 				continue;
-			}
-
-			if ( !isLargerThanTwin ( * ( unsigned int * ) darrayGet ( scaf3, j ) ) )
-			{
-				fprintf ( fp, "%-10d %-10d +   %d  %d  %d"
-				          , index_array[* ( unsigned int * ) darrayGet ( scaf3, j )], len,
-				          contig_array[* ( unsigned int * ) darrayGet ( scaf3, j )].length + overlaplen,
-				          now_cnt_weigth, curr_ctg_score );
-				weak = printCnts ( fp, * ( unsigned int * ) darrayGet ( scaf3, j ) );
-			}
-			else
-			{
-				fprintf ( fp, "%-10d %-10d -   %d  %d  %d"
-				          , index_array[getTwinCtg ( * ( unsigned int * ) darrayGet ( scaf3, j ) )], len
-				          , contig_array[* ( unsigned int * ) darrayGet ( scaf3, j )].length + overlaplen,
-				          now_cnt_weigth, curr_ctg_score );
-				weak = printCnts ( fp, * ( unsigned int * ) darrayGet ( scaf3, j ) );
 			}
 
 			if ( prev_ctg )
@@ -4435,23 +4415,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 				continue;
 			}
 
-			if ( !isLargerThanTwin ( * ( unsigned int * ) darrayGet ( scaf5, j ) ) )
-			{
-				fprintf ( fp, "%-10d %-10d +   %d  %d  %d"
-				          , index_array[* ( unsigned int * ) darrayGet ( scaf5, j )], len
-				          , contig_array[* ( unsigned int * ) darrayGet ( scaf5, j )].length + overlaplen,
-				          now_cnt_weigth, curr_ctg_score );
-				weak = printCnts ( fp, * ( unsigned int * ) darrayGet ( scaf5, j ) );
-			}
-			else
-			{
-				fprintf ( fp, "%-10d %-10d -   %d  %d  %d"
-				          , index_array[getTwinCtg ( * ( unsigned int * ) darrayGet ( scaf5, j ) )], len
-				          , contig_array[* ( unsigned int * ) darrayGet ( scaf5, j )].length + overlaplen,
-				          now_cnt_weigth, curr_ctg_score );
-				weak = printCnts ( fp, * ( unsigned int * ) darrayGet ( scaf5, j ) );
-			}
-
 			if ( prev_ctg )
 			{
 				num_route = num_trace = 0;
@@ -4484,7 +4447,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 	freeDarray ( gap3 );
 	freeDarray ( gap5 );
 	freeDarray ( tempArray );
-	fclose ( fp );
 	fclose ( fo );
 	printf ( "\nThe final rank\n" );
 
