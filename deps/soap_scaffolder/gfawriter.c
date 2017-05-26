@@ -16,7 +16,7 @@ void dump_gfa(const char * filename){
     FILE * ndoutgfa=fopen(ndfn,"w");
     FILE * actoutgfa=fopen(actfn,"w");
     //dump contigs as sequences (only lenghts)
-    for (uint64_t i=1; i<num_ctg; ++i){
+    for (uint64_t i=1; i<=num_ctg; ++i){
         if (contig_array[i].bal_edge==2){
             fprintf(alloutgfa,"S\t%llu\t*\tLN:i:%u\n",i,contig_array[i].length);//TODO add kmer length
             fprintf(ndoutgfa,"S\t%llu\t*\tLN:i:%u\n",i,contig_array[i].length);//TODO add kmer length
@@ -27,7 +27,7 @@ void dump_gfa(const char * filename){
         }
     }
     //Now dump links
-    for (uint64_t i=1; i<num_ctg; ++i){
+    for (uint64_t i=1; i<=num_ctg; ++i){
         for (CONNECT * conn=contig_array[i].downwardConnect; conn ; conn=conn->next){
             int c1=i,c2=conn->contigID;
             unsigned char c1d='+',c2d='+';
