@@ -55,6 +55,8 @@ void PE2LinksEXP ( char * infile )
     long long wrong_direction=0;
     long long same=0;
     long long different=0;
+    long long single_first=0;
+    long long single_second=0;
     long long pre_bound=0;
     //TODO (in progress): load all reads, computing the size distribution as it goes
     char * r=gzgets ( fp, line, lineLen ); //discard first line
@@ -67,7 +69,7 @@ void PE2LinksEXP ( char * infile )
             FILE * fhist=fopen(name,"w");
             size_t maxc=0;
             for (long i=1;i<100000;i++){
-                if (sizedist[i]>10) fprintf(fhist,"%ld, %ld\n",i-50000,sizedist[i]);
+                if (sizedist[i]>10) fprintf(fhist,"%ld, %lld\n",i-50000,sizedist[i]);
                 if (sizedist[i]>maxc){
                     pes[current_grad].insertS=i-50000;
                     maxc=sizedist[i];
@@ -75,10 +77,13 @@ void PE2LinksEXP ( char * infile )
             }
             fclose(fhist);
 
-            printf("\nPE Grad %d: %10lld pairs, insert size %d bp \n",current_grad, (upper_bound-pre_bound)/2, pes[current_grad].insertS);
+            printf("PE Grad %d: %10lld pairs, insert size %d bp \n",current_grad, (upper_bound-pre_bound)/2, pes[current_grad].insertS);
             printf("           %10lld (%6.2f%% ) correct orientation within contig\n",same-wrong_direction,(same-wrong_direction)*200.0/(upper_bound-pre_bound));
             printf("           %10lld (%6.2f%% ) incorrect orientation within contig\n",wrong_direction,wrong_direction*200.0/(upper_bound-pre_bound));
-            printf("           %10lld (%6.2f%% ) across contigs\n\n",different,different*200.0/(upper_bound-pre_bound));
+            printf("           %10lld (%6.2f%% ) across contigs\n",different,different*200.0/(upper_bound-pre_bound));
+            printf("           %10lld (%6.2f%% ) single end mapped (%lld first, %lld second)\n",single_first+single_second,(single_first+single_second)*200.0/(upper_bound-pre_bound),single_first,single_second);
+            printf("           %10lld (%6.2f%% ) fully unmapped\n\n",((upper_bound-pre_bound)/2-same-different-single_first-single_second),((upper_bound-pre_bound)/2-same-different-single_first-single_second)*200.0/(upper_bound-pre_bound));
+
             same=wrong_direction=different=0;
             pre_bound=upper_bound;
             for (long i=1;i<100000;i++) sizedist[i]=0;
@@ -94,27 +99,14 @@ void PE2LinksEXP ( char * infile )
             pre_readno=readno;
             pre_contigno=contigno;
             pre_pos=pos;
-            //pre_dir=dir;
-
+            ++single_first;
         }
         else if ( pre_readno == readno - 1 ){
-            //some consistency here: everything must map + on the first, - on the second (so all conections are forward)
-            //This is not needed as the mapper takes cares of inverting, so all reads do point forward
-            /*if (pre_dir=='-') {
-                pre_contigno=getTwinCtg(pre_contigno);
-                pre_pos=contig_array[pre_contigno].length-pre_pos;
-                pre_dir='+';
-            }
-            if (dir=='+') {
-                contigno=getTwinCtg(contigno);
-                pos=contig_array[pre_contigno].length-pos;
-                dir='-';
-            }*/
+            --single_first;
             if (contigno==pre_contigno) {
                 same++;
                 wrong_direction++;
             }
-                //same contig? contig is long enough? include in size distribution
             else if (contigno==getTwinCtg(pre_contigno)){
                 same++;
                 long long s=contig_array[pre_contigno].length-pos-pre_pos+50000;
@@ -122,7 +114,6 @@ void PE2LinksEXP ( char * infile )
                 s=(s<100000? s: 100000);
                 ++sizedist[s];
             }
-                //different contig, insert on pair_links (twice, once per contig), use canonical contigs and adjust orientations
             else {
                 different++;
                 //insertion with block-based growth
@@ -144,7 +135,7 @@ void PE2LinksEXP ( char * infile )
                 pair_links[pair_links_size].peGrad=current_grad;
                 ++pair_links_size;
             }
-        }
+        } else ++single_second;
 
     }
 
@@ -183,6 +174,18 @@ void PE2LinksEXP ( char * infile )
     gzclose ( fp2 );
     fclose ( linkF );
 
+    //TODO fill in first-connection of a contig struct
+    for (size_t i=1;i<=num_ctg;++i) contig_array[i].first_link_out=0;
+    contig_array[pair_links[0].source].first_link_out=0;
+    size_t linked_ctgs=1;
+    for (size_t i=1; i<pair_links_size;++i) {
+        if (pair_links[i].source!=pair_links[i-1].source){
+            ++linked_ctgs;
+            contig_array[pair_links[i].source].first_link_out=i;
+        }
+    }
+    printf ("Grad %lld / %lld contigs have links\n",linked_ctgs,num_ctg);
+
     return;
 }
 
@@ -197,30 +200,84 @@ int find_perfect_overlap(size_t source, size_t dest, int min, int max){
     return 0;
 }
 
+int proposed_distance(size_t linkid){
+    return pes[pair_links[linkid].peGrad].insertS
+           - (contig_array[pair_links[linkid].source].length-pair_links[linkid].source_pos)
+           - pair_links[linkid].dest_pos;
+}
+
+int min_distance(size_t linkid){
+    return pes[pair_links[linkid].peGrad].insertS * 7 / 10
+           - (contig_array[pair_links[linkid].source].length-pair_links[linkid].source_pos)
+           - pair_links[linkid].dest_pos;
+}
+
+int max_distance(size_t linkid){
+    return pes[pair_links[linkid].peGrad].insertS * 13 / 10
+           - (contig_array[pair_links[linkid].source].length-pair_links[linkid].source_pos)
+           - pair_links[linkid].dest_pos;
+}
+
 /*************************************************
 Function:
     find_best_distance
 Description:
-    Analyses the probability of a connection between 2 contigs
+    Finds the distance that best satisfies all links between two contigs
 Input:
     1. Source contig #
     2. Dest contig #
 Output:
-    3. Distance, if <0 and return >0, this is a valid overlap
+    3. Distance, if <0 this is a validated overlap, non-validated overlaps will produce dist=1
 Return:
-    Score (probability) of a connection, form 0 (not connected) to 1000 (completely supported)
+    % of links with their distances satisfied with +/- 20%
 *************************************************/
 //TODO: have a version of this that goes upstream to add info if needed from previous contigs
-boolean find_best_distance(size_t source, size_t dest, long * dist){
+uint8_t find_best_distance(size_t source, size_t dest, long * dist) {
+    unsigned satisfied[100001]; //how many satisfied links at a distances between -50K + 50K
+    unsigned proposed[10001]; //how many proposed links at a distances between -50K + 50K
+
+    size_t bs = 0, bs_start = 0, bs_end = 0;
+
+    for (int i = 0; i <= 100000; ++i) satisfied[i] = proposed[i] = 0;
+    size_t lc = 0;
+
     //create an array of all satisfaction intervals (ie. dist -20% insert, dist+20%insert)
-    //sort array
+    for (size_t ci = contig_array[source].first_link_out; pair_links[ci].source == source; ++ci) {
+        if (pair_links[ci].dest == dest) {
+            ++lc;
+            int mind = min_distance(ci) + 50000;
+            int maxd = max_distance(ci) + 50000;
+            if (mind < 0 || maxd > 100000) continue;
+            for (int d = mind; d <= maxd; ++d) ++satisfied[d];
+            ++proposed[(mind+maxd)/2];
+            //printf("min=%lld max=%lld proposed=%lld\n",mind,maxd,(mind+maxd)/2);
+        }
+    }
+    if (lc==0) return 0;
+    //find the interval of maximum satisfaction
+    for (int i = 0; i <= 100000; ++i) {
+        if (satisfied[i] > bs) {
+            bs = satisfied[i];
+            bs_start = i;
+        }
+        if (satisfied[i] == bs) bs_end = i;
+    }
 
-
-    //count for every possible distance what the satisfaction % is.
-
-    //take the distance that satisfies the most links, compute the mean of all satisfied links
+    //compute the mean of all satisfied links
+    long long total_d = 0;
+    long long sl = 0;
+    for (size_t i = bs_start; i <= bs_end; ++i) {
+        total_d += proposed[i] * (i - 50000);
+        sl += proposed[i];
+    }
+    //printf("bs=%lld bs_start=%lld bs_end=%lld totald=%lld sl=%lld\n",bs, bs_start,bs_end, total_d,sl);
+    if (sl>0) {
+        *dist = total_d / sl;
+    } else *dist=((long long) (bs_start+bs_end))/2-50000;
+    //printf("%lld->%lld Distances between %lld and %lld satisfy %lld / %lld links, best distance is %ld\n",
+    //source,dest, bs_start-50000, bs_end-50000, bs, lc, *dist);
+    return (uint8_t) (bs*100/lc);
 }
-
 
 
 /*************************************************
@@ -318,7 +375,7 @@ int connection_prob(size_t source, size_t dest, long * dist){
 }
 
 size_t create_all_connections(){
-    printf( "Creating all direct connections between contigs:\n");
+    printf( "Creating all direct connections between %d contigs:\n", num_ctg);
     size_t connections_count=0;
     //TODO for each contig, evaluate connections with each proposed linked contig in a 1-to-1 basis
     uint8_t * dests = malloc(sizeof(uint8_t)*(num_ctg+1));
@@ -331,10 +388,10 @@ size_t create_all_connections(){
                     long d1,d2;
                     int p1=connection_prob(i,pair_links[ci].dest,&d1);
                     int p2=connection_prob(getTwinCtg(pair_links[ci].dest),getTwinCtg(i),&d2);
-                    if ( ( p1>60 || p2>60 ) && d1-d2<2000 && d2-d1<2000 ){
-                        int dm=(d1+d2)/2;
-                        if (1/*find_best_distance(i,pair_links[ci].dest,&dm)*/) {
-                            if (dm < -10000 || dm > 10000) {
+                    if ( ( p1>40 || p2>40 ) ){//&& d1-d2<2000 && d2-d1<2000 ){
+                        int dm;
+                        if (find_best_distance(i,pair_links[ci].dest,&dm)>75) {
+                            if (dm < -1000 || dm > 10000) {
                                 printf("Error on d1=%ld (p1=%d) d2=%ld (p2=%d) dm=%d for connection between %lld and %lld\n",
                                        d1, p1, d2, p2, dm, i, pair_links[ci].dest);
                             }
@@ -355,6 +412,6 @@ size_t create_all_connections(){
 
     }
     free(dests);
-    printf( "%d connections created\n", connections_count);
+    printf( "%ld connections created\n", connections_count);
     return connections_count;
 }

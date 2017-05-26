@@ -41,7 +41,10 @@ static size_t pair_links_size=0;
 size_t create_all_connections();
 
 int connection_prob(size_t source, size_t dest, long * dist);
-boolean find_best_distance(size_t source, size_t dest, long * dist);
+uint8_t find_best_distance(size_t source, size_t dest, long * dist);
+inline int max_distance(size_t linkid);
+inline int min_distance(size_t linkid);
+inline int proposed_distance(size_t linkid);
 
 
 #endif //SOAP_SCAFFOLDER_LINKANALISES_H

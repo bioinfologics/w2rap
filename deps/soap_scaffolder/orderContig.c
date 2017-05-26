@@ -4087,7 +4087,7 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 		if ( contig_array[i].flag || contig_array[i].mask || !contig_array[i].downwardConnect || !validConnect ( i, NULL ) )
 			{ continue; }
 
-		printf ("Starting scaffold linearisation from contig %d\n",i);
+		//printf ("Starting scaffold linearisation from contig %d\n",i);
 
 		//Add the contig to start.
 		num5 = num3 = 0;
@@ -4099,7 +4099,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 		len = contig_array[i].length;
 		prevCNT = NULL;
 		cnt = getNextContig ( ctg, prevCNT, &excep );
-		printf ("len= %d\n",len);
 		//go forward with getNextContig
 		while ( cnt )
 		{
@@ -4122,7 +4121,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 			prevCNT = cnt;
 			cnt = nextCnt;
 		}
-		printf ("len= %d\n",len);
 		//to change direction, use the Twin
 		ctg = getTwinCtg ( i );
 
@@ -4162,9 +4160,7 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 			contig_array[i].flag = 0;
 			continue;
 		}
-		printf ("len= %d\n",len);
 		len += overlaplen;
-		printf ("len= %d\n",len);
 		sum += len;
 		length_array[count++] = len;
 
@@ -4448,7 +4444,6 @@ void scaffolding ( unsigned int len_cut, char * outfile )
 		}
 
 		free ( ( void * ) score_array );
-		printf ("Scaffold produced, sum is now %lld\n", sum);
 	}
 
 	freeDarray ( scaf3 );
@@ -5009,15 +5004,7 @@ void Links2ScafEXP ( char * infile )
     gap5 = ( DARRAY * ) createDarray ( 1000, sizeof ( int ) );
     printf ( "\n" );
 
-
 	create_all_connections();
-
-	//TODO fill in first-connection of a contig struct
-	contig_array[pair_links[0].source].first_link_out=0;
-	for (size_t i=1; i<pair_links_size;++i) {
-		if (pair_links[i].source!=pair_links[i-1].source) 	contig_array[pair_links[i].source].first_link_out=i;
-	}
-
 
 	//TODO expand bridged short-repeats with trivial frontiers (i.e. those that would be masked and re-introduced)
 

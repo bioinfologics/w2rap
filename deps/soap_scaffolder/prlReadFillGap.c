@@ -354,11 +354,11 @@ static void outputScafSeq ( FILE * fo, FILE * foc, int index, STACK * ctgsStack,
 			if (gapN<0) {
 				validated_ovl=find_perfect_overlap(prevCtg->ctgID,actg->ctgID,10,500);
 				if (validated_ovl==0){
-					printf("WARNING: re-adjusting gap of %d bp to 1\n",gapN);
+					printf("WARNING: re-adjusting gap of %d bp to 1 (overlap couldn't be found)\n",gapN);
 					gapN=1;
 				} else {
-					printf("Gap of %d bp validated as %dbp\n",gapN,validated_ovl);
-					gapN=validated_ovl;
+					//printf("Gap of %d bp validated as %dbp\n",gapN,-validated_ovl);
+					gapN=-validated_ovl;
 				}
 			}
 			//gapN = gapN > 0 ? gapN : 1; //XXX bj -- BUG: gapN<0 (i.e. overlaps between contigs) end up as 1xN and dups.
