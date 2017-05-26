@@ -75,8 +75,10 @@ void PE2LinksEXP ( char * infile )
             }
             fclose(fhist);
 
-            printf("PE Grad %d: %lld pairs, %lld on same contig (%lld correctly orientated), %lld on different contig, insertS=%d\n",
-                   current_grad, (upper_bound-pre_bound)/2, same, same-wrong_direction, different,pes[current_grad].insertS);
+            printf("\nPE Grad %d: %10lld pairs, insert size %d bp \n",current_grad, (upper_bound-pre_bound)/2, pes[current_grad].insertS);
+            printf("           %10lld (%6.2f%% ) correct orientation within contig\n",same-wrong_direction,(same-wrong_direction)*200.0/(upper_bound-pre_bound));
+            printf("           %10lld (%6.2f%% ) incorrect orientation within contig\n",wrong_direction,wrong_direction*200.0/(upper_bound-pre_bound));
+            printf("           %10lld (%6.2f%% ) across contigs\n\n",different,different*200.0/(upper_bound-pre_bound));
             same=wrong_direction=different=0;
             pre_bound=upper_bound;
             for (long i=1;i<100000;i++) sizedist[i]=0;
@@ -177,7 +179,7 @@ void PE2LinksEXP ( char * infile )
     for (char i=0;i<gradsCounter;++i){
         printf ("Grad %d, %ld / %ld (%.2f%%) unique links\n",i,unique_links[i],total_links[i],unique_links[i]*100.0/total_links[i]);
     }
-    
+
     gzclose ( fp2 );
     fclose ( linkF );
 
