@@ -9,7 +9,7 @@ to be specifically activated using the experimental flag.
 ```
 ## Loading contigs from GFA
 
-:checkered_flag:<span style="background:orange">TODO for w2rap v1</span>, as of now we still use `s_prepare` from a fasta file.
+:checkered_flag: TODO for w2rap v1 :checkered_flag:, as of now we still use `s_prepare` from a fasta file.
 
 ## Read mapping
 
@@ -19,7 +19,7 @@ to be specifically activated using the experimental flag.
 
 ### Support for external mappers
 
-:construction:<span style="background:orange">TODO after w2rap v1.</span>
+:construction: TODO after w2rap v1. :construction:
 
 ## Scaffolding
 
@@ -27,13 +27,24 @@ to be specifically activated using the experimental flag.
 
 ### Read to link transformation
 
-Reads are grouped 
+Reads are grouped as pairs, and every pair generates a 2 links between contigs (one for the FW direction, one for the REV direction).
+On this stage the links are stored in a `PAIR_LINK` array.
+
+```C
+typedef struct {
+    uint32_t source;
+    uint32_t source_pos;
+    uint32_t dest;
+    uint32_t dest_pos;
+    unsigned char peGrad;
+} PAIR_LINK;
+```
 
 ### Contig breakpoint detection
 
 Sometimes contigs obviously contradict read linkage. They should be split to avoid producing missassemblies around them.
 
-:construction:<span style="background:orange">TODO after w2rap v1.</span>
+:construction: TODO after w2rap v1. :construction:
 
 ### Contig-to-contig link analysis
 

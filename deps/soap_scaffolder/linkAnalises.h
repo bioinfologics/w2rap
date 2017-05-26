@@ -11,14 +11,12 @@
 #include "kmerhash.h"
 #include "extfunc.h"
 #include "extvab.h"
+
 typedef struct {
     uint32_t source;
     uint32_t source_pos;
     uint32_t dest;
     uint32_t dest_pos;
-    unsigned char source_rv:1;
-    unsigned char dest_rv:1;
-    //unsigned char peGrad:5;
     unsigned char peGrad;
 } PAIR_LINK;
 
