@@ -131,18 +131,14 @@ void PE2LinksEXP ( char * infile )
                 }
                 pair_links[pair_links_size].source=pre_contigno;
                 pair_links[pair_links_size].source_pos=pre_pos;
-                pair_links[pair_links_size].source_rv=1;
                 pair_links[pair_links_size].dest=getTwinCtg(contigno);
                 pair_links[pair_links_size].dest_pos=contig_array[contigno].length-pos;
-                pair_links[pair_links_size].dest_rv=0;
                 pair_links[pair_links_size].peGrad=current_grad;
                 ++pair_links_size;
                 pair_links[pair_links_size].source=contigno;
                 pair_links[pair_links_size].source_pos=pos;
-                pair_links[pair_links_size].source_rv=0;
                 pair_links[pair_links_size].dest=getTwinCtg(pre_contigno);
                 pair_links[pair_links_size].dest_pos=contig_array[pre_contigno].length-pre_pos;
-                pair_links[pair_links_size].dest_rv=1;
                 pair_links[pair_links_size].peGrad=current_grad;
                 ++pair_links_size;
             }
@@ -178,46 +174,12 @@ void PE2LinksEXP ( char * infile )
     }
     pair_links_size=next_w;
 
-    char linkdetail_name[255];
-    sprintf ( linkdetail_name, "%s.linkdetail", infile);
-    FILE * ldet=fopen(linkdetail_name,"w");
-    for (size_t i=0;i<next_w;++i)
-        fprintf (ldet, "%d:%d(%d) -> %d:%d(%d) - %d\n",
-                 pair_links[i].source,pair_links[i].source_pos,pair_links[i].source_rv,
-                 pair_links[i].dest,pair_links[i].dest_pos,pair_links[i].dest_rv, pair_links[i].peGrad);
-    fclose(ldet);
-
     for (char i=0;i<gradsCounter;++i){
         printf ("Grad %d, %ld / %ld (%.2f%%) unique links\n",i,unique_links[i],total_links[i],unique_links[i]*100.0/total_links[i]);
     }
-
-/*	printf( "Identifying possible links contig by contig\n");
-	for (size_t i=0; i<pair_links_size;) {
-		if (contig_array[pair_links[i].source].length>1000)
-			printf ("\n\n--- Reads coming in to contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
-		size_t j=i;
-		while (pair_links[j].source==pair_links[i].source) {
-			if (pair_links[j].source_rv && contig_array[pair_links[i].source].length>1000 && contig_array[pair_links[j].dest].length>1000)
-				printf ("%lld -> %lld (%lld bp) - grad %d\n", pair_links[j].source_pos, pair_links[j].dest,
-						contig_array[pair_links[j].dest].length, pair_links[j].peGrad);
-			j++;
-		}
-		if (contig_array[pair_links[i].source].length>1000)
-			printf ("\n\n--- Reads coming out from contig %lld (%lld bp)\n",pair_links[i].source,contig_array[pair_links[i].source].length );
-		j=i;
-		while (pair_links[j].source==pair_links[i].source) {
-			if (!pair_links[j].source_rv && contig_array[pair_links[i].source].length>1000 && contig_array[pair_links[j].dest].length>1000)
-				printf ("%lld -> %lld (%lld bp) - grad %d\n", pair_links[j].source_pos, pair_links[j].dest,
-						contig_array[pair_links[j].dest].length, pair_links[j].peGrad);
-			j++;
-		}
-		i=j;
-	}
-*/
-
+    
     gzclose ( fp2 );
     fclose ( linkF );
-    //free (pair_links);
 
     return;
 }
