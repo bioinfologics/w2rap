@@ -40,7 +40,11 @@ static PAIR_LINK * pair_links;
 static size_t pair_links_capacity=100000;
 static size_t pair_links_size=0;
 
+size_t create_all_connections();
+
 int connection_prob(size_t source, size_t dest, long * dist);
+boolean find_best_distance(size_t source, size_t dest, long * dist);
+
 
 #endif //SOAP_SCAFFOLDER_LINKANALISES_H
 
