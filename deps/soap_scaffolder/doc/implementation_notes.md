@@ -25,7 +25,7 @@ to be specifically activated using the experimental flag.
 
 :warning: This behaviour is activated with the experimental flag `-x`.
 
-### Read to link transformation
+### Read mapping to link transformation
 
 Reads are grouped as pairs, and every pair generates a 2 links between contigs (one for the FW direction, one for the REV direction).
 On this stage the links are stored in a `PAIR_LINK` array.
@@ -42,11 +42,13 @@ typedef struct {
 
 ### Contig breakpoint detection
 
-Sometimes contigs obviously contradict read linkage. They should be split to avoid producing missassemblies around them.
-
 :construction: TODO after w2rap v1. :construction:
 
+Sometimes contigs obviously contradict read linkage. They should be split to avoid producing missassemblies around them.
+
 ### Contig-to-contig link analysis
+
+
 
 ### Scaffold construction
 

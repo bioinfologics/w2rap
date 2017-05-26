@@ -8,7 +8,7 @@
 #include "darray.h"
 #include "zlib.h"
 #include "stdint.h"
-#include "linkAnalises.h"
+#include "linkAnalyses.h"
 
 #define CNBLOCKSIZE 10000
 #define MAXCinBetween 200

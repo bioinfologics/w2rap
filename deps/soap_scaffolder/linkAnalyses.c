@@ -3,7 +3,7 @@
 //
 
 
-#include "linkAnalises.h"
+#include "linkAnalyses.h"
 
 /*************************************************
  Function:
