@@ -84,7 +84,7 @@ void PE2LinksEXP ( char * infile )
             printf("           %10lld (%6.2f%% ) single end mapped (%lld first, %lld second)\n",single_first+single_second,(single_first+single_second)*200.0/(upper_bound-pre_bound),single_first,single_second);
             printf("           %10lld (%6.2f%% ) fully unmapped\n\n",((upper_bound-pre_bound)/2-same-different-single_first-single_second),((upper_bound-pre_bound)/2-same-different-single_first-single_second)*200.0/(upper_bound-pre_bound));
 
-            same=wrong_direction=different=0;
+            same=wrong_direction=different=0,single_first=0,single_second=0;
             pre_bound=upper_bound;
             for (long i=1;i<100000;i++) sizedist[i]=0;
             if (r==NULL) break;
