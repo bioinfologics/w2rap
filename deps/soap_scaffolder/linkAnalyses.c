@@ -70,7 +70,7 @@ void PE2LinksEXP ( char * infile )
             size_t maxc=0;
             for (long i=1;i<100000;i++){
                 if (sizedist[i]>10) fprintf(fhist,"%ld, %lld\n",i-50000,sizedist[i]);
-                if (sizedist[i]>maxc){
+                if (i>50000 && sizedist[i]>maxc){
                     pes[current_grad].insertS=i-50000;
                     maxc=sizedist[i];
                 }
