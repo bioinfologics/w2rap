@@ -47,7 +47,6 @@ extern char getCharInTightString ( char * tightSeq, int pos );
 extern void writeChar2tightSting ( char nt, char * tightSeq, int pos );
 extern void short_reads_sum();
 extern void read_one_sequence ( FILE * fp, long long * T, char ** X );
-extern void loadVertex ( char * graphfile );
 extern void loadEdge ( char * graphfile );
 extern boolean loadPath ( char * graphfile );
 extern READINTERVAL * allocateRV ( int readid, int edgeid );

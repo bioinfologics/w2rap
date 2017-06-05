@@ -71,7 +71,6 @@ add_library(scaff_lib OBJECT
         mem_manager.c
         stack.c
         output_contig.c
-        loadPreGraph.c
         kmer.c
         arc.c
         darray.c
