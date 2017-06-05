@@ -94,7 +94,7 @@ void PE2LinksEXP ( char * infile )
             upper_bound=pes[current_grad].PE_bound;
         }
         if (contig_array[contigno].bal_edge==1) continue; //skips things on palindrome contigs
-
+        //if (contig_array[contigno].length-pos<300) continue;
         if ( readno % 2 == 1 ){
             pre_readno=readno;
             pre_contigno=contigno;
@@ -390,14 +390,15 @@ size_t create_all_connections(){
                     int p2=connection_prob(getTwinCtg(pair_links[ci].dest),getTwinCtg(i),&d2);
                     if ( ( p1>40 || p2>40 ) ){//&& d1-d2<2000 && d2-d1<2000 ){
                         int dm;
-                        if (find_best_distance(i,pair_links[ci].dest,&dm)>75) {
+                        if (find_best_distance(i,pair_links[ci].dest,&dm)>50) {
                             if (dm < -1000 || dm > 10000) {
                                 printf("Error on d1=%ld (p1=%d) d2=%ld (p2=%d) dm=%d for connection between %lld and %lld\n",
                                        d1, p1, d2, p2, dm, i, pair_links[ci].dest);
+                            } else {
+                                add1Connect(i, pair_links[ci].dest, dm, p1, 0);
+                                add1Connect(getTwinCtg(pair_links[ci].dest), getTwinCtg(i), dm, p2, 0);
+                                ++connections_count;
                             }
-                            add1Connect(i, pair_links[ci].dest, dm, p1, 0);
-                            add1Connect(getTwinCtg(pair_links[ci].dest), getTwinCtg(i), dm, p2, 0);
-                            ++connections_count;
                         }
                     }
                     dests[pair_links[ci].dest] = 2;

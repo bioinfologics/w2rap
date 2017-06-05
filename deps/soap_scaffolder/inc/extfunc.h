@@ -85,7 +85,6 @@ extern void prlRead2edge ( char * libfile, char * outfile );
 extern void annotFileTrans ( char * infile, char * outfile );
 extern void prlLoadPath ( char * graphfile );
 extern void misCheck ( char * infile, char * outfile );
-extern int uniqueLenSearch ( unsigned int * len_array, unsigned int * flag_array, int num, unsigned int target );
 extern int cmp_vertex ( const void * a, const void * b );
 extern void linkContig2Vts();
 extern int connectByPE_gradPatch ( FILE * fp1, FILE * fp2, int peGrad, char * line1, char * line2 );
