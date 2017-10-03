@@ -2,7 +2,7 @@
 This is a short tutorial on how to use w2rap to generate scaffolds from raw Illumina reads. We have provided a [test dataset](http://opendata.earlham.ac.uk/w2rap/tutorial_files.tar.gz) from *Saccharomyces cerevisiae* consisting of one paired-end (PE) library and one long mate-pair (LMP) library.
 
  * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
- * LIB6471\_R1.fastq, LIB6471\_R2.fastq - LMP read files
+ * LIB6471\_R1.fastq, LIB6471\_R2.fastq - Nextera LMP read files
 
 The downloadable dataset also includes the *S. cerevisiae* reference sequence for QC purposes. This was downloaded from the [Saccharomyces Genome Database](http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
@@ -12,7 +12,6 @@ To run the pipeline you will need to install the following;
 * [K-mer Analysis Toolkit (KAT)](https://github.com/TGAC/KAT)  
 * [BWA](https://sourceforge.net/projects/bio-bwa/files/) (or other short-read aligner)  
 * [FLASh](https://ccb.jhu.edu/software/FLASH/)  
-* [FASTX toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)  
 * [Nextclip](https://github.com/richardmleggett/nextclip/)  
 * Something to calculate assembly stats (eg. [abyss-fac](http://www.bcgsc.ca/platform/bioinfo/software/abyss))
 * [Python](https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
@@ -196,7 +195,13 @@ Count		|       Type
 This is run in the same way as for PE reads to assess read quality etc.
 
 ### b) Identify good LMP reads.
-A Python script is provided to process raw LMP to identify reads containing the Nextera adapter and remove it. This also removes PE contamination which is often present in LMP seqeuncing datasets. Run it as follows;  
+The Python script lmp\_processing uses FLASh and Nextclip to identify reads containing the Nextera adapter (correct LMP reads) and remove the adapter from them. Any PE contamination present in the LMP reads are removed and duplicate LMP reads are removed. Before running the python script you need to compile the dedup_fastq tool like so;
+
+```
+cmake .
+make
+```
+ Run the script as follows;  
 
 ```  
 lmp_processing <read_file_list> <ncpus>  
@@ -212,12 +217,7 @@ eg.
 
 ncpus: the number of CPUs to use.
 
-The processed LMP FASTQ files will be written to the `nextclip` directory. These files should be used in the subsequent scaffolding step. The read counts before and after trimming are written to the log file, for the test dataset we get the following;
-
-```
-LIB6471 read count before trimming: 576252
-LIB6471 read count after trimming: 443411
-```
+The processed LMP FASTQ files will be written to the `nextclip` directory. These files should be used in the subsequent scaffolding step. The read counts before and after trimming are reported as well as the percentage of reads merged by FLASh and the percentage of reads present after deduplication. We would usually expect ~80% of reads remaining after deduplication but libraries with larger insert sizes tend to have higher duplication rates.
 
 ## Step 5: QC processed LMPs 
 ### a) Use KAT comp to check for LMP representation issues.
