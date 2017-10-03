@@ -6,13 +6,6 @@ import subprocess
 import shutil
 import stat
 
-def file_len(fname):
-  p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  result, err = p.communicate()
-  if p.returncode != 0:
-    raise IOError(err)
-  return int(result.strip().split()[0])
-
 def is_exe(fpath):
   return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -29,6 +22,13 @@ def which(program):
         return exe_file
 
   return None
+
+def file_len(fname):
+  p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  result, err = p.communicate()
+  if p.returncode != 0:
+    raise IOError(err)
+  return int(result.strip().split()[0])
 
 def write_nc_chunk_script():
   """ Writes the nextclip chunk script to the nextclip dir """
@@ -62,6 +62,28 @@ def write_nc_chunk_script():
   st=os.stat('nextclip/nextclip_chunk.sh')
   os.chmod('nextclip/nextclip_chunk.sh', st.st_mode | stat.S_IEXEC)
 	
+def get_flash_stats(lib_prefix):
+  """ Gets the useful stats from the FLASH and dedup log files """
+
+  flash_log = os.path.join("flash", "{0}_flash.log".format(lib_prefix))
+  dedup_log = os.path.join("flash", "{0}_dedup.log".format(lib_prefix))
+
+  p = subprocess.Popen(['tail', flash_log], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  flash_text, err = p.communicate()
+  if p.returncode != 0:
+    raise IOError(err)
+ 
+  f_fields = flash_text.replace("[FLASH]", "").split("\n")
+
+  p = subprocess.Popen(['cat', dedup_log], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  dedup_text, err = p.communicate()
+  if p.returncode != 0:
+    raise IOError(err)
+
+  d_fields = dedup_text.split("\n")
+
+  return "{0}:\n{1}\n{2}\n{3}\n{4}\n\nAfter de-duplication: {5}\n".format(lib_prefix, f_fields[1], f_fields[2], f_fields[3], f_fields[4], d_fields[5])
+
 if __name__ == '__main__':
 
   if len(sys.argv) != 3 or sys.argv[1] == "--help":
@@ -82,15 +104,23 @@ if __name__ == '__main__':
     print "Cannot find libraries file {0}.\n".format(libs_list)
     sys.exit()
 
+  # if the bin directory exists, add it to the path
+  bin_dir = os.path.join(os.getcwd(), "bin")
+  print bin_dir
+  if os.path.exists(bin_dir):
+    os.environ["PATH"] += os.pathsep + bin_dir
+  else:
+    print "dir {0} not there".format(bin_dir)
+
   # check the required executables exist in the path
   FLASH_PATH = which("flash")
   if FLASH_PATH == None:
     print "ERROR: Cannot find FLASH in PATH.\n"
     sys.exit()
 
-  FASTX_PATH = which("fastx_reverse_complement")
-  if FASTX_PATH == None:
-    print "ERROR: Cannot find FASTX reverse complement in PATH.\n"
+  DEDUP_PATH = which("dedup_fastq")
+  if DEDUP_PATH == None:
+    print "ERROR: Cannot find dedup_fastq in PATH.\n"
     sys.exit()
 
   NXCLIP_PATH = which("nextclip")
@@ -99,12 +129,11 @@ if __name__ == '__main__':
     sys.exit()
 
   print "FLASH found: {0}".format(FLASH_PATH)
-  print "FASTX reverse complement found: {0}".format(FASTX_PATH)
+  print "dedup_fastq found: {0}".format(DEDUP_PATH)
   print "Nextclip found: {0}".format(NXCLIP_PATH)
 
   cwd = os.getcwd()
 
-  print "Checking read files..."
   libraries = []
   with open(libs_list, 'r') as f:
     while True:
@@ -127,24 +156,18 @@ if __name__ == '__main__':
         fp.close()
         read_length = len(line.strip("\n"))
 
-        # get the read count (file length / 4)
-        read_count = file_len(r1) / 4
-
         # get the library prefix
         base=os.path.basename(r1)
 	prefix = os.path.splitext(base)[0].replace("_R1", "")
 
-        libraries.append({"r1": r1, "r2": r2, "read_length": read_length, "prefix": prefix, "read_count": read_count})
+        libraries.append({"r1": r1, "r2": r2, "read_length": read_length, "prefix": prefix})
       else: break  # EOF
 
-  print "Found {0} libraries to process.".format(len(libraries))
+  print "Number of libraries to process: {0}".format(len(libraries))
   for lib in libraries:
     print lib["r1"], lib["r2"]
 
-  for lib in libraries:
-    print "{0} read count before trimming: {1}".format(lib["prefix"], lib["read_count"])
-
-  print "Running FLASH..."
+  print "\nRunning FLASH and de-duplicating combined reads..."
   if not os.path.exists("flash"):
     os.makedirs("flash")
 
@@ -157,16 +180,12 @@ if __name__ == '__main__':
     f.write("wait\n\n")
 
     for lib in libraries:
-      f.write("fastx_reverse_complement -Q33 -i {0}.extendedFrags.fastq -o {0}.extendedFrags.reverse.fastq &\n".format(lib["prefix"]))
+      f.write("dedup_fastq -i {0}.extendedFrags.fastq -o {0}.extendedFrags.dedup > {0}_dedup.log &\n".format(lib["prefix"]))
     f.write("wait\n\n")
 
     for lib in libraries:
-      f.write("sed -i 's/1:N:0/2:N:0/' {0}.extendedFrags.reverse.fastq &\n".format(lib["prefix"]))
-    f.write("wait\n\n")
-
-    for lib in libraries:
-      f.write("cat {0}.notCombined_1.fastq {0}.extendedFrags.fastq > {0}_extended_R1.fastq\n".format(lib["prefix"]))
-      f.write("cat {0}.notCombined_2.fastq {0}.extendedFrags.reverse.fastq > {0}_extended_R2.fastq\n".format(lib["prefix"]))
+      f.write("cat {0}.notCombined_1.fastq {0}.extendedFrags.dedup.fastq > {0}_extended_R1.fastq\n".format(lib["prefix"]))
+      f.write("cat {0}.notCombined_2.fastq {0}.extendedFrags.dedup_rc.fastq > {0}_extended_R2.fastq\n".format(lib["prefix"]))
     f.write("wait\n\n")
 
     for lib in libraries:
@@ -181,6 +200,10 @@ if __name__ == '__main__':
 
   # move back to cwd
   os.chdir(cwd)
+
+  # for each library, get the stats from flash and dedup
+  for lib in libraries:
+    print get_flash_stats(lib["prefix"])    
 
   print "Running Nextclip..."
   if not os.path.exists("nextclip"):
@@ -206,7 +229,6 @@ if __name__ == '__main__':
       f.write("cat {0}_nc_[ABC]_R1.fastq > {0}_nc_ABC_R1.fastq &\n".format(lib["prefix"]))
       f.write("cat {0}_nc_[ABC]_R2.fastq > {0}_nc_ABC_R2.fastq &\n".format(lib["prefix"]))
     f.write("wait\n\n")
-
     f.write("rm *_nc_?_R?.fastq *extended*\n")
 
   # run the script in the nextclip directory
@@ -214,7 +236,7 @@ if __name__ == '__main__':
   st=os.stat('./run.sh')
   os.chmod('./run.sh', st.st_mode | stat.S_IEXEC)
   subprocess.call(['./run.sh'])
- 
+
   for lib in libraries:
     read_count = file_len("{0}_nc_ABC_R1.fastq".format(lib["prefix"])) / 4
     print "{0} read count after trimming: {1}".format(lib["prefix"], read_count)
