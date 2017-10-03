@@ -10,6 +10,7 @@ The downloadable dataset also includes the *S. cerevisiae* reference sequence fo
 To run the pipeline you will need to install the following;  
 
 * [K-mer Analysis Toolkit (KAT)](https://github.com/TGAC/KAT)  
+* [w2rap-contigger](https://github.com/bioinfologics/w2rap-contigger)
 * [BWA](https://sourceforge.net/projects/bio-bwa/files/) (or other short-read aligner)  
 * [FLASh](https://ccb.jhu.edu/software/FLASH/)  
 * [Nextclip](https://github.com/richardmleggett/nextclip/)  
@@ -75,7 +76,7 @@ We can see that the insert sizes are roughly symmetrically distributed around 25
 
 ## Step 2: Contigging
 
-Use the w2rap-contigger to generate contigs from the PE reads. The current version of the w2rap contigger runs in 8 steps: 
+Use the [w2rap-contigger](https://github.com/bioinfologics/w2rap-contigger) to generate contigs from the PE reads. The current version runs in 8 steps: 
 
 Step # | Description | Outputs
 :---|---|---
