@@ -7,7 +7,7 @@
 #include <fstream>
 #include <unordered_set>
 #include <iomanip>
-#include "deps/cxxopts/cxxopts.hpp"
+#include "deps/cxxopts/include/cxxopts.hpp"
 #include <chrono>
 
 
