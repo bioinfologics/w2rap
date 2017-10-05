@@ -36,7 +36,7 @@ The pipeline consists of 8 steps;
 [Step 8: Create release FASTA](#step-8-create-release-fasta)  
   
 ## Step 1: QC PE read files
-[[back to top]](#w2rap-the-wgs-(wheat)-robust-assembly-pipeline)
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)
 ### a) Run FASTQC to check read metrics.
 
 ```
