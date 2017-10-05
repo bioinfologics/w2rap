@@ -33,7 +33,7 @@ The pipeline consists of 8 steps;
 [Step 5: QC processed LMPs](#step-5-qc-processed-lmps)  
 [Step 6: Scaffolding](#step-6-scaffolding)  
 [Step 7: Scaffold validation](#step-7-scaffold-validation)  
-[Step 8: Create release FASTA](#step-8-create-release-file)  
+[Step 8: Create release FASTA](#step-8-create-release-fasta)  
   
 ## Step 1: QC PE read files
 [[back to top]](#w2rap-the-wgs-(wheat)-robust-assembly-pipeline)
