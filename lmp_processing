@@ -106,26 +106,23 @@ if __name__ == '__main__':
 
   # if the bin directory exists, add it to the path
   bin_dir = os.path.join(os.getcwd(), "bin")
-  print bin_dir
   if os.path.exists(bin_dir):
     os.environ["PATH"] += os.pathsep + bin_dir
-  else:
-    print "dir {0} not there".format(bin_dir)
-
+  
   # check the required executables exist in the path
   FLASH_PATH = which("flash")
   if FLASH_PATH == None:
-    print "ERROR: Cannot find FLASH in PATH.\n"
+    print "ERROR: Cannot find FLASh in PATH. Is it installed?\n"
     sys.exit()
 
   DEDUP_PATH = which("dedup_fastq")
   if DEDUP_PATH == None:
-    print "ERROR: Cannot find dedup_fastq in PATH.\n"
+    print "ERROR: Cannot find dedup_fastq executable in PATH. Have you compiled it?\n"
     sys.exit()
 
   NXCLIP_PATH = which("nextclip")
   if NXCLIP_PATH == None:
-    print "ERROR: Cannot find Nextclip in PATH.\n"
+    print "ERROR: Cannot find Nextclip in PATH. Is it installed?\n"
     sys.exit()
 
   print "FLASH found: {0}".format(FLASH_PATH)

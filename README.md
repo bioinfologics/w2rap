@@ -221,6 +221,7 @@ This is run in the same way as for PE reads to assess read quality etc.
 The Python script lmp\_processing uses FLASh and Nextclip to identify reads containing the Nextera adapter (correct LMP reads) and remove the adapter from them. Any PE contamination present in the LMP reads are removed and duplicate LMP reads are removed. Before running the python script you need to compile the dedup_fastq tool like so;
 
 ```
+git clone --recursive https://github.com/bioinfologics/w2rap.git
 cmake .
 make
 ```
