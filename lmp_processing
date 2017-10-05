@@ -104,8 +104,12 @@ if __name__ == '__main__':
     print "Cannot find libraries file {0}.\n".format(libs_list)
     sys.exit()
 
+  # get the directory where this script is running
+  abspath = os.path.abspath(__file__)	
+  dname = os.path.dirname(abspath)	
+  bin_dir = os.path.join(dname, "bin")
+
   # if the bin directory exists, add it to the path
-  bin_dir = os.path.join(os.getcwd(), "bin")
   if os.path.exists(bin_dir):
     os.environ["PATH"] += os.pathsep + bin_dir
   
