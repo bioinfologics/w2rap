@@ -86,7 +86,7 @@ Then use your favourite plotting tool to check the insert size and the shape of 
 We can see that the insert sizes are roughly symmetrically distributed around 250. The distribution is quite wide, so a lot of pairs will have an insert size which varies quite far from the average, but we should be able to obtain a reasonable assembly from these reads.
 
 ## Step 2: Contigging
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
 Use the [w2rap-contigger](https://github.com/bioinfologics/w2rap-contigger) to generate contigs from the PE reads. The current version runs in 8 steps: 
 
 Step # | Description | Outputs
@@ -127,7 +127,7 @@ w2rap-contigger/bin/w2rap-contigger -t 16 -m 200 -r LIB4432_R1.fastq,LIB4432_R2.
 More detail about these options, and descriptions of the other options, can be found in the [w2rap paper](http://biorxiv.org/content/early/2017/02/22/110999), or by running the contigger with the `--help` parameter:
 
 ## Step 3: Contig assessment
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)
 ### a) Check assembly contiguity.
 
 ```
@@ -203,7 +203,7 @@ Count		|       Type
 429  |   Total BUSCO groups searched
 
 ## Step 4: LMP processing
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)
 ### a) Run FastQC to check read metrics.
 This is run in the same way as for PE reads to assess read quality etc.
 
@@ -234,7 +234,7 @@ ncpus: the number of CPUs to use.
 The processed LMP FASTQ files will be written to the `nextclip` directory. These files should be used in the subsequent scaffolding step. The read counts before and after trimming are reported as well as the percentage of reads merged by FLASh and the percentage of reads present after deduplication. We would usually expect ~80% of reads remaining after deduplication but libraries with larger insert sizes tend to have higher duplication rates.
 
 ## Step 5: QC processed LMPs 
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)
 ### a) Use KAT comp to check for LMP representation issues.
 Another use of KAT comp is to generate a spectra-mx plot which shows kmers that are shared between two datasets and kmers exclusive to each dataset. As PE and LMP reads originate from the same sample, there should be no content in the LMP data which is not present in the PE data, and vice versa. Hence, content should be shared and there should be no exclusive content.
 
@@ -279,7 +279,7 @@ From the read count after trimming and the insert size, we can calculate the fra
 2,882,171,500 / 12,495,68 = **2306x coverage**
 
 ## Step 6: Scaffolding
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)  
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
 s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes.
 
 ### a) Make a SOAPdenovo config file.
@@ -376,7 +376,7 @@ python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <
 ```
 
 ## Step 7: Scaffold validation
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)
 ### a) Check assembly contiguity.
 
 ```
@@ -452,5 +452,5 @@ Count      |       Type
 The number of BUSCO genes has increased slightly, corresponding to the decrease in the number of fragmented BUSCOs, indicating that the scaffolding step has assembled them correctly. We would not expect a significant increase here as genetic regions tend to be easier to assemble, so are likely to be present in the assembly after the contigging step. 
 
 ## Step 8: Create release FASTA
-[[back to top]](#w2rap:-the-wgs-(wheat)-robust-assembly-pipeline)  
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
 At this point you should check for contamination in scaffolds (phiX etc.) and Illumina adapters. If you want to remove seqeunces shorter than a certain threshold (eg. below 500 bp) you can use KAT comp to check whether this removes significant content from the assembly in the same way as shown in step 7 b).
