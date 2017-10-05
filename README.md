@@ -87,6 +87,7 @@ We can see that the insert sizes are roughly symmetrically distributed around 25
 
 ## Step 2: Contigging
 [[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
+
 Use the [w2rap-contigger](https://github.com/bioinfologics/w2rap-contigger) to generate contigs from the PE reads. The current version runs in 8 steps: 
 
 Step # | Description | Outputs
@@ -280,6 +281,7 @@ From the read count after trimming and the insert size, we can calculate the fra
 
 ## Step 6: Scaffolding
 [[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
+
 s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes.
 
 ### a) Make a SOAPdenovo config file.
@@ -452,5 +454,6 @@ Count      |       Type
 The number of BUSCO genes has increased slightly, corresponding to the decrease in the number of fragmented BUSCOs, indicating that the scaffolding step has assembled them correctly. We would not expect a significant increase here as genetic regions tend to be easier to assemble, so are likely to be present in the assembly after the contigging step. 
 
 ## Step 8: Create release FASTA
-[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
+[[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline) 
+
 At this point you should check for contamination in scaffolds (phiX etc.) and Illumina adapters. If you want to remove seqeunces shorter than a certain threshold (eg. below 500 bp) you can use KAT comp to check whether this removes significant content from the assembly in the same way as shown in step 7 b).
