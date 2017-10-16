@@ -23,13 +23,6 @@ def which(program):
 
   return None
 
-def file_len(fname):
-  p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  result, err = p.communicate()
-  if p.returncode != 0:
-    raise IOError(err)
-  return int(result.strip().split()[0])
-
 def write_nc_chunk_script():
   """ Writes the nextclip chunk script to the nextclip dir """
   
@@ -75,14 +68,31 @@ def get_flash_stats(lib_prefix):
  
   f_fields = flash_text.replace("[FLASH]", "").split("\n")
 
-  p = subprocess.Popen(['cat', dedup_log], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  dedup_text, err = p.communicate()
-  if p.returncode != 0:
-    raise IOError(err)
+  with open(dedup_log, 'r') as f:
+    lines = f.readlines()
 
-  d_fields = dedup_text.split("\n")
+  lines = [x.strip() for x in lines]
 
-  return "{0}:\n{1}\n{2}\n{3}\n{4}\n\nAfter de-duplication: {5}\n".format(lib_prefix, f_fields[1], f_fields[2], f_fields[3], f_fields[4], d_fields[5])
+  return "{0}:\n{1}\n{2}\n{3}\n{4}\n\nAfter de-duplication: {5}\n".format(lib_prefix, f_fields[1], f_fields[2], f_fields[3], f_fields[4], lines[5])
+
+def get_nextclip_stats(lib_prefix):
+  """ Gets stats from the .nc_counts files """
+
+  nc_log = os.path.join("nextclip", "{0}.nc_counts".format(lib_prefix))
+
+  with open(nc_log, 'r') as f:
+    lines = f.readlines()
+
+  lines = [x.strip() for x in lines]
+  dict = {}
+  for x in lines:
+    (cat, count) = x.split()
+    dict[cat] = count
+
+  total = int(dict["A"]) + int(dict["B"]) + int(dict["C"])
+  str = "{0}:\n     catA: {1}\n     catB: {2}\n     catC: {3}\n     catD: {4}\n\nTotal reads after processing: {5}".format(lib_prefix, dict["A"], dict["B"], dict["C"], dict["D"], total)
+
+  return str
 
 if __name__ == '__main__':
 
@@ -168,7 +178,7 @@ if __name__ == '__main__':
   for lib in libraries:
     print lib["r1"], lib["r2"]
 
-  print "\nRunning FLASH and de-duplicating combined reads..."
+  print "\nRunning FLASh and de-duplicating combined reads..."
   if not os.path.exists("flash"):
     os.makedirs("flash")
 
@@ -198,8 +208,6 @@ if __name__ == '__main__':
   st=os.stat('./run.sh')
   os.chmod('./run.sh', st.st_mode | stat.S_IEXEC)
   subprocess.call(['./run.sh'])
-
-  # move back to cwd
   os.chdir(cwd)
 
   # for each library, get the stats from flash and dedup
@@ -227,6 +235,17 @@ if __name__ == '__main__':
       f.write("rm *.report\n")
 
     for lib in libraries:
+      f.write("wcA=`wc -l {0}_nc_A_R1.fastq | cut -d' ' -f 1`\n".format(lib["prefix"]))
+      f.write("wcB=`wc -l {0}_nc_B_R1.fastq | cut -d' ' -f 1`\n".format(lib["prefix"]))
+      f.write("wcC=`wc -l {0}_nc_C_R1.fastq | cut -d' ' -f 1`\n".format(lib["prefix"]))
+      f.write("wcD=`wc -l {0}_nc_D_R1.fastq | cut -d' ' -f 1`\n".format(lib["prefix"]))
+      f.write("let wcA=wcA/4\n")
+      f.write("let wcB=wcB/4\n")
+      f.write("let wcC=wcC/4\n")
+      f.write("let wcD=wcD/4\n")
+      f.write("printf \"A $wcA\\nB $wcB\\nC $wcC\\nD $wcD\\n\" > {0}.nc_counts\n".format(lib["prefix"]))
+
+    for lib in libraries:
       f.write("cat {0}_nc_[ABC]_R1.fastq > {0}_nc_ABC_R1.fastq &\n".format(lib["prefix"]))
       f.write("cat {0}_nc_[ABC]_R2.fastq > {0}_nc_ABC_R2.fastq &\n".format(lib["prefix"]))
     f.write("wait\n\n")
@@ -237,14 +256,15 @@ if __name__ == '__main__':
   st=os.stat('./run.sh')
   os.chmod('./run.sh', st.st_mode | stat.S_IEXEC)
   subprocess.call(['./run.sh'])
+  os.chdir(cwd)
 
-  for lib in libraries:
-    read_count = file_len("{0}_nc_ABC_R1.fastq".format(lib["prefix"])) / 4
-    print "{0} read count after trimming: {1}".format(lib["prefix"], read_count)
- 
-  # get rid of the temporary flash dir and the scripts in nextclip dir
+  print get_nextclip_stats(lib["prefix"]) 
+
+  # get rid of the temporary flash dir and extra bits in the nextclip dir
   shutil.rmtree(os.path.join(cwd, "flash"))
   os.remove(os.path.join(cwd, "nextclip", "run.sh"))
   os.remove(os.path.join(cwd, "nextclip", "nextclip_chunk.sh"))
+  for lib in libraries:
+    os.remove(os.path.join(cwd, "nextclip", "{0}.nc_counts".format(lib["prefix"])))
 
 print "DONE."
