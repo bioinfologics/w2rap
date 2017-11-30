@@ -90,7 +90,7 @@ def get_nextclip_stats(lib_prefix):
     dict[cat] = count
 
   total = int(dict["A"]) + int(dict["B"]) + int(dict["C"])
-  str = "{0}:\n     catA: {1}\n     catB: {2}\n     catC: {3}\n     catD: {4}\n\nTotal reads after processing: {5}".format(lib_prefix, dict["A"], dict["B"], dict["C"], dict["D"], total)
+  str = "{0}:\n     catA: {1}\n     catB: {2}\n     catC: {3}\n     catD: {4}\nTotal reads after processing: {5}\n".format(lib_prefix, dict["A"], dict["B"], dict["C"], dict["D"], total)
 
   return str
 
@@ -258,7 +258,8 @@ if __name__ == '__main__':
   subprocess.call(['./run.sh'])
   os.chdir(cwd)
 
-  print get_nextclip_stats(lib["prefix"]) 
+  for lib in libraries:
+    print get_nextclip_stats(lib["prefix"]) 
 
   # get rid of the temporary flash dir and extra bits in the nextclip dir
   shutil.rmtree(os.path.join(cwd, "flash"))
