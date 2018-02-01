@@ -377,7 +377,7 @@ SOAPdenovo converts gaps in contigs to Cs and Gs so we need to convert these bac
 python SOAP_n_remapper.py <contigPosInScaff_file> <scafSeq_file> <contig_file> <output_file>
 ```
 ### d) Collapse repeats surrounding gaps
-An artifact of SOAPdenovo generates repeated sequences around gaps so the following script checks a FASTA file for these and collapses them. Gaps are generally around 200bp and the sequence each side of the gap is identical.
+In some cases, SOAPdenovo produces repeated sequence around gaps so the following script checks a FASTA file for these and collapses them. Gaps are generally around 200bp and the sequence each side of the gap is identical.
 
 ```
 python SOAP_n_collapser.py <FASTA_in> <FASTA_out>
