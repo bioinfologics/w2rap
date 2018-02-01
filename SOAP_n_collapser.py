@@ -98,4 +98,4 @@ for seq in seqiter:
 
 fout.close
 
-print "DONE\n{0} gaps processed, {1} collapsed, {2} not collapsed".format(seq_count, collapse_count, not_collapse_count)
+print "DONE\n{0} sequences processed, {1} collapsed, {2} not collapsed".format(seq_count, collapse_count, not_collapse_count)
