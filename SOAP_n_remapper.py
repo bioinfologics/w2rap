@@ -82,7 +82,7 @@ def align_contigs(scaffold, contigs_data, contigs_seq):
 
 if __name__ == "__main__":
 
-  if len(sys.argv) == 1:
+  if len(sys.argv) != 5:
     print "Usage: {0} contig_pos_in_scaff scaffolds_file contigs_file scaffolds_output".format(sys.argv[0])
     sys.exit()
 
