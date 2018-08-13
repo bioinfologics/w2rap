@@ -151,14 +151,18 @@ if __name__ == '__main__':
       r1 = f.readline().strip()
       r2 = f.readline().strip()
       if r2:
+        if r1 == r2:
+          print "Read 1 and read 2 files are the same - {0}.".format(r1)
+          sys.exit()
+
         if not os.path.exists(r1):
           print "Read file {0} does not exist.".format(r1)
           sys.exit()
 
         if not os.path.exists(r2):
           print "Read file {0} does not exist.".format(r2)
-          sys.exit()
-        
+          sys.exit()       
+
         # get the read length from r1 (required for flash)
         fp = open(r1)
         for i, line in enumerate(fp):
