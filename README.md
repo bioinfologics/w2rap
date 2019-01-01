@@ -15,7 +15,7 @@ To run the pipeline you will need to install the following;
 * [FLASh](https://ccb.jhu.edu/software/FLASH/)  
 * [Nextclip](https://github.com/richardmleggett/nextclip/)  
 * Something to calculate assembly stats (eg. [abyss-fac](http://www.bcgsc.ca/platform/bioinfo/software/abyss))
-* [Python](https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
+* [Python v2.7](https://www.python.org/downloads/release/python-2711/) with Biopython and Matplotlib installed
 
 Other tools are optional depending on how much QC and validation you want to perform on your reads and assembly.  We recommend;  
 
@@ -209,7 +209,7 @@ Count		|       Type
 This is run in the same way as for PE reads to assess read quality etc.
 
 ### b) Identify good LMP reads.
-The Python script lmp\_processing uses FLASh and Nextclip to identify reads containing the Nextera adapter (correct LMP reads) and remove the adapter from them. Any PE contamination present in the LMP reads are removed and duplicate LMP reads are removed. Before running the python script you need to compile the dedup_fastq tool like so;
+The Python script lmp\_processing (written in Python v2.7) uses FLASh and Nextclip to identify reads containing the Nextera adapter (correct LMP reads) and remove the adapter from them. Any PE contamination present in the LMP reads are removed and duplicate LMP reads are removed. Before running the python script you need to compile the dedup_fastq tool like so;
 
 ```
 git clone --recursive https://github.com/bioinfologics/w2rap.git
