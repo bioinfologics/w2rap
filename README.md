@@ -282,7 +282,7 @@ From the read count after trimming and the insert size, we can calculate the fra
 ## Step 6: Scaffolding
 [[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
 
-s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes.
+The executables s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes. These executables need to be compiled using make.sh in w2rap/deps/soap_scaffolder from this repository.
 
 ### a) Make a SOAPdenovo config file.
 It is important to use both the PE and LMP reads to scaffold. 
