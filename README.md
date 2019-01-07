@@ -1,8 +1,8 @@
 # W2rap: the WGS (Wheat) Robust Assembly Pipeline 
 This is a short tutorial on how to use w2rap to generate scaffolds from raw Illumina reads. We have provided a [test dataset](http://opendata.earlham.ac.uk/w2rap/tutorial_files.tar.gz) from *Saccharomyces cerevisiae* consisting of one paired-end (PE) library and one long mate-pair (LMP) library.
 
- * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files
- * LIB6471\_R1.fastq, LIB6471\_R2.fastq - Nextera LMP read files
+ * LIB4432\_R1.fastq, LIB4432\_R2.fastq - PE read files (150 bp read length)
+ * LIB6471\_R1.fastq, LIB6471\_R2.fastq - Nextera LMP read files (300 bp read length)
 
 The downloadable dataset also includes the *S. cerevisiae* reference sequence for QC purposes. This was downloaded from the [Saccharomyces Genome Database](http://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/).
 
