@@ -142,7 +142,7 @@ We are assembling 11.54 Mb of the 12 Mb *S. cerevisiae*  genome into 1723 contig
 Use KAT comp to compare the kmer content of the PE reads to the kmer content of the contigs using a spectra-cn plot. You expect to see all the content from the reads represented in the contigs and no new content (which could represent missassemblies). See the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots. 
 
 ```
-kat comp -o scer_pe_v2_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' contigs/a.lines.fasta
+kat comp -o scer_pe_vs_ctgs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' contigs/a.lines.fasta
 ```
 
 <img src="images/pe_vs_contigs_k27-main.mx.spectra-cn.png"  width="500" height="400">
