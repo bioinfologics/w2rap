@@ -399,7 +399,7 @@ The total content is similar to the expected genome size, so the assembly contai
 Use KAT comp to compare the kmer content of the PE reads to the kmer content of the scaffolds using a spectra-cn plot. You expect to see all the content from the reads represented in the scaffolds and no new content (which could represent missassemblies). See the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots. 
 
 ```
-kat comp -t 16 -m 31 -H10000000000 -I10000000000 -o reads_vs_scaffolds '/path/to/LIB4432_R1.fastq /path/to/LIB4432_R2.fastq' /path/to/scaffolds/yeast.scafSeq
+kat comp -o scer_pe_vs_scfs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' scaffolds.fasta
 ```
 
 <img src="images/lmp_vs_pe-main.mx.spectra-cn.png"  width="450" height="400">
