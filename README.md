@@ -265,7 +265,7 @@ grep -v '@SQ' lmp2contig.sam | grep -v '@PG' | awk -v binsize=100 '{if ($5==60) 
 
 The distribution looks like this;
 
-<img src="images/yeast_lmp.png"  width="500" height="400">
+<img src="images/yeast_lmp.png"  width="700" height="400">
 
 The distribution has a clear, pronounced peak so it is easy to see that the insert size is approximately 6500bp. There is very little paired end contamination present, as this would cause another peak closer to the origin. Be aware that if you are mapping a LMP library with an insert size larger than the average length of your contigs, many LMP reads will map incorrectly to smaller contigs and the resulting insert size distribution will contain lots of artificially small mappings which could look like PE contamination. 
 
