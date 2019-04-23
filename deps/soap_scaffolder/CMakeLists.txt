@@ -60,3 +60,8 @@ if(ZLIB_FOUND)
     target_link_libraries(s_map ${ZLIB_LIBRARIES})
     target_link_libraries(s_scaffold ${ZLIB_LIBRARIES})
 endif()
+
+find_package (Threads REQUIRED)
+target_link_libraries(s_prepare ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(s_map ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(s_scaffold ${CMAKE_THREAD_LIBS_INIT})
