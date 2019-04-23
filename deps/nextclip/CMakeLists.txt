@@ -29,3 +29,5 @@ add_executable(nextclip
            src/hash_value.c
            src/logger.c
            src/nextclip.c)
+
+target_link_libraries(nextclip m)

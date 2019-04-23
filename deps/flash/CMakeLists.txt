@@ -10,7 +10,6 @@ if (ZLIB_FOUND)
     include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
-find_package (Threads REQUIRED)
 
 add_executable(flash
                combine_reads.c
@@ -25,4 +24,5 @@ if (ZLIB_FOUND)
     target_link_libraries(flash ${ZLIB_LIBRARIES})
 endif()
 
+find_package (Threads REQUIRED)
 target_link_libraries(flash ${CMAKE_THREAD_LIBS_INIT})
