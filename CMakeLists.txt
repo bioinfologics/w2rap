@@ -4,6 +4,10 @@ cmake_minimum_required (VERSION 2.8.2)
 # Name of project and that it is C++ only.
 project (w2rap_lmp_proc)
 
+add_subdirectory(deps/flash)
+add_subdirectory(deps/nextclip)
+add_subdirectory(deps/soap_scaffolder)
+
 set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_BUILD_TYPE Debug)
 

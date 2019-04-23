@@ -95,14 +95,14 @@ int main(int argc, char * argv[]) {
                 ("o,output_prefix", "output prefix", cxxopts::value<std::string>(out_prefix))
                 ("s,suppress_rc", "do not output reverse complement FASTQ", cxxopts::value<bool>(suppress_rc));
 
-        options.parse(argc, argv);
+        auto result(options.parse(argc, argv));
 
-        if (options.count("help")) {
+        if (result.count("help")) {
             std::cout << options.help({""}) << std::endl;
             exit(0);
         }
 
-        if (options.count("i") != 1 or options.count("o") != 1) {
+        if (result.count("i") != 1 or result.count("o") != 1) {
             std::cout << "Error: please specify input FASTQ and output prefix." << std::endl
             << " Use option --help to check command line arguments." << std::endl;
             exit(1);
@@ -135,7 +135,7 @@ int main(int argc, char * argv[]) {
 
     int64_t rec_pos;
     std::string id, seq_str, tmp, qual_str;
-    std::vector<std::pair<u_int, uint64_t>> file_idx;    // a vector of pairs (length, file_offset)
+    std::vector<std::pair<unsigned int, uint64_t>> file_idx;    // a vector of pairs (length, file_offset)
 
     while(!ifs.eof()){
         rec_pos = ifs.tellg();
