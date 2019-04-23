@@ -16,7 +16,6 @@ add_subdirectory(deps/nextclip)
 add_subdirectory(deps/soap_scaffolder)
 
 
-
 set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_BUILD_TYPE Debug)
 
@@ -32,3 +31,7 @@ add_executable (dedup_fastq src/dedup_fastq.cpp)
 if(ZLIB_FOUND)
     target_link_libraries(dedup_fastq ${ZLIB_LIBRARIES})
 endif()
+
+install(TARGETS dedup_fastq s_scaffold s_map s_prepare nextclip flash
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin
+        )
