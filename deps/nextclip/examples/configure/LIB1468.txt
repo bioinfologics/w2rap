@@ -1,0 +1,7 @@
+library_name:LIB1468
+organism:Streptomyces coelicolor
+output_dir:LIB1468
+read_one:reads/LIB1468part_ATCACG_L001_R1_001.fastq
+read_two:reads/LIB1468part_ATCACG_L001_R2_001.fastq
+reference:references/AL645882.fasta
+minimum_contig_alignment_size:0
