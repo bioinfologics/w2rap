@@ -11,16 +11,16 @@ include_directories(include)
 
 SET(MAXK 63 CACHE STRING "Maximum size of K to be used (default 64)")
 
-SET(NUMBER_OF_BITFIELDS_IN_BINARY_KMER 1)
+SET(NBITS 1)
 if(MAXK GREATER_EQUAL 63)
-    SET(NUMBER_OF_BITFIELDS_IN_BINARY_KMER 2)
+    SET(NBITS 2)
 elseif(MAXK GREATER_EQUAL 95)
-    SET(NUMBER_OF_BITFIELDS_IN_BINARY_KMER 3)
+    SET(NBITS 3)
 else(MAXK GREATER_EQUAL 127)
-    SET(NUMBER_OF_BITFIELDS_IN_BINARY_KMER 4)
+    SET(NBITS 4)
 endif()
 
-add_definitions(-DNBITS)
+add_definitions(-DNUMBER_OF_BITFIELDS_IN_BINARY_KMER=${NBITS})
 
 add_executable(nextclip
            src/binary_kmer.c
