@@ -115,28 +115,36 @@ if __name__ == '__main__':
     sys.exit()
 
   # get the directory where this script is running
-  abspath = os.path.abspath(__file__)	
-  dname = os.path.dirname(abspath)	
-  bin_dir = os.path.join(dname, "bin")
+  #abspath = os.path.abspath(__file__)	
+  #dname = os.path.dirname(abspath)	
+  #bin_dir = os.path.join(dname, "bin")
 
   # if the bin directory exists, add it to the path
-  if os.path.exists(bin_dir):
-    os.environ["PATH"] += os.pathsep + bin_dir
+  #if os.path.exists(bin_dir):
+  #  os.environ["PATH"] += os.pathsep + bin_dir
   
+  # read env var and add to path
+  bin_dir = os.environ['W2RAP_PATH']
+  if bin_dir == None:
+    print "No path to binaries, please set W2RAP_PATH environment variable"
+    sys.exit()
+  else:
+    os.environ["PATH"] += os.pathsep + bin_dir
+
   # check the required executables exist in the path
   FLASH_PATH = which("flash")
   if FLASH_PATH == None:
-    print "ERROR: Cannot find FLASh in PATH. Is it installed?\n"
+    print "ERROR: Cannot find FLASH in PATH.\n"
     sys.exit()
 
   DEDUP_PATH = which("dedup_fastq")
   if DEDUP_PATH == None:
-    print "ERROR: Cannot find dedup_fastq executable in PATH. Have you compiled it?\n"
+    print "ERROR: Cannot find dedup_fastq in PATH.\n"
     sys.exit()
 
   NXCLIP_PATH = which("nextclip")
   if NXCLIP_PATH == None:
-    print "ERROR: Cannot find Nextclip in PATH. Is it installed?\n"
+    print "ERROR: Cannot find Nextclip in PATH.\n"
     sys.exit()
 
   print "FLASH found: {0}".format(FLASH_PATH)
@@ -182,7 +190,7 @@ if __name__ == '__main__':
   for lib in libraries:
     print lib["r1"], lib["r2"]
 
-  print "\nRunning FLASh and de-duplicating combined reads..."
+  print "\nRunning FLASH and de-duplicating combined reads..."
   if not os.path.exists("flash"):
     os.makedirs("flash")
 
