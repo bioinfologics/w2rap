@@ -386,10 +386,10 @@ This step performs two tasks;
 * Recovers gaps from the contigging stage: SOAPdenovo converts gaps (Ns) in contigs to Cs and Gs in scaffolds so we need to convert these back to Ns.   
 * Collapses repeats surrounding gaps: In some cases, SOAPdenovo generates repeated sequence around gaps which can be collapsed. Gaps are generally around 200bp and the sequence each side of the gap is identical.
 
-The script `SOAP_post_process.py` requires three input files generated in the scaffolding step `yeast.contigPosInscaff`, `yeast.scafSeq`, `yeast.contig` and writes the post-processed scaffolds to a new FASTA file. In the following example the post-processed scaffolds are written to `yeast_scf_post_process.fa` and this file should be used in subsequent steps.
+The script `SOAP_post_process.py` requires three input files generated in the scaffolding step `yeast.contigPosInscaff`, `yeast.scafSeq`, `yeast.contig` and writes the post-processed scaffolds to a new FASTA file. In the following example the post-processed scaffolds are written to `yeast_scf_final.fa` and this file should be used in subsequent steps.
 
 ```
-python SOAP_post_process.py yeast.contigPosInscaff yeast.scafSeq yeast.contig yeast_scf_post_process.fa
+python SOAP_post_process.py yeast.contigPosInscaff yeast.scafSeq yeast.contig yeast_scf_final.fa
 
 ```
 
@@ -398,7 +398,7 @@ python SOAP_post_process.py yeast.contigPosInscaff yeast.scafSeq yeast.contig ye
 ### a) Check assembly contiguity.
 
 ```
-abyss-fac yeast_scf_post_process.fa
+abyss-fac yeast_scf_final.fa
 ```
 
 <img src="images/scaffolds_fac.png">
@@ -409,7 +409,7 @@ The total content is similar to the expected genome size, so the assembly contai
 Use KAT comp to compare the kmer content of the PE reads to the kmer content of the scaffolds using a spectra-cn plot. You expect to see all the content from the reads represented in the scaffolds and no new content (which could represent missassemblies). See the [KAT documentation](https://kat.readthedocs.io/en/latest/) for more details on how to interpret KAT plots. 
 
 ```
-kat comp -o scer_pe_vs_scfs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' yeast_scf_post_process.fa
+kat comp -o scer_pe_vs_scfs -t 8 -m 27 -H 100000000 -I 100000000 'LIB4432_R?.fastq' yeast_scf_final.fa
 ```
 
 <img src="images/lmp_vs_pe-main.mx.spectra-cn.png"  width="450" height="400">
@@ -420,7 +420,7 @@ Again, most of the content from the reads is present in the assembly. There are 
 
 ```
 mkdir quast
-python /path/to/quast/quast.py --extensive-mis-size 10000 -o ./quast -R ref/S288C_reference_sequence_R64-2-1_20150113.fsa -t 8 -f ./yeast_scf_post_process.fa
+python /path/to/quast/quast.py --extensive-mis-size 10000 -o ./quast -R ref/S288C_reference_sequence_R64-2-1_20150113.fsa -t 8 -f ./yeast_scf_final.fa
 ```
 The `--extensive-mis-size` parameter sets a threshold for what is considered to be a local misassembly. By specifying this to be larger than the default value, we exclude very small rearrangements from the misassembly count.
 
@@ -455,7 +455,7 @@ We can see that the scaffolder has successfully put together a large number of c
 ### d) Check assembly completeness by aligning BUSCO genes.
 
 ```
-python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_scf_post_process.fa -l ~/busco_data/eukaryota -m genome -f
+python /path/to/busco2/BUSCO.py -o busco_lmp -in ./yeast_scf_final.fa -l ~/busco_data/eukaryota -m genome -f
 ```
 
 Count      |       Type
