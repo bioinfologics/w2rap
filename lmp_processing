@@ -156,9 +156,11 @@ if __name__ == '__main__':
   libraries = []
   with open(libs_list, 'r') as f:
     while True:
-      r1 = f.readline().strip()
-      r2 = f.readline().strip()
-      if r2:
+      r1_in = f.readline().strip()
+      r2_in = f.readline().strip()
+      if r2_in:
+        r1 = os.path.abspath(r1_in)
+        r2 = os.path.abspath(r2_in)
         if r1 == r2:
           print "Read 1 and read 2 files are the same - {0}.".format(r1)
           sys.exit()
