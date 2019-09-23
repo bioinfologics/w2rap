@@ -292,7 +292,7 @@ From the read count after trimming and the insert size, we can calculate the fra
 ## Step 6: Scaffolding
 [[back to top]](#w2rap-the-wgs-wheat-robust-assembly-pipeline)  
 
-The executables s\_prepare, s\_map and s\_scaff are modified versions of the prepare, map and scaff stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes. 
+The executables s\_prepare, s\_map and s\_scaffold are modified versions of the prepare, map and scaffold stages of the [SOAPdenovo](http://soap.genomics.org.cn/soapdenovo.html) pipeline which are more configurable and thus better suited to complex genomes. 
 
 ### a) Make a SOAPdenovo config file.
 It is important to use both the PE and LMP reads to scaffold. 
@@ -314,16 +314,16 @@ The config file must be correctly configured, and there are lots of options to c
 
 We have kept our configuration file relatively simple, specifying only the paths to the data sets to be used for scaffolding, their type, and their insert size. The `reverse_seq` field indicates whether we have paired end (= 0, the default) or long mate pair (= 1) read sets.
  
-### b) Run the "prepare -> map -> scaff" pipeline.  
-s\_prepare converts your contig assembly into a format ready for SOAPdenovo scaffolding. For the majority of use cases, it is suitable to use a kmer length of 71. s\_map maps the reads from all libraries to the contigs. In this stage, the kmer length must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs.  Using multiple CPUs will speed this stage up. s\_scaff generates scaffolds using the mapping results. Redirecting all outputs to log files will enable you to check the results from each step.
+### b) Run the "prepare -> map -> scaffold" pipeline.  
+s\_prepare converts your contig assembly into a format ready for SOAPdenovo scaffolding. For the majority of use cases, it is suitable to use a kmer length of 71. s\_map maps the reads from all libraries to the contigs. In this stage, the kmer length must be lower as reads may have been trimmed, and a lower value enables reads containing a small number of errors to be mapped to the contigs.  Using multiple CPUs will speed this stage up. s\_scaffold generates scaffolds using the mapping results. Redirecting all outputs to log files will enable you to check the results from each step.
 
 ```
 s_prepare -g yeast -K 71 -c /contigs/a.lines.fasta 2>&1
 s_map -k 31 -s soap.config -p 32 -g yeast > yeast.map.log 2>&1
-s_scaff -p 8 -g yeast > yeast.scaff.log 2>&1
+s_scaffold -p 8 -g yeast > yeast.scaff.log 2>&1
 ```
 
-Before proceeding from the map step to the scaffolding step, you should check that the mapping results are as expected. If there are any problems at this stage, the scaffolding step will not give good results. In particular, you should check that a reasonable proportion of reads have mapped to the contigs. The key part of the log for `s_map` for our example is:
+Before proceeding from the mapping step to the scaffolding step, you should check that the mapping results are as expected. If there are any problems at this stage, the scaffolding step will not give good results. In particular, you should check that a reasonable proportion of reads have mapped to the contigs. The key part of the log for `s_map` for our example is:
 
 ```
 Total reads         4623823
@@ -335,7 +335,7 @@ Ratio               76.0%
 
 The reads in gaps are reads which do not fall on a contig at all. As we have reasonable read coverage and have used a kat plot to check that information from the reads is not missing in the contigs, most of the reads should map at least partially to the contigs, which they do. The total number of reads is larger than the number of reads in gaps plus the number of reads on contigs because some reads map partially to a contig, and hang off the end. 
 
-After the mapping has completed successfully, it's time to do the scaffolding. By default, `s_scaff` will scaffold in insert size order, from the smallest to the largest. To change this order, specify the `rank` field in the configuration file. Though `s_scaff` makes its own insert size estimates, it bases this ordering on the user specified insert sizes, so it is important that these are correct. You can check the following part of the log to make sure that the insert sizes calculated by `s_scaff` are similar to those specified in the config file:
+After the mapping has completed successfully, it's time to do the scaffolding. By default, `s_scaffold` will scaffold in insert size order, from the smallest to the largest. To change this order, specify the `rank` field in the configuration file. Though `s_scaffold` makes its own insert size estimates, it bases this ordering on the user specified insert sizes, so it is important that these are correct. You can check the following part of the log to make sure that the insert sizes calculated by `s_scaffold` are similar to those specified in the config file:
 
  ```
  For insert size: 300
