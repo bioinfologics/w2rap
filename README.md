@@ -386,7 +386,7 @@ This step performs two tasks;
 * Recovers gaps from the contigging stage: SOAPdenovo converts gaps (Ns) in contigs to Cs and Gs in scaffolds so we need to convert these back to Ns.   
 * Collapses repeats surrounding gaps: In some cases, SOAPdenovo generates repeated sequence around gaps which can be collapsed. Gaps are generally around 200bp and the sequence each side of the gap is identical.
 
-The following script performs these tasks and requires three input files generated in the scaffolding step; `yeast.contigPosInscaff`, `yeast.scafSeq`, `yeast.contig`. The post-processed scaffolds are written to `yeast_scf_post_process.fa` using the following command and this file should be used in subsequent steps.
+The script `SOAP_post_process.py` requires three input files generated in the scaffolding step `yeast.contigPosInscaff`, `yeast.scafSeq`, `yeast.contig` and writes the post-processed scaffolds to a new FASTA file. In the following example the post-processed scaffolds are written to `yeast_scf_post_process.fa` and this file should be used in subsequent steps.
 
 ```
 python SOAP_post_process.py yeast.contigPosInscaff yeast.scafSeq yeast.contig yeast_scf_post_process.fa
