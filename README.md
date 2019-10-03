@@ -378,7 +378,7 @@ The masked contigs are ones which are assumed to be repetitive, so are not inclu
  
 Transitive connections are formed when reads which map to gaps between contigs overlap, so that we can use these overlaps to deduce which contigs go together.
 
-If this pipeline runs successfully, a number of output files will be created. The final scaffolds have the extension `scafSeq`. 
+After scaffolding, a number of output files will be created. The FASTA-format file containing the final scaffolds have the extension `scafSeq`. 
 
 ### c) SOAP post-processing
 This step performs two tasks;
