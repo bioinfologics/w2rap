@@ -65,8 +65,8 @@ def get_flash_stats(lib_prefix):
   flash_text, err = p.communicate()
   if p.returncode != 0:
     raise IOError(err)
- 
-  f_fields = flash_text.replace("[FLASH]", "").split("\n")
+  
+  f_fields = str(flash_text).replace("[FLASH]", "").split("\\n")
 
   with open(dedup_log, 'r') as f:
     lines = f.readlines()
