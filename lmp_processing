@@ -191,7 +191,7 @@ if __name__ == '__main__':
   print("Number of libraries to process: {0}".format(len(libraries)))
   for lib in libraries:
     print(lib["r1"])
-	print(lib["r2"])
+    print(lib["r2"])
 
   print("\nRunning FLASH and de-duplicating combined reads...")
   if not os.path.exists("flash"):
