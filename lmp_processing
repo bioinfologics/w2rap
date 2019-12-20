@@ -97,21 +97,21 @@ def get_nextclip_stats(lib_prefix):
 if __name__ == '__main__':
 
   if len(sys.argv) != 3 or sys.argv[1] == "--help":
-    print "\n#### w2rap LMP processing ####\n"
-    print "Usage: {0} libs_list ncpus\n".format(sys.argv[0])
-    print "libs_list is a text file containing a list of your FASTQ LMP read files, eg.\n" \
+    print("\n#### w2rap LMP processing ####\n")
+    print("Usage: {0} libs_list ncpus\n".format(sys.argv[0]))
+    print("libs_list is a text file containing a list of your FASTQ LMP read files, eg.\n" \
     "/path/to/LIB1_R1.fastq\n/path/to/LIB1_R2.fastq\n/path/to/LIB2_R1.fastq\n/path/to/LIB2_R2.fastq\n\n" \
-    "FASTQ read files must be uncompressed and end in _R1.fastq or _R2.fastq\n"
+    "FASTQ read files must be uncompressed and end in _R1.fastq or _R2.fastq\n")
     sys.exit()
 
   libs_list = sys.argv[1]
   ncpus = sys.argv[2]
 
-  print "\n#### w2rap LMP processing ####\n"
+  print("\n#### w2rap LMP processing ####\n")
 
   # can we find the input file and does it look ok
   if not os.path.exists(libs_list):
-    print "Cannot find libraries file {0}.\n".format(libs_list)
+    print("Cannot find libraries file {0}.\n".format(libs_list))
     sys.exit()
 
   # get the directory where this script is running
@@ -126,7 +126,7 @@ if __name__ == '__main__':
   # read env var and add to path
   bin_dir = os.environ['W2RAP_PATH']
   if bin_dir == None:
-    print "No path to binaries, please set W2RAP_PATH environment variable"
+    print("No path to binaries, please set W2RAP_PATH environment variable")
     sys.exit()
   else:
     os.environ["PATH"] += os.pathsep + bin_dir
@@ -134,22 +134,22 @@ if __name__ == '__main__':
   # check the required executables exist in the path
   FLASH_PATH = which("flash")
   if FLASH_PATH == None:
-    print "ERROR: Cannot find FLASH in PATH.\n"
+    print("ERROR: Cannot find FLASH in PATH.\n")
     sys.exit()
 
   DEDUP_PATH = which("dedup_fastq")
   if DEDUP_PATH == None:
-    print "ERROR: Cannot find dedup_fastq in PATH.\n"
+    print("ERROR: Cannot find dedup_fastq in PATH.\n")
     sys.exit()
 
   NXCLIP_PATH = which("nextclip")
   if NXCLIP_PATH == None:
-    print "ERROR: Cannot find Nextclip in PATH.\n"
+    print("ERROR: Cannot find Nextclip in PATH.\n")
     sys.exit()
 
-  print "FLASH found: {0}".format(FLASH_PATH)
-  print "dedup_fastq found: {0}".format(DEDUP_PATH)
-  print "Nextclip found: {0}".format(NXCLIP_PATH)
+  print("FLASH found: {0}".format(FLASH_PATH))
+  print("dedup_fastq found: {0}".format(DEDUP_PATH))
+  print("Nextclip found: {0}".format(NXCLIP_PATH))
 
   cwd = os.getcwd()
 
@@ -162,15 +162,15 @@ if __name__ == '__main__':
         r1 = os.path.abspath(r1_in)
         r2 = os.path.abspath(r2_in)
         if r1 == r2:
-          print "Read 1 and read 2 files are the same - {0}.".format(r1)
+          print("Read 1 and read 2 files are the same - {0}.".format(r1))
           sys.exit()
 
         if not os.path.exists(r1):
-          print "Read file {0} does not exist.".format(r1)
+          print("Read file {0} does not exist.".format(r1))
           sys.exit()
 
         if not os.path.exists(r2):
-          print "Read file {0} does not exist.".format(r2)
+          print("Read file {0} does not exist.".format(r2))
           sys.exit()       
 
         # get the read length from r1 (required for flash)
@@ -188,11 +188,12 @@ if __name__ == '__main__':
         libraries.append({"r1": r1, "r2": r2, "read_length": read_length, "prefix": prefix})
       else: break  # EOF
 
-  print "Number of libraries to process: {0}".format(len(libraries))
+  print("Number of libraries to process: {0}".format(len(libraries)))
   for lib in libraries:
-    print lib["r1"], lib["r2"]
+    print(lib["r1"])
+	print(lib["r2"])
 
-  print "\nRunning FLASH and de-duplicating combined reads..."
+  print("\nRunning FLASH and de-duplicating combined reads...")
   if not os.path.exists("flash"):
     os.makedirs("flash")
 
@@ -226,9 +227,9 @@ if __name__ == '__main__':
 
   # for each library, get the stats from flash and dedup
   for lib in libraries:
-    print get_flash_stats(lib["prefix"])    
+    print(get_flash_stats(lib["prefix"]))  
 
-  print "Running Nextclip..."
+  print("Running Nextclip...")
   if not os.path.exists("nextclip"):
     os.makedirs("nextclip")
 
@@ -273,7 +274,7 @@ if __name__ == '__main__':
   os.chdir(cwd)
 
   for lib in libraries:
-    print get_nextclip_stats(lib["prefix"]) 
+    print(get_nextclip_stats(lib["prefix"])) 
 
   # get rid of the temporary flash dir and extra bits in the nextclip dir
   shutil.rmtree(os.path.join(cwd, "flash"))
@@ -282,4 +283,4 @@ if __name__ == '__main__':
   for lib in libraries:
     os.remove(os.path.join(cwd, "nextclip", "{0}.nc_counts".format(lib["prefix"])))
 
-print "DONE."
+print("DONE.")
