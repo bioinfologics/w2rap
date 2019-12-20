@@ -183,7 +183,7 @@ if __name__ == '__main__':
 
         # get the library prefix
         base=os.path.basename(r1)
-    prefix = os.path.splitext(base)[0].replace("_R1", "")
+	    prefix = os.path.splitext(base)[0].replace("_R1", "")
 
         libraries.append({"r1": r1, "r2": r2, "read_length": read_length, "prefix": prefix})
       else: break  # EOF
